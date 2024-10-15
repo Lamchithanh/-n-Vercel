@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import "./Header.scss";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import avatar from "../../assets/img/avarta.png";
+import HomePage from "../../Page/Home/HomePage";
+import Link from "antd/es/typography/Link";
 
 const Header = () => {
     const location = useLocation();
@@ -37,17 +39,19 @@ const Header = () => {
 
     return (
         <header className="header">
-            <div className="header__logo">
-                <span className="logo-icon">
-                    <img
-                        width="50"
-                        height="50"
-                        src="https://img.icons8.com/bubbles/50/classroom.png"
-                        alt="classroom"
-                    />
-                </span>
-                <span className="logo-text">Làm để qua đồ án</span>
-            </div>
+           
+                <div className="header__logo">
+                    <span className="logo-icon">
+                        <img
+                            width="50"
+                            height="50"
+                            src="https://img.icons8.com/bubbles/50/classroom.png"
+                            alt="classroom"
+                        />
+                    </span>
+                    <span className="logo-text">Làm để qua đồ án</span>
+                </div>
+   
             <div className="header__search">
                 <input
                     type="text"

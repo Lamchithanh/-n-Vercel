@@ -50,14 +50,9 @@ const HomePage = () => {
             const key = String(index + 1);
             const menuLabels = ["Tài khoản", "Khóa học", "Thông báo"];
             const submenuLabels = {
-                0: [
-                    { label: "Thông tin cá nhân", path: "user-info" },
-                    { label: "Đổi mật khẩu", path: "change-password" },
-                    { label: "Khóa học của tôi", path: "my-courses" },
-                    { label: "Cài đặt tài khoản", path: "account-settings" },
-                ],
+                0: [{ label: "Thông tin cá nhân", path: "user-info" }],
                 1: [
-                    { label: "Khóa học của tôi", path: "my-courses" },
+                    { label: "Khóa học của tôi", path: "my-courses" }, // Cập nhật đường dẫn
                     { label: "Khóa học mới", path: "/" },
                     { label: "Khóa học yêu thích", path: "/" },
                 ],
@@ -152,11 +147,7 @@ const HomePage = () => {
                 >
                     <Breadcrumb
                         className="breadcrumb"
-                        items={[
-                            {
-                                title: "Trang chủ",
-                            },
-                        ]}
+                        items={[{ title: "Trang chủ" }]}
                     />
                     <Content className="content">
                         {location.pathname === "/" ? (

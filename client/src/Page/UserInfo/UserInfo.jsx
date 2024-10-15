@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Card, Descriptions, Alert } from "antd";
+import { Card, Descriptions, Alert, Button } from "antd";
+import { useNavigate } from "react-router-dom";
 
 const UserInfo = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate(); // Sử dụng hook navigate để điều hướng
 
     useEffect(() => {
         const userData = localStorage.getItem("user"); // Lấy thông tin người dùng từ localStorage
@@ -64,6 +66,20 @@ const UserInfo = () => {
                     {formatDate(user.updatedAt)}
                 </Descriptions.Item>
             </Descriptions>
+            <Button
+                type="primary"
+                style={{ marginTop: "16px" }}
+                onClick={() => navigate("/change-password")} // Chuyển hướng tới trang đổi mật khẩu
+            >
+                Đổi mật khẩu
+            </Button>
+            <Button
+                type="default"
+                style={{ marginLeft: "8px", marginTop: "16px" }}
+                onClick={() => navigate("/account-settings")} // Chuyển hướng tới trang cài đặt tài khoản
+            >
+                Cài đặt tài khoản
+            </Button>
         </Card>
     );
 };

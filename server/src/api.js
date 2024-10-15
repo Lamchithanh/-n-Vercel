@@ -195,6 +195,7 @@ export const enrollCourse = async (courseId) => {
     return response.data;
 };
 
+
 // Lấy danh sách bài học của khóa học
 export const fetchLessons = async (courseId) => {
     const response = await axios.get(`${API_URL}/courses/${courseId}/lessons`, {
@@ -208,80 +209,6 @@ export const addLesson = async (courseId, lessonData) => {
     const response = await axios.post(
         `${API_URL}/courses/${courseId}/lessons`,
         lessonData,
-        { headers: getAuthHeader() }
-    );
-    return response.data;
-};
-
-// Lấy danh sách bài kiểm tra của bài học
-export const fetchQuizzes = async (lessonId) => {
-    const response = await axios.get(`${API_URL}/lessons/${lessonId}/quizzes`, {
-        headers: getAuthHeader(),
-    });
-    return response.data;
-};
-
-// Thêm bài kiểm tra vào bài học
-export const addQuiz = async (lessonId, quizData) => {
-    const response = await axios.post(
-        `${API_URL}/lessons/${lessonId}/quizzes`,
-        quizData,
-        { headers: getAuthHeader() }
-    );
-    return response.data;
-};
-
-// Lấy danh sách câu hỏi của bài kiểm tra
-export const fetchQuizQuestions = async (quizId) => {
-    const response = await axios.get(`${API_URL}/quizzes/${quizId}/questions`, {
-        headers: getAuthHeader(),
-    });
-    return response.data;
-};
-
-// Thêm câu hỏi vào bài kiểm tra
-export const addQuizQuestion = async (quizId, questionData) => {
-    const response = await axios.post(
-        `${API_URL}/quizzes/${quizId}/questions`,
-        questionData,
-        { headers: getAuthHeader() }
-    );
-    return response.data;
-};
-
-// Lấy danh sách chủ đề thảo luận trong forum
-export const fetchForumTopics = async (courseId) => {
-    const response = await axios.get(
-        `${API_URL}/courses/${courseId}/forum/topics`,
-        { headers: getAuthHeader() }
-    );
-    return response.data;
-};
-
-// Thêm chủ đề thảo luận vào forum
-export const addForumTopic = async (courseId, topicData) => {
-    const response = await axios.post(
-        `${API_URL}/courses/${courseId}/forum/topics`,
-        topicData,
-        { headers: getAuthHeader() }
-    );
-    return response.data;
-};
-
-// Lấy danh sách phản hồi của chủ đề thảo luận
-export const fetchForumReplies = async (topicId) => {
-    const response = await axios.get(
-        `${API_URL}/forum/topics/${topicId}/replies`,
-        { headers: getAuthHeader() }
-    );
-    return response.data;
-};
-
-// Thêm phản hồi vào chủ đề thảo luận
-export const addForumReply = async (topicId, replyData) => {
-    const response = await axios.post(
-        `${API_URL}/forum/topics/${topicId}/replies`,
-        replyData,
         { headers: getAuthHeader() }
     );
     return response.data;
