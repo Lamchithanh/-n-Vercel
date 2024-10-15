@@ -37,6 +37,10 @@ const UserInfo = () => {
         );
     }
 
+    const formatDate = (date) => {
+        return date ? new Date(date).toLocaleString() : "Không rõ";
+    };
+
     return (
         <Card title="Thông tin người dùng">
             <Descriptions layout="vertical" bordered>
@@ -54,10 +58,10 @@ const UserInfo = () => {
                         : "Học viên"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày tạo">
-                    {new Date(user.createdAt).toLocaleString()}
+                    {formatDate(user.createdAt)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Cập nhật lần cuối">
-                    {new Date(user.updatedAt).toLocaleString()}
+                    {formatDate(user.updatedAt)}
                 </Descriptions.Item>
             </Descriptions>
         </Card>
