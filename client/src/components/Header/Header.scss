@@ -1,0 +1,142 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #fff;
+
+    &__logo {
+        display: flex;
+        align-items: center;
+
+        .logo-icon {
+            padding: 10px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .logo-text {
+            
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+    }
+
+    &__search {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        margin: 0 20px;
+
+        input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .search-icon {
+            margin-left: -30px;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+            &--outline {
+                background-color: transparent;
+                border: 1px solid #0071e2;
+                color: #0071e2;
+            }
+            &--primary {
+                background-color: #0071e2;
+                border: none;
+                color: #fff;
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+
+        &__search {
+            margin: 10px 0;
+        }
+
+        &__actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
+    // .user-menu {
+    //     position: relative;
+
+    //     button.user-avatar {
+    //         img.avatar-img {
+    //             width: 50px;
+    //         }
+    //     }
+    //     .dropdown-menu {
+    //         display: none; // Mặc định không hiển thị
+    //     }
+
+    //     .dropdown-menu.active {
+    //         display: block; // Hiển thị khi active
+    //     }
+
+    //     .dropdown-menu {
+    //         position: absolute;
+    //         top: 100%;
+    //         right: 0;
+    //         background-color: white;
+    //         border: 1px solid #ccc;
+    //         border-radius: 4px;
+    //         padding: 10px;
+    //         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    //         z-index: 1000;
+
+    //         .user-info {
+    //             margin-bottom: 10px;
+    //             padding-bottom: 10px;
+    //             border-bottom: 1px solid #eee;
+
+    //             .username {
+    //                 display: block;
+    //                 font-weight: bold;
+    //             }
+
+    //             .email {
+    //                 display: block;
+    //                 font-size: 0.9em;
+    //                 color: #666;
+    //             }
+    //         }
+
+    //         ul {
+    //             list-style-type: none;
+    //             padding: 0;
+    //             margin: 0;
+
+    //             li {
+    //                 padding: 5px 0;
+    //                 cursor: pointer;
+
+    //                 &:hover {
+    //                     background-color: #f5f5f5;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+}

@@ -1,0 +1,35 @@
+.form-signin {
+    background: #d3d3d3;
+    padding: 20px;
+    border-radius: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center;
+    p {
+        text-align: center;
+    }
+    .title-signin {
+        color: #32cd32;
+        font-size: 18px;
+        font-weight: 700;
+    }
+    input {
+        margin: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        border-color: #bfd2d1;
+    }
+    .btn-signin {
+        background: #0000ff;
+        color: aliceblue;
+        font-size: 15px;
+        
+        &:hover {
+            background-color: #2492ce; /* Màu nền khi hover */
+        }
+    }
+}
