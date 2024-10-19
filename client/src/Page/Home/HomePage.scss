@@ -1,55 +1,53 @@
 .demo-logo {
-    width: 120px;
-    height: 31px;
-    background: rgba(237, 232, 232, 0.3);
-    margin: 16px 28px 16px 0;
+  width: 120px;
+  height: 31px;
+  background: rgba(237, 232, 232, 0.3);
+  margin: 16px 28px 16px 0;
 }
 
 .header {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .sider-menu {
-    height: 100%;
-    border-right: 0;
+  height: 100%;
+  border-right: 0;
 }
 
 .breadcrumb {
-    margin: 16px 0;
+  margin: 16px 0;
 }
 .content {
-    background-color: #f0f2f5; // Thay bằng mã màu trực tiếp
-    padding: 24px;
-    border-radius: 8px;
+  background-color: #70bcee; // Thay bằng mã màu trực tiếp
+  padding: 24px;
+  border-radius: 8px;
+  display: grid;
+
+  .course-list {
     display: grid;
+    grid-template-columns: repeat(4, 1fr); // Sắp xếp 4 card trên một hàng
+    grid-gap: 16px; // Khoảng cách giữa các card
 
-    .course-list {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr); // Sắp xếp 4 card trên một hàng
-        grid-gap: 16px; // Khoảng cách giữa các card
+    .ant-card {
+      width: 100%; // Chiều rộng của card là 100% của grid cell
+      height: 90%; // Chiều cao tự động
+      border-radius: 10px; // Bo góc cho card
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); // Thêm bóng cho card
+      transition: transform 0.3s; // Hiệu ứng khi hover
 
-        .ant-card {
-            width: 100%; // Chiều rộng của card là 100% của grid cell
-            height: 90%; // Chiều cao tự động
-            border-radius: 10px; // Bo góc cho card
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); // Thêm bóng cho card
-            transition: transform 0.3s; // Hiệu ứng khi hover
+      &:hover {
+        transform: translateY(-5px); // Di chuyển card lên một chút khi hover
+      }
 
-            &:hover {
-                transform: translateY(
-                    -5px
-                ); // Di chuyển card lên một chút khi hover
-            }
-
-            .ant-card-cover {
-                img {
-                    object-fit: cover; // Đảm bảo hình ảnh vừa vặn trong card
-                    height: 200px; // Chiều cao cố định cho hình ảnh
-                    border-top-left-radius: 10px; // Bo góc cho hình ảnh
-                    border-top-right-radius: 10px;
-                }
-            }
+      .ant-card-cover {
+        img {
+          object-fit: cover; // Đảm bảo hình ảnh vừa vặn trong card
+          height: 200px; // Chiều cao cố định cho hình ảnh
+          border-top-left-radius: 10px; // Bo góc cho hình ảnh
+          border-top-right-radius: 10px;
         }
+      }
     }
+  }
 }

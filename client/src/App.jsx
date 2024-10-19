@@ -1,4 +1,3 @@
-import React from "react";
 import {
     BrowserRouter as Router,
     Route,
@@ -18,6 +17,7 @@ import ChangePassword from "./Page/ChangePassword/ChangePassword";
 import MyCourses from "./Page/MyCourses/MyCourses";
 import AccountSettings from "./Page/AccountSettings/AccountSettings";
 import CourseDetail from "./Page/CourseDetail/CourseDetail"; // Nhập CourseDetail
+import PropTypes from 'prop-types'; // Thêm import PropTypes
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -25,6 +25,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         return <Navigate to="/login" replace />;
     }
     return children;
+};
+
+// Thêm khai báo PropTypes cho các props
+ProtectedRoute.propTypes = {
+    children: PropTypes.node.isRequired,
+    allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 const App = () => {
@@ -45,8 +51,7 @@ const App = () => {
                             path="account-settings"
                             element={<AccountSettings />}
                         />
-                        <Route path="courses/:id" element={<CourseDetail />} />{" "}
-                        {/* Thêm route cho khóa học */}
+                        <Route path="courses/:id" element={<CourseDetail />} /> {/* Thêm route cho khóa học */}
                     </Route>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />

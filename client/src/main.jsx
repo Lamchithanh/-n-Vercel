@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
@@ -11,13 +10,13 @@ overlay.classList.add("overlay");
 document.body.appendChild(overlay);
 
 const renderApp = () => {
-    createRoot(document.getElementById("root")).render(
-        <AuthProvider>
-            <App />
-        </AuthProvider>
-    );
-    loader.style.display = "none";
-    overlay.style.display = "none";
+  createRoot(document.getElementById("root")).render(
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+  loader.style.display = "none";
+  overlay.style.display = "none";
 };
 
 // Hiển thị thanh loading toàn bộ trang
