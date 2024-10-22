@@ -163,14 +163,6 @@ export const enrollCourse = async (courseId) => {
   return response.data;
 };
 
-// Hàm lấy tất cả các bài học của một khóa học
-export const fetchLessonsAPI = async (courseId, token) => {
-  const response = await axios.get(`${API_URL}/lessons/${courseId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
-
 // Hàm lấy tất cả các khóa học
 export const fetchCoursesAPI = async (token) => {
   const response = await axios.get(`${API_URL}/courses`, {
@@ -179,18 +171,18 @@ export const fetchCoursesAPI = async (token) => {
   return response.data;
 };
 
-// Hàm thêm bài học
-export const addLessonAPI = async (lessonData, token) => {
-  const response = await axios.post(`${API_URL}/lessons`, lessonData, {
+// api.js - Update these functions
+
+export const fetchLessonsAPI = async (courseId, token) => {
+  const response = await axios.get(`${API_URL}/courses/${courseId}/lessons`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 };
 
-// Hàm cập nhật bài học
-export const updateLessonAPI = async (lessonId, lessonData, token) => {
-  const response = await axios.put(
-    `${API_URL}/lessons/${lessonId}`,
+export const addLessonAPI = async (lessonData, token) => {
+  const response = await axios.post(
+    `${API_URL}/courses/${lessonData.course_id}/lessons`,
     lessonData,
     {
       headers: { Authorization: `Bearer ${token}` },
@@ -199,14 +191,26 @@ export const updateLessonAPI = async (lessonId, lessonData, token) => {
   return response.data;
 };
 
-// Hàm xóa bài học
-export const deleteLessonAPI = async (lessonId, token) => {
-  const response = await axios.delete(`${API_URL}/lessons/${lessonId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const updateLessonAPI = async (lessonId, lessonData, token) => {
+  const response = await axios.put(
+    `${API_URL}/courses/${lessonData.course_id}/lessons/${lessonId}`,
+    lessonData,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return response.data;
 };
 
+export const deleteLessonAPI = async (courseId, lessonId, token) => {
+  const response = await axios.delete(
+    `${API_URL}/courses/${courseId}/lessons/${lessonId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data;
+};
 // Xử lý thanh toán cho khóa học
 export const processPayment = async (paymentData) => {
   const response = await axios.post(`${API_URL}/payments`, paymentData, {

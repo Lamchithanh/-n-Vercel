@@ -128,10 +128,11 @@ exports.deleteCourse = (req, res) => {
 exports.getLessonsByCourseId = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const lessons = await pool.query(
-      "SELECT * FROM lessons WHERE course_id = $1",
+    const [lessons] = await pool.execute(
+      "SELECT * FROM lessons WHERE course_id = ?",
       [courseId]
     );
+
     res.json(lessons.rows);
   } catch (error) {
     console.error("Error fetching lessons:", error);
@@ -143,11 +144,23 @@ exports.addLesson = async (req, res) => {
   try {
     const { courseId } = req.params;
     const { title, content, description, video_url, order_index } = req.body;
-    const newLesson = await pool.query(
-      "INSERT INTO lessons (course_id, title, content, description, video_url, order_index) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+
+    // Thực hiện chèn bài học mà không cần RETURNING
+    const result = await pool.query(
+      "INSERT INTO lessons (course_id, title, content, description, video_url, order_index) VALUES (?, ?, ?, ?, ?, ?)",
       [courseId, title, content, description, video_url, order_index]
     );
-    res.status(201).json(newLesson.rows[0]);
+
+    // Lấy ID bài học vừa chèn
+    const newLessonId = result.insertId;
+
+    // Truy vấn để lấy thông tin bài học vừa chèn
+    const [newLesson] = await pool.query("SELECT * FROM lessons WHERE id = ?", [
+      newLessonId,
+    ]);
+
+    // Trả về thông tin bài học vừa thêm
+    res.status(201).json(newLesson[0]);
   } catch (error) {
     console.error("Error adding lesson:", error);
     res.status(500).json({ error: "Unable to add lesson" });
