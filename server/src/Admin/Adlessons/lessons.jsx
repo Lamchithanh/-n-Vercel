@@ -20,7 +20,7 @@ import {
 } from "../../api";
 
 const Lessons = () => {
-  const [lessons, setLessons] = useState([]); // Initialize as empty array
+  const [lessons, setLessons] = useState([]); // Khởi tạo mảng rỗng
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -147,7 +147,7 @@ const Lessons = () => {
           style={{ width: 200, marginRight: 16 }}
           value={selectedCourse}
           onChange={setSelectedCourse}
-          placeholder="Select a course"
+          placeholder="Chọn khóa học"
         >
           {courses.map((course) => (
             <Select.Option key={course.id} value={course.id}>
@@ -167,12 +167,12 @@ const Lessons = () => {
             setModalVisible(true);
           }}
         >
-          Add New Lesson
+          Thêm Bài Học Mới
         </Button>
       </div>
 
       <Row gutter={16}>
-        {Array.isArray(lessons) &&
+        {lessons.length > 0 ? (
           lessons.map((lesson) => (
             <Col key={lesson.id} xs={24} sm={12} md={8} lg={6}>
               <Card
@@ -187,32 +187,38 @@ const Lessons = () => {
                       }}
                       style={{ marginRight: 8 }}
                     >
-                      Edit
+                      Chỉnh sửa
                     </Button>
                     <Button onClick={() => handleDeleteLesson(lesson.id)}>
-                      Delete
+                      Xóa
                     </Button>
                   </>
                 }
               >
                 <p>{lesson.description}</p>
                 <p>
-                  <strong>Content:</strong> {lesson.content}
+                  <strong>Nội dung:</strong> {lesson.content}
                 </p>
                 <p>
                   <strong>Video URL:</strong> {lesson.video_url}
                 </p>
                 <p>
-                  <strong>Order Index:</strong>{" "}
-                  {lesson.order_index || "Not set"}
+                  <strong>Thứ tự:</strong> {lesson.order_index || "Chưa đặt"}
                 </p>
               </Card>
             </Col>
-          ))}
+          ))
+        ) : (
+          <Col span={24}>
+            <Card>
+              <p>Không có bài học nào được tìm thấy.</p>
+            </Card>
+          </Col>
+        )}
       </Row>
 
       <Modal
-        title={editingLesson ? "Edit Lesson" : "Add New Lesson"}
+        title={editingLesson ? "Chỉnh Sửa Bài Học" : "Thêm Bài Học Mới"}
         open={modalVisible}
         onOk={() => form.submit()}
         onCancel={() => {
@@ -223,30 +229,27 @@ const Lessons = () => {
         <Form form={form} layout="vertical" onFinish={handleAddOrUpdateLesson}>
           <Form.Item
             name="title"
-            label="Title"
+            label="Tiêu đề"
             rules={[
-              { required: true, message: "Please input the lesson title!" },
+              { required: true, message: "Vui lòng nhập tiêu đề bài học!" },
             ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="content"
-            label="Content"
+            label="Nội dung"
             rules={[
-              { required: true, message: "Please input the lesson content!" },
+              { required: true, message: "Vui lòng nhập nội dung bài học!" },
             ]}
           >
             <Input.TextArea />
           </Form.Item>
           <Form.Item
             name="description"
-            label="Description"
+            label="Mô tả"
             rules={[
-              {
-                required: true,
-                message: "Please input the lesson description!",
-              },
+              { required: true, message: "Vui lòng nhập mô tả bài học!" },
             ]}
           >
             <Input />
@@ -255,17 +258,15 @@ const Lessons = () => {
             name="video_url"
             label="Video URL"
             rules={[
-              { required: true, message: "Please input the lesson video URL!" },
+              { required: true, message: "Vui lòng nhập Video URL bài học!" },
             ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="order_index"
-            label="Order Index"
-            rules={[
-              { required: true, message: "Please input the order index!" },
-            ]}
+            label="Thứ tự"
+            rules={[{ required: true, message: "Vui lòng nhập thứ tự!" }]}
           >
             <Input type="number" />
           </Form.Item>
