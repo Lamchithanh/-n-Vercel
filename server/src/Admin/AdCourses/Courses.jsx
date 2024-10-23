@@ -135,7 +135,10 @@ const Courses = () => {
           <Button
             onClick={() => {
               setEditingCourse(record);
-              form.setFieldsValue(record);
+              form.setFieldsValue({
+                ...record,
+                priceOption: record.price === "0" ? "free" : "paid", // Thiết lập giá tùy chọn dựa trên giá hiện tại
+              });
               setModalVisible(true);
             }}
           >
@@ -219,6 +222,7 @@ const Courses = () => {
                   form.setFieldsValue({ price: "" });
                 }
               }}
+              // Giữ giá tùy chọn trong khi chỉnh sửa
             >
               <Option value="free">Miễn phí</Option>
               <Option value="paid">Nhập số tiền</Option>

@@ -20,7 +20,7 @@ import {
 } from "../../api";
 
 const Lessons = () => {
-  const [lessons, setLessons] = useState([]); // Khởi tạo mảng rỗng
+  const [lessons, setLessons] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -28,19 +28,14 @@ const Lessons = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [form] = Form.useForm();
 
-  // Fetch courses first
   const fetchCourses = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const coursesData = await fetchCoursesAPI(token);
-      if (Array.isArray(coursesData)) {
-        setCourses(coursesData);
-        if (coursesData.length > 0 && !selectedCourse) {
-          setSelectedCourse(coursesData[0].id);
-        }
-      } else {
-        console.error("Courses data is not an array:", coursesData);
-        setCourses([]);
+      console.log("Fetched courses data:", coursesData);
+      setCourses(coursesData);
+      if (coursesData.length > 0 && !selectedCourse) {
+        setSelectedCourse(coursesData[0].id);
       }
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -49,7 +44,6 @@ const Lessons = () => {
     }
   }, [selectedCourse]);
 
-  // Fetch lessons for selected course
   const fetchLessons = useCallback(async () => {
     if (!selectedCourse) {
       setLessons([]);
@@ -60,14 +54,8 @@ const Lessons = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
       const lessonsData = await fetchLessonsAPI(selectedCourse, token);
-
-      if (Array.isArray(lessonsData)) {
-        setLessons(lessonsData);
-      } else {
-        console.error("Lessons data is not an array:", lessonsData);
-        setLessons([]);
-        console.log("Lessons data:", lessonsData);
-      }
+      console.log("Fetched lessons data:", lessonsData);
+      setLessons(lessonsData); // Hiển thị dữ liệu không kiểm tra định dạng
     } catch (error) {
       console.error("Error fetching lessons:", error);
       message.error("Unable to load lessons. Please try again later.");
@@ -98,7 +86,7 @@ const Lessons = () => {
       const token = localStorage.getItem("token");
       const lessonData = {
         ...values,
-        course_id: selectedCourse,
+        course_id: selectedCourse, // Thêm course_id theo bảng lessons
       };
 
       if (editingLesson) {
@@ -203,7 +191,7 @@ const Lessons = () => {
                   <strong>Video URL:</strong> {lesson.video_url}
                 </p>
                 <p>
-                  <strong>Thứ tự:</strong> {lesson.order_index || "Chưa đặt"}
+                  <strong>Thứ tự:</strong> {lesson.order_index}
                 </p>
               </Card>
             </Col>
@@ -243,7 +231,7 @@ const Lessons = () => {
               { required: true, message: "Vui lòng nhập nội dung bài học!" },
             ]}
           >
-            <Input.TextArea />
+            <Input.TextArea rows={4} />
           </Form.Item>
           <Form.Item
             name="description"
@@ -252,21 +240,21 @@ const Lessons = () => {
               { required: true, message: "Vui lòng nhập mô tả bài học!" },
             ]}
           >
-            <Input />
+            <Input.TextArea rows={2} />
           </Form.Item>
           <Form.Item
             name="video_url"
             label="Video URL"
-            rules={[
-              { required: true, message: "Vui lòng nhập Video URL bài học!" },
-            ]}
+            rules={[{ required: true, message: "Vui lòng nhập URL video!" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="order_index"
             label="Thứ tự"
-            rules={[{ required: true, message: "Vui lòng nhập thứ tự!" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập thứ tự bài học!" },
+            ]}
           >
             <Input type="number" />
           </Form.Item>
