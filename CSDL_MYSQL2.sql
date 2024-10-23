@@ -12,6 +12,9 @@ CREATE TABLE users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+ALTER TABLE users
+ADD COLUMN avatar VARCHAR(255);
+
 -- Courses
 CREATE TABLE courses (
   id SERIAL PRIMARY KEY,
@@ -22,12 +25,20 @@ CREATE TABLE courses (
   level ENUM('beginner', 'intermediate', 'advanced') NOT NULL,
   category VARCHAR(100) NOT NULL,
   total_lessons INT DEFAULT 0,
-  duration VARCHAR(50) DEFAULT 'N/A',
-  total_videos INT DEFAULT 0,
   image VARCHAR(255),
+  intro_video_url VARCHAR(255),  -- Trường mới để chứa URL video giới thiệu
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+ALTER TABLE courses
+ADD COLUMN intro_video_url VARCHAR(255);
+
+ALTER TABLE courses
+DROP COLUMN duration;
+
+ALTER TABLE courses
+DROP COLUMN total_videos;
 
 -- Enrollments
 CREATE TABLE enrollments (
@@ -37,7 +48,6 @@ CREATE TABLE enrollments (
   enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   completed_at TIMESTAMP
 );
-
 
 -- Lessons
 CREATE TABLE lessons (
@@ -95,21 +105,6 @@ CREATE TABLE modules (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-
-ALTER TABLE quizzes MODIFY lesson_id BIGINT;
-ALTER TABLE quiz_questions MODIFY quiz_id BIGINT;
-ALTER TABLE quiz_answers MODIFY question_id BIGINT;
-ALTER TABLE forum_topics MODIFY course_id BIGINT;
-ALTER TABLE forum_topics MODIFY user_id BIGINT;
-ALTER TABLE forum_replies MODIFY topic_id BIGINT;
-ALTER TABLE forum_replies MODIFY user_id BIGINT;
-ALTER TABLE payments MODIFY user_id BIGINT;
-ALTER TABLE payments MODIFY course_id BIGINT;
-ALTER TABLE progress MODIFY user_id BIGINT;
-ALTER TABLE progress MODIFY lesson_id BIGINT;
-ALTER TABLE certificates MODIFY user_id BIGINT;
-ALTER TABLE certificates MODIFY course_id BIGINT;
 
 INSERT INTO enrollments (user_id, course_id)
 VALUES (2, 8);  -- user_id 1 đăng ký khoá học có course_id 1
@@ -195,12 +190,13 @@ ON DELETE CASCADE;
 ALTER TABLE progress
 MODIFY lesson_id BIGINT UNSIGNED;
 
-ALTER TABLE progress
-ADD CONSTRAINT fk_lesson_progress
-FOREIGN KEY (lesson_id)
-REFERENCES lessons(id)
+ALTER TABLE progress 
+ADD CONSTRAINT fk_lesson_progress_new 
+FOREIGN KEY (lesson_id) 
+REFERENCES lessons(id) 
 ON DELETE CASCADE;
 
+SHOW CREATE TABLE progress;
 
 ALTER TABLE certificates
 MODIFY course_id BIGINT UNSIGNED;

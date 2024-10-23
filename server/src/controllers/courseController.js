@@ -62,14 +62,27 @@ exports.addCourse = (req, res) => {
 };
 
 // Cập nhật thông tin khóa học
-exports.updateCourse = (req, res) => {
-  const { id } = req.params; // Thay đổi ở đây
-  const { title, description, instructor_id, price, level, category } =
-    req.body;
+// Cập nhật thông tin khóa học
+exports.updateCourse = async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    instructor_id,
+    price,
+    level,
+    category,
+    intro_video_url,
+  } = req.body;
+
+  // Kiểm tra xem ID có phải là số không
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid course ID" });
+  }
 
   const query = `
         UPDATE courses
-        SET title = ?, description = ?, instructor_id = ?, price = ?, level = ?, category = ?
+        SET title = ?, description = ?, instructor_id = ?, price = ?, level = ?, category = ?, intro_video_url = ?
         WHERE id = ?
     `;
 
@@ -80,49 +93,53 @@ exports.updateCourse = (req, res) => {
     price,
     level,
     category,
-    id, // Sử dụng id ở đây
+    intro_video_url,
+    id,
   ];
 
-  pool.query(query, values, (err, results) => {
-    if (err) {
-      console.error("Error updating course:", err);
-      return res.status(500).json({ error: "Internal server error" });
-    }
+  try {
+    const [results] = await pool.query(query, values);
+
     if (results.affectedRows === 0) {
       return res.status(404).json({ error: "Course not found" });
     }
 
-    // Lấy dữ liệu khóa học sau khi đã cập nhật
-    pool.query(
+    // Lấy dữ liệu khóa học đã cập nhật
+    const [updatedCourse] = await pool.query(
       "SELECT * FROM courses WHERE id = ?",
-      [id], // Sử dụng id ở đây
-      (err, updatedResults) => {
-        if (err) {
-          console.error("Error fetching updated course:", err);
-          return res.status(500).json({ error: "Internal server error" });
-        }
-        res.json(updatedResults[0]); // Trả về khóa học đã được cập nhật
-      }
+      [id]
     );
-  });
+    res.status(200).json(updatedCourse[0]);
+  } catch (error) {
+    console.error("Error updating course:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 // Xóa khóa học
-exports.deleteCourse = (req, res) => {
-  const { courseId } = req.params;
+// Xóa khóa học
+exports.deleteCourse = async (req, res) => {
+  const { id } = req.params;
+
+  // Kiểm tra xem ID có phải là số không
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid course ID" });
+  }
 
   const query = `DELETE FROM courses WHERE id = ?`;
 
-  pool.query(query, [courseId], (err, results) => {
-    if (err) {
-      console.error("Error deleting course:", err);
-      return res.status(500).json({ error: "Internal server error" });
-    }
+  try {
+    const [results] = await pool.query(query, [id]);
+
     if (results.affectedRows === 0) {
       return res.status(404).json({ error: "Course not found" });
     }
-    res.json({ message: "Course deleted successfully" });
-  });
+
+    res.status(200).json({ message: "Course deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting course:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 exports.getLessonsByCourseId = async (req, res) => {

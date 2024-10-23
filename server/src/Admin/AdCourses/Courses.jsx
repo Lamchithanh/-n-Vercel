@@ -68,13 +68,25 @@ const Courses = () => {
     }
   };
 
+  const confirmDelete = (courseId) => {
+    Modal.confirm({
+      title: "Are you sure you want to delete this course?",
+      onOk: () => handleDeleteCourse(courseId),
+      onCancel: () => console.log("Delete canceled"),
+    });
+  };
+
   const handleDeleteCourse = async (courseId) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:9000/api/courses/${courseId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.delete(
+        `http://localhost:9000/api/courses/${courseId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Delete response:", response); // Kiểm tra phản hồi từ server
       message.success("Course deleted successfully");
       fetchCourses();
     } catch (error) {
@@ -130,7 +142,7 @@ const Courses = () => {
             Edit
           </Button>
           <Button
-            onClick={() => handleDeleteCourse(record.id)}
+            onClick={() => confirmDelete(record.id)}
             style={{ marginLeft: 8 }}
           >
             Delete

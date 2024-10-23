@@ -91,9 +91,8 @@ const CourseDetail = () => {
               Đăng ký học
             </Button>
           </Card>
-
-          {/* Khung chứa video giới thiệu */}
-          {/* <Card
+          Khung chứa video giới thiệu
+          <Card
             title="Video Giới Thiệu"
             style={{ marginBottom: "20px", borderRadius: "8px" }}
           >
@@ -118,7 +117,7 @@ const CourseDetail = () => {
                 allowFullScreen
               ></iframe>
             </div>
-          </Card> */}
+          </Card>
         </Col>
         <Col span={6}>
           <Card
