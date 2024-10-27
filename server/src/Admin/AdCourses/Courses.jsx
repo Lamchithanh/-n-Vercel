@@ -18,11 +18,10 @@ const Courses = () => {
       const response = await axios.get("http://localhost:9000/api/courses", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(response.data); // Kiểm tra dữ liệu trả về từ API
       setCourses(response.data);
     } catch (error) {
       console.error("Error fetching courses:", error);
-      message.error("Unable to load courses. Please try again later.");
+      message.error("Không thể tải khóa học. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -36,33 +35,34 @@ const Courses = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      let response;
-      if (editingCourse) {
-        response = await axios.put(
-          `http://localhost:9000/api/courses/${editingCourse.id}`,
-          values,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        message.success("Course updated successfully");
-      } else {
-        response = await axios.post(
-          "http://localhost:9000/api/courses",
-          values,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        message.success("Course added successfully");
-      }
-      console.log(response); // Kiểm tra response trả về
-      setModalVisible(false);
-      form.resetFields();
-      fetchCourses();
+      const apiUrl = editingCourse
+        ? `http://localhost:9000/api/courses/${editingCourse.id}`
+        : "http://localhost:9000/api/courses";
+
+      const method = editingCourse ? "put" : "post";
+
+      const courseData = {
+        ...values,
+        image: values.imageUrl || "", // Sử dụng URL từ trường nhập liệu
+        price: values.priceOption === "free" ? "0" : values.price.toString(),
+      };
+
+      await axios[method](apiUrl, courseData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      message.success(
+        `Khóa học ${
+          editingCourse ? "đã được cập nhật" : "đã được thêm"
+        } thành công`
+      );
+
+      setModalVisible(false); // Ẩn modal
+      form.resetFields(); // Reset form
+      await fetchCourses(); // Tự động tải lại danh sách khóa học
     } catch (error) {
       console.error("Error adding/updating course:", error);
-      message.error("Unable to add/update course. Please try again.");
+      message.error("Không thể thêm/cập nhật khóa học. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -70,9 +70,8 @@ const Courses = () => {
 
   const confirmDelete = (courseId) => {
     Modal.confirm({
-      title: "Are you sure you want to delete this course?",
+      title: "Bạn có chắc chắn muốn xóa khóa học này?",
       onOk: () => handleDeleteCourse(courseId),
-      onCancel: () => console.log("Delete canceled"),
     });
   };
 
@@ -80,18 +79,14 @@ const Courses = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.delete(
-        `http://localhost:9000/api/courses/${courseId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log("Delete response:", response); // Kiểm tra phản hồi từ server
-      message.success("Course deleted successfully");
-      fetchCourses();
+      await axios.delete(`http://localhost:9000/api/courses/${courseId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success("Khóa học đã được xóa thành công");
+      await fetchCourses(); // Tự động tải lại danh sách khóa học
     } catch (error) {
       console.error("Error deleting course:", error);
-      message.error("Unable to delete course. Please try again.");
+      message.error("Không thể xóa khóa học. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -100,7 +95,7 @@ const Courses = () => {
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
     {
-      title: "Title",
+      title: "Tiêu Đề",
       dataIndex: "title",
       key: "title",
       render: (text, record) => (
@@ -112,23 +107,52 @@ const Courses = () => {
         </>
       ),
     },
-    { title: "Description", dataIndex: "description", key: "description" },
+    { title: "Mô Tả", dataIndex: "description", key: "description" },
     {
-      title: "Price",
+      title: "Giá",
       dataIndex: "price",
       key: "price",
-      render: (text, record) => (
-        <>
-          {record.price === "0" || record.price === "0.00"
-            ? "Miễn phí"
-            : `${record.price} vnd`}
-        </>
-      ),
+      render: (text, record) =>
+        record.price === "0" || record.price === "0.00"
+          ? "Miễn phí"
+          : `${record.price} vnd`,
     },
-    { title: "Level", dataIndex: "level", key: "level" },
-    { title: "Category", dataIndex: "category", key: "category" },
+    { title: "Cấp Độ", dataIndex: "level", key: "level" },
+    { title: "Danh Mục", dataIndex: "category", key: "category" },
     {
-      title: "Action",
+      title: "Tổng Số Bài Học",
+      dataIndex: "total_lessons",
+      key: "total_lessons",
+    },
+    {
+      title: "Ảnh",
+      dataIndex: "image",
+      key: "image",
+      render: (image) => {
+        if (!image) {
+          return <span>Không có ảnh</span>;
+        }
+        return (
+          <img
+            src={image}
+            alt="Khóa học"
+            style={{
+              width: 100,
+              height: 100,
+              objectFit: "cover",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+            }}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/placeholder-image.png"; // Ảnh mặc định khi không tìm thấy
+            }}
+          />
+        );
+      },
+    },
+    {
+      title: "Hành Động",
       key: "action",
       render: (_, record) => (
         <>
@@ -137,18 +161,18 @@ const Courses = () => {
               setEditingCourse(record);
               form.setFieldsValue({
                 ...record,
-                priceOption: record.price === "0" ? "free" : "paid", // Thiết lập giá tùy chọn dựa trên giá hiện tại
+                priceOption: record.price === "0" ? "free" : "paid",
               });
               setModalVisible(true);
             }}
           >
-            Edit
+            Chỉnh Sửa
           </Button>
           <Button
             onClick={() => confirmDelete(record.id)}
             style={{ marginLeft: 8 }}
           >
-            Delete
+            Xóa
           </Button>
         </>
       ),
@@ -165,14 +189,14 @@ const Courses = () => {
         }}
         style={{ marginBottom: 16 }}
       >
-        Add New Course
+        Thêm Khóa Học Mới
       </Button>
 
       <Table columns={columns} dataSource={courses} rowKey="id" />
 
       <Modal
-        title={editingCourse ? "Edit Course" : "Add New Course"}
-        visible={modalVisible}
+        title={editingCourse ? "Chỉnh Sửa Khóa Học" : "Thêm Khóa Học Mới"}
+        open={modalVisible}
         onOk={() => form.submit()}
         onCancel={() => {
           setModalVisible(false);
@@ -182,97 +206,77 @@ const Courses = () => {
         <Form form={form} layout="vertical" onFinish={handleAddOrUpdateCourse}>
           <Form.Item
             name="title"
-            label="Title"
+            label="Tiêu Đề"
             rules={[
-              {
-                required: true,
-                message: "Please input the course title!",
-              },
+              { required: true, message: "Vui lòng nhập tiêu đề khóa học!" },
             ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="description"
-            label="Description"
+            label="Mô Tả"
             rules={[
-              {
-                required: true,
-                message: "Please input the course description!",
-              },
+              { required: true, message: "Vui lòng nhập mô tả khóa học!" },
+            ]}
+          >
+            <Input.TextArea rows={4} />
+          </Form.Item>
+          <Form.Item
+            name="priceOption"
+            label="Tùy Chọn Giá"
+            rules={[
+              { required: true, message: "Vui lòng chọn một tùy chọn giá!" },
+            ]}
+          >
+            <Select>
+              <Option value="free">Miễn Phí</Option>
+              <Option value="paid">Có Phí</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="price"
+            label="Giá"
+            rules={[{ required: true, message: "Vui lòng nhập giá khóa học!" }]}
+          >
+            <Input type="number" min={0} />
+          </Form.Item>
+          <Form.Item
+            name="level"
+            label="Cấp Độ"
+            rules={[
+              { required: true, message: "Vui lòng nhập cấp độ khóa học!" },
+            ]}
+          >
+            <Select>
+              <Option value="beginner">Người Mới Bắt Đầu</Option>
+              <Option value="intermediate">Trung Cấp</Option>
+              <Option value="advanced">Nâng Cao</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="category"
+            label="Danh Mục"
+            rules={[
+              { required: true, message: "Vui lòng nhập danh mục khóa học!" },
             ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            name="priceOption"
-            label="Price Option"
+            name="total_lessons"
+            label="Tổng Số Bài Học"
             rules={[
-              {
-                required: true,
-                message: "Please select a price option!",
-              },
+              { required: true, message: "Vui lòng nhập tổng số bài học!" },
             ]}
           >
-            <Select
-              onChange={(value) => {
-                if (value === "free") {
-                  form.setFieldsValue({ price: "0" });
-                } else {
-                  form.setFieldsValue({ price: "" });
-                }
-              }}
-              // Giữ giá tùy chọn trong khi chỉnh sửa
-            >
-              <Option value="free">Miễn phí</Option>
-              <Option value="paid">Nhập số tiền</Option>
-            </Select>
+            <Input type="number" min={0} />
           </Form.Item>
           <Form.Item
-            name="price"
-            label="Price Amount"
+            name="imageUrl"
+            label="URL Ảnh Khóa Học"
             rules={[
-              {
-                required: true,
-                message: "Please input the course price!",
-                validator: (_, value) => {
-                  const priceOption = form.getFieldValue("priceOption");
-                  if (priceOption === "paid" && !value) {
-                    return Promise.reject(
-                      new Error("Please input the course price!")
-                    );
-                  }
-                  return Promise.resolve();
-                },
-              },
-            ]}
-          >
-            <Input type="number" placeholder="Nhập số tiền" />
-          </Form.Item>
-          <Form.Item
-            name="level"
-            label="Level"
-            rules={[
-              {
-                required: true,
-                message: "Please select the course level!",
-              },
-            ]}
-          >
-            <Select>
-              <Option value="beginner">Beginner</Option>
-              <Option value="intermediate">Intermediate</Option>
-              <Option value="advanced">Advanced</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="category"
-            label="Category"
-            rules={[
-              {
-                required: true,
-                message: "Please input the course category!",
-              },
+              { required: true, message: "Vui lòng nhập URL ảnh khóa học!" },
             ]}
           >
             <Input />

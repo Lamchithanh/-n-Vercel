@@ -40,24 +40,6 @@ const CourseDetail = () => {
   return (
     <div className="course-detail container">
       <Row gutter={16}>
-        <Col span={24}>
-          <Card
-            title="Kiến Thức Nhập Môn IT"
-            style={{ marginBottom: "10px", borderRadius: "8px" }}
-          >
-            <Paragraph>
-              Để có cái nhìn tổng quan về ngành IT - Lập trình web, các bạn nên
-              xem các videos tại khóa này trước nhé.
-            </Paragraph>
-            <Title level={6}>Bạn sẽ học được gì?</Title>
-            <ul>
-              <li>Các kiến thức cơ bản, nền móng của ngành IT</li>
-              <li>Các mô hình, kiến trúc cơ bản khi triển khai ứng dụng</li>
-              <li>Các khái niệm, thuật ngữ cốt lõi khi triển khai ứng dụng</li>
-              <li>Hiểu hơn về cách internet và máy vi tính hoạt động</li>
-            </ul>
-          </Card>
-        </Col>
         <Col span={18}>
           <Card
             title={course.title}
@@ -75,7 +57,7 @@ const CourseDetail = () => {
             <Title level={4}>Nội dung khóa học</Title>
             <Paragraph>{course.description || "Chưa có mô tả."}</Paragraph>
 
-            <Title level={5}>Nội dung khóa học</Title>
+            <Title level={5}>Bạn sẽ học được gì?</Title>
             <div className="course-content">
               {Array.isArray(course.content) && course.content.length > 0 ? (
                 <ul>
@@ -91,7 +73,25 @@ const CourseDetail = () => {
               Đăng ký học
             </Button>
           </Card>
-          Khung chứa video giới thiệu
+
+          <Card
+            title="Kiến Thức Nhập Môn IT"
+            style={{ marginBottom: "10px", borderRadius: "8px" }}
+          >
+            <Paragraph>
+              Để có cái nhìn tổng quan về ngành IT - Lập trình web, các bạn nên
+              xem các videos tại khóa này trước nhé.
+            </Paragraph>
+            <Title level={6}>Bạn sẽ học được gì?</Title>
+            <ul>
+              <li>Các kiến thức cơ bản, nền móng của ngành IT</li>
+              <li>Các mô hình, kiến trúc cơ bản khi triển khai ứng dụng</li>
+              <li>Các khái niệm, thuật ngữ cốt lõi khi triển khai ứng dụng</li>
+              <li>Hiểu hơn về cách internet và máy vi tính hoạt động</li>
+            </ul>
+          </Card>
+        </Col>
+        <Col span={6}>
           <Card
             title="Video Giới Thiệu"
             style={{ marginBottom: "20px", borderRadius: "8px" }}
@@ -118,8 +118,7 @@ const CourseDetail = () => {
               ></iframe>
             </div>
           </Card>
-        </Col>
-        <Col span={6}>
+
           <Card
             title="Thông tin khóa học"
             style={{ marginBottom: "20px", borderRadius: "8px" }}

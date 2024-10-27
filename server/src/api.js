@@ -172,12 +172,17 @@ export const fetchCoursesAPI = async (token) => {
 };
 
 // api.js - Update these functions
-
 export const fetchLessonsAPI = async (courseId, token) => {
-  const response = await axios.get(`${API_URL}/courses/${courseId}/lessons`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
+  try {
+    const response = await axios.get(`${API_URL}/courses/${courseId}/lessons`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log("Response data:", response.data); // Kiểm tra dữ liệu phản hồi
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching lessons:", error);
+    throw error; // Ném lỗi để xử lý ở nơi gọi hàm
+  }
 };
 
 export const addLessonAPI = async (lessonData, token) => {

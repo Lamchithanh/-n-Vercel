@@ -55,7 +55,7 @@ const Lessons = () => {
       const token = localStorage.getItem("token");
       const lessonsData = await fetchLessonsAPI(selectedCourse, token);
       console.log("Fetched lessons data:", lessonsData);
-      setLessons(lessonsData); // Hiển thị dữ liệu không kiểm tra định dạng
+      setLessons(lessonsData); // Kiểm tra xem dữ liệu có đúng không
     } catch (error) {
       console.error("Error fetching lessons:", error);
       message.error("Unable to load lessons. Please try again later.");
@@ -71,6 +71,7 @@ const Lessons = () => {
 
   useEffect(() => {
     if (selectedCourse) {
+      console.log("Selected course ID:", selectedCourse); // Kiểm tra ID khóa học đã chọn
       fetchLessons();
     }
   }, [selectedCourse, fetchLessons]);
