@@ -9,6 +9,7 @@ const Courses = () => {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+  const [priceRequired, setPriceRequired] = useState(true);
   const [form] = Form.useForm();
 
   const fetchCourses = useCallback(async () => {
@@ -43,8 +44,8 @@ const Courses = () => {
 
       const courseData = {
         ...values,
-        image: values.imageUrl || "", // Sử dụng URL từ trường nhập liệu
         price: values.priceOption === "free" ? "0" : values.price.toString(),
+        image: editingCourse ? editingCourse.image : values.imageUrl || "",
       };
 
       await axios[method](apiUrl, courseData, {
@@ -57,9 +58,9 @@ const Courses = () => {
         } thành công`
       );
 
-      setModalVisible(false); // Ẩn modal
-      form.resetFields(); // Reset form
-      await fetchCourses(); // Tự động tải lại danh sách khóa học
+      setModalVisible(false);
+      form.resetFields();
+      await fetchCourses();
     } catch (error) {
       console.error("Error adding/updating course:", error);
       message.error("Không thể thêm/cập nhật khóa học. Vui lòng thử lại.");
@@ -83,7 +84,7 @@ const Courses = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       message.success("Khóa học đã được xóa thành công");
-      await fetchCourses(); // Tự động tải lại danh sách khóa học
+      await fetchCourses();
     } catch (error) {
       console.error("Error deleting course:", error);
       message.error("Không thể xóa khóa học. Vui lòng thử lại.");
@@ -145,7 +146,7 @@ const Courses = () => {
             }}
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "/placeholder-image.png"; // Ảnh mặc định khi không tìm thấy
+              e.target.src = "/placeholder-image.png";
             }}
           />
         );
@@ -161,13 +162,18 @@ const Courses = () => {
               setEditingCourse(record);
               form.setFieldsValue({
                 ...record,
-                priceOption: record.price === "0" ? "free" : "paid",
+                priceOption:
+                  record.price === "0" || record.price === "0.00"
+                    ? "free"
+                    : "paid",
               });
+              setPriceRequired(record.price !== "0");
               setModalVisible(true);
             }}
           >
             Chỉnh Sửa
           </Button>
+
           <Button
             onClick={() => confirmDelete(record.id)}
             style={{ marginLeft: 8 }}
@@ -185,6 +191,7 @@ const Courses = () => {
         onClick={() => {
           setEditingCourse(null);
           form.resetFields();
+          setPriceRequired(true);
           setModalVisible(true);
         }}
         style={{ marginBottom: 16 }}
@@ -229,7 +236,12 @@ const Courses = () => {
               { required: true, message: "Vui lòng chọn một tùy chọn giá!" },
             ]}
           >
-            <Select>
+            <Select
+              onChange={(value) => {
+                setPriceRequired(value !== "free");
+                if (value === "free") form.setFieldsValue({ price: "0" });
+              }}
+            >
               <Option value="free">Miễn Phí</Option>
               <Option value="paid">Có Phí</Option>
             </Select>
@@ -237,9 +249,14 @@ const Courses = () => {
           <Form.Item
             name="price"
             label="Giá"
-            rules={[{ required: true, message: "Vui lòng nhập giá khóa học!" }]}
+            rules={[
+              {
+                required: priceRequired,
+                message: "Vui lòng nhập giá khóa học!",
+              },
+            ]}
           >
-            <Input type="number" min={0} />
+            <Input type="number" min={0} disabled={!priceRequired} />
           </Form.Item>
           <Form.Item
             name="level"
@@ -258,27 +275,26 @@ const Courses = () => {
             name="category"
             label="Danh Mục"
             rules={[
-              { required: true, message: "Vui lòng nhập danh mục khóa học!" },
+              {
+                required: true,
+                message: "Vui lòng chọn hoặc nhập danh mục khóa học!",
+              },
             ]}
           >
-            <Input />
+            <Select
+              placeholder="Chọn hoặc nhập danh mục"
+              allowClear
+              showSearch // Cho phép người dùng nhập để tìm kiếm hoặc nhập mới
+            >
+              <Option value="theory">Lý Thuyết</Option>
+              <Option value="practice">Thực Hành</Option>
+              <Option value="review">Ôn Tập</Option>
+              <Option value="exam_preparation">Luyện Thi</Option>
+              <Option value="other">Khác</Option>
+            </Select>
           </Form.Item>
-          <Form.Item
-            name="total_lessons"
-            label="Tổng Số Bài Học"
-            rules={[
-              { required: true, message: "Vui lòng nhập tổng số bài học!" },
-            ]}
-          >
-            <Input type="number" min={0} />
-          </Form.Item>
-          <Form.Item
-            name="imageUrl"
-            label="URL Ảnh Khóa Học"
-            rules={[
-              { required: true, message: "Vui lòng nhập URL ảnh khóa học!" },
-            ]}
-          >
+
+          <Form.Item name="imageUrl" label="URL Ảnh">
             <Input />
           </Form.Item>
         </Form>
