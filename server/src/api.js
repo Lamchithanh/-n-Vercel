@@ -327,3 +327,34 @@ export const fetchModules = async (courseId) => {
     console.error("Error fetching modules:", error);
   }
 };
+
+// đăng ký khóa học
+export const enrollCourseAPI = async (userId, courseId) => {
+  try {
+    const response = await axios.post(`${API_URL}/enroll`, {
+      user_id: userId,
+      course_id: courseId,
+    });
+    return response.data; // Trả về dữ liệu phản hồi
+  } catch (error) {
+    throw new Error("Lỗi khi đăng ký khóa học: " + error.message);
+  }
+};
+
+export const getEnrollmentsAPI = async (userId) => {
+  try {
+    const response = await axios.get(`${API_URL}/enrollments/${userId}`);
+    return response.data; // Trả về danh sách đăng ký
+  } catch (error) {
+    throw new Error("Lỗi khi lấy thông tin đăng ký: " + error.message);
+  }
+};
+
+export const completeCourseAPI = async (enrollmentId) => {
+  try {
+    const response = await axios.patch(`${API_URL}/complete/${enrollmentId}`);
+    return response.data; // Trả về dữ liệu phản hồi
+  } catch (error) {
+    throw new Error("Lỗi khi đánh dấu hoàn thành khóa học: " + error.message);
+  }
+};

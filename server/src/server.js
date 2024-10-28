@@ -9,6 +9,7 @@ const courseRoutes = require("./routes/courseRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const lessonRoutes = require("./routes/lessonRoutes");
 const moduleRoutes = require("./routes/moduleRoutes"); // Thêm import cho moduleRoutes
+const enrollmentRoutes = require("./routes/enrollmentRoutes");
 
 const app = express();
 const port = process.env.PORT || 9000;
@@ -30,6 +31,7 @@ app.use("/api", courseRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", lessonRoutes);
 app.use("/api", moduleRoutes); // Thêm moduleRoutes vào middleware chain
+app.use("/api", enrollmentRoutes);
 
 // Middleware xử lý lỗi
 app.use((err, req, res, next) => {
