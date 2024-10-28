@@ -107,6 +107,7 @@ const Lessons = () => {
       return;
     }
 
+    // Kiểm tra xem đã chọn module hay chưa
     if (!selectedModule && !newModuleName) {
       message.error(
         "Please enter a new module name or select an existing module"
@@ -117,10 +118,14 @@ const Lessons = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+
       const lessonData = {
         ...values,
         course_id: selectedCourse,
-        module_id: selectedModule ? selectedModule : newModuleName,
+        // Nếu selectedModule không có, hãy thêm logic để thêm module mới vào database
+        module_id: selectedModule
+          ? selectedModule
+          : await handleAddModuleAndGetId(newModuleName, token),
       };
 
       const conflictingLesson = lessons.find(
@@ -204,14 +209,14 @@ const Lessons = () => {
       const moduleData = {
         title: values.title,
         course_id: selectedCourse,
-        order_index: values.order_index || 0, // Add default order if needed
+        order_index: values.order_index || 0, // Default order index if not provided
       };
 
       await addModuleAPI(moduleData, token);
       message.success("Module added successfully");
       setModuleModalVisible(false);
       moduleForm.resetFields();
-      fetchModules();
+      fetchModules(); // Refresh module list after adding
     } catch (error) {
       console.error("Error adding module:", error);
       if (error.response) {
