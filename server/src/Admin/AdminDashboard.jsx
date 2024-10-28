@@ -4,11 +4,12 @@ import {
   UserOutlined,
   BookOutlined,
   PlayCircleOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import Courses from "./AdCourses/Courses.jsx";
 import Users from "./AdUsers/Users.jsx";
-import Lessons from "./Adlessons/lessons.jsx"; // Import your new Lessons component
+import Lessons from "./Adlessons/lessons.jsx";
 
 const { Header, Content, Sider } = Layout;
 
@@ -24,18 +25,60 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchCourses = useCallback(async () => {
-    const response = await axios.get("http://localhost:9000/api/courses");
+    const token = localStorage.getItem("token");
+    const response = await axios.get("http://localhost:9000/api/courses", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response.data;
   }, []);
 
   const fetchLessons = useCallback(async () => {
-    const response = await axios.get("http://localhost:9000/api/lessons");
+    const token = localStorage.getItem("token");
+    const response = await axios.get("http://localhost:9000/api/lessons", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response.data;
   }, []);
+
+  const fetchModules = useCallback(async (courseId) => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(
+      `http://localhost:9000/api/courses/${courseId}/modules`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  }, []);
+
+  const renderContent = () => {
+    switch (selectedMenu) {
+      case "users":
+        return <Users fetchUsers={fetchUsers} />;
+      case "courses":
+        return <Courses fetchCourses={fetchCourses} />; // Truyền fetchCourses
+      case "lessons":
+        return (
+          <Lessons
+            fetchLessons={fetchLessons}
+            fetchCourses={fetchCourses}
+            fetchModules={fetchModules}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider>
+        <div
+          className="logo"
+          style={{ height: "64px", padding: "16px", color: "white" }}
+        >
+          Admin Panel
+        </div>
         <Menu
           theme="dark"
           mode="inline"
@@ -49,42 +92,45 @@ const AdminDashboard = () => {
             Courses
           </Menu.Item>
           <Menu.Item key="lessons" icon={<PlayCircleOutlined />}>
-            Lessons
+            Lessons & Modules
           </Menu.Item>
         </Menu>
       </Sider>
       <Layout>
-        <Header style={{ background: "#fff", padding: 0 }}>
+        <Header
+          style={{
+            background: "#fff",
+            padding: "0 16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <h2 style={{ margin: 0 }}>Admin Dashboard</h2>
           <Button
-            style={{ float: "right", margin: "16px" }}
             onClick={() => {
               localStorage.removeItem("token");
               window.location.href = "/";
             }}
-          >
-            <img
-              width="32"
-              height="32"
-              src="https://img.icons8.com/stencil/32/exit.png"
-              alt="exit"
-            />
-          </Button>
-          <h2 style={{ margin: "0 16px" }}>Admin Dashboard</h2>
+            icon={
+              <img
+                width="24"
+                height="24"
+                src="https://img.icons8.com/stencil/32/exit.png"
+                alt="exit"
+              />
+            }
+          />
         </Header>
         <Content
           style={{
             margin: "24px 16px",
             padding: 24,
             background: "#fff",
+            minHeight: 280,
           }}
         >
-          {selectedMenu === "users" && <Users fetchUsers={fetchUsers} />}
-          {selectedMenu === "courses" && (
-            <Courses fetchCourses={fetchCourses} />
-          )}
-          {selectedMenu === "lessons" && (
-            <Lessons fetchLessons={fetchLessons} /> // Render Lessons component
-          )}
+          {renderContent()}
         </Content>
       </Layout>
     </Layout>

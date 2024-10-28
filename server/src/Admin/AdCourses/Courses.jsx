@@ -48,6 +48,7 @@ const Courses = () => {
         image: editingCourse ? editingCourse.image : values.imageUrl || "",
       };
 
+      // Gửi yêu cầu Axios
       await axios[method](apiUrl, courseData, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -58,12 +59,19 @@ const Courses = () => {
         } thành công`
       );
 
+      // Đóng modal và reset form
       setModalVisible(false);
       form.resetFields();
+
+      // Làm mới danh sách khóa học
       await fetchCourses();
     } catch (error) {
       console.error("Error adding/updating course:", error);
-      message.error("Không thể thêm/cập nhật khóa học. Vui lòng thử lại.");
+      // Thông báo lỗi cho người dùng
+      message.error(
+        error.response?.data?.message ||
+          "Không thể thêm/cập nhật khóa học. Vui lòng thử lại."
+      );
     } finally {
       setLoading(false);
     }
@@ -189,12 +197,12 @@ const Courses = () => {
     <Spin spinning={loading}>
       <Button
         onClick={() => {
-          setEditingCourse(null);
-          form.resetFields();
-          setPriceRequired(true);
-          setModalVisible(true);
+          setEditingCourse(null); // Đặt khóa học đang chỉnh sửa về null để chuẩn bị thêm khóa học mới
+          form.resetFields(); // Reset tất cả các trường trong form để người dùng có thể nhập dữ liệu mới
+          setPriceRequired(true); // Đặt lại trạng thái yêu cầu nhập giá cho form (nếu có)
+          setModalVisible(true); // Mở modal để người dùng có thể nhập thông tin khóa học
         }}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 16 }} // Thêm khoảng cách phía dưới nút
       >
         Thêm Khóa Học Mới
       </Button>

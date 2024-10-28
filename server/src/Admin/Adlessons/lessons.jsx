@@ -14,25 +14,32 @@ import {
 import {
   fetchCoursesAPI,
   fetchLessonsAPI,
+  fetchModulesAPI,
   addLessonAPI,
   updateLessonAPI,
   deleteLessonAPI,
+  addModuleAPI,
 } from "../../api";
 
 const Lessons = () => {
   const [lessons, setLessons] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [moduleModalVisible, setModuleModalVisible] = useState(false);
   const [editingLesson, setEditingLesson] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [selectedModule, setSelectedModule] = useState(null);
+  const [newModuleName, setNewModuleName] = useState("");
   const [form] = Form.useForm();
+  const [moduleForm] = Form.useForm();
 
+  // Fetch courses
   const fetchCourses = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const coursesData = await fetchCoursesAPI(token);
-      console.log("Fetched courses data:", coursesData);
       setCourses(coursesData);
       if (coursesData.length > 0 && !selectedCourse) {
         setSelectedCourse(coursesData[0].id);
@@ -44,6 +51,7 @@ const Lessons = () => {
     }
   }, [selectedCourse]);
 
+  // Fetch lessons
   const fetchLessons = useCallback(async () => {
     if (!selectedCourse) {
       setLessons([]);
@@ -54,8 +62,7 @@ const Lessons = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
       const lessonsData = await fetchLessonsAPI(selectedCourse, token);
-      console.log("Fetched lessons data:", lessonsData);
-      setLessons(lessonsData); // Kiểm tra xem dữ liệu có đúng không
+      setLessons(lessonsData);
     } catch (error) {
       console.error("Error fetching lessons:", error);
       message.error("Unable to load lessons. Please try again later.");
@@ -65,20 +72,45 @@ const Lessons = () => {
     }
   }, [selectedCourse]);
 
+  // Fetch modules
+  const fetchModules = useCallback(async () => {
+    if (!selectedCourse) return;
+    try {
+      const modulesData = await fetchModulesAPI(selectedCourse);
+      setModules(modulesData);
+      if (modulesData.length > 0 && !selectedModule) {
+        setSelectedModule(modulesData[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching modules:", error);
+      message.error("Unable to load modules. Please try again later.");
+      setModules([]);
+    }
+  }, [selectedCourse]);
+
+  // Fetch courses on mount
   useEffect(() => {
     fetchCourses();
   }, [fetchCourses]);
 
+  // Fetch lessons and modules when selected course changes
   useEffect(() => {
     if (selectedCourse) {
-      console.log("Selected course ID:", selectedCourse); // Kiểm tra ID khóa học đã chọn
       fetchLessons();
+      fetchModules();
     }
-  }, [selectedCourse, fetchLessons]);
+  }, [selectedCourse, fetchLessons, fetchModules]);
 
   const handleAddOrUpdateLesson = async (values) => {
     if (!selectedCourse) {
       message.error("Please select a course first");
+      return;
+    }
+
+    if (!selectedModule && !newModuleName) {
+      message.error(
+        "Please enter a new module name or select an existing module"
+      );
       return;
     }
 
@@ -87,8 +119,24 @@ const Lessons = () => {
       const token = localStorage.getItem("token");
       const lessonData = {
         ...values,
-        course_id: selectedCourse, // Thêm course_id theo bảng lessons
+        course_id: selectedCourse,
+        module_id: selectedModule ? selectedModule : newModuleName,
       };
+
+      const conflictingLesson = lessons.find(
+        (lesson) =>
+          lesson.order_index === lessonData.order_index &&
+          (!editingLesson || lesson.id !== editingLesson.id)
+      );
+
+      if (conflictingLesson) {
+        const tempOrderIndex = conflictingLesson.order_index;
+        conflictingLesson.order_index = editingLesson
+          ? editingLesson.order_index
+          : lessonData.order_index;
+
+        await updateLessonAPI(conflictingLesson.id, conflictingLesson, token);
+      }
 
       if (editingLesson) {
         await updateLessonAPI(editingLesson.id, lessonData, token);
@@ -100,6 +148,7 @@ const Lessons = () => {
 
       setModalVisible(false);
       form.resetFields();
+      setNewModuleName("");
       fetchLessons();
     } catch (error) {
       console.error("Error adding/updating lesson:", error);
@@ -115,17 +164,62 @@ const Lessons = () => {
       return;
     }
 
+    Modal.confirm({
+      title: "Bạn có chắc chắn muốn xóa bài học này?",
+      content: "Thao tác này không thể hoàn tác.",
+      okText: "Xóa",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          setLoading(true);
+          const token = localStorage.getItem("token");
+          await deleteLessonAPI(selectedCourse, lessonId, token);
+          message.success("Xóa bài học thành công!");
+          fetchLessons();
+        } catch (error) {
+          console.error("Error deleting lesson:", error);
+          message.error("Không thể xóa bài học. Vui lòng thử lại.");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
+
+  // Add new module
+  const handleAddModule = async (values) => {
+    if (!selectedCourse) {
+      message.error("Please select a course first");
+      return;
+    }
+
     try {
-      setLoading(true);
       const token = localStorage.getItem("token");
-      await deleteLessonAPI(selectedCourse, lessonId, token);
-      message.success("Lesson deleted successfully");
-      fetchLessons();
+      if (!token) {
+        message.error("You must be logged in to add a module");
+        return;
+      }
+
+      // Prepare module data
+      const moduleData = {
+        title: values.title,
+        course_id: selectedCourse,
+        order_index: values.order_index || 0, // Add default order if needed
+      };
+
+      await addModuleAPI(moduleData, token);
+      message.success("Module added successfully");
+      setModuleModalVisible(false);
+      moduleForm.resetFields();
+      fetchModules();
     } catch (error) {
-      console.error("Error deleting lesson:", error);
-      message.error("Unable to delete lesson. Please try again.");
-    } finally {
-      setLoading(false);
+      console.error("Error adding module:", error);
+      if (error.response) {
+        console.error("Response:", error.response);
+        message.error(error.response.data?.message || "Failed to add module");
+      } else {
+        message.error("Network error. Please try again.");
+      }
     }
   };
 
@@ -136,7 +230,7 @@ const Lessons = () => {
           style={{ width: 200, marginRight: 16 }}
           value={selectedCourse}
           onChange={setSelectedCourse}
-          placeholder="Chọn khóa học"
+          placeholder="Select a course"
         >
           {courses.map((course) => (
             <Select.Option key={course.id} value={course.id}>
@@ -153,10 +247,25 @@ const Lessons = () => {
             }
             setEditingLesson(null);
             form.resetFields();
+            setNewModuleName("");
             setModalVisible(true);
           }}
         >
-          Thêm Bài Học Mới
+          Add New Lesson
+        </Button>
+
+        <Button
+          style={{ marginLeft: 16 }}
+          onClick={() => {
+            if (!selectedCourse) {
+              message.warning("Please select a course first");
+              return;
+            }
+            setModuleModalVisible(true);
+            moduleForm.resetFields();
+          }}
+        >
+          Add New Module
         </Button>
       </div>
 
@@ -172,27 +281,28 @@ const Lessons = () => {
                       onClick={() => {
                         setEditingLesson(lesson);
                         form.setFieldsValue(lesson);
+                        setSelectedModule(lesson.module_id);
                         setModalVisible(true);
                       }}
                       style={{ marginRight: 8 }}
                     >
-                      Chỉnh sửa
+                      Edit
                     </Button>
                     <Button onClick={() => handleDeleteLesson(lesson.id)}>
-                      Xóa
+                      Delete
                     </Button>
                   </>
                 }
               >
                 <p>{lesson.description}</p>
                 <p>
-                  <strong>Nội dung:</strong> {lesson.content}
+                  <strong>Content:</strong> {lesson.content}
                 </p>
                 <p>
                   <strong>Video URL:</strong> {lesson.video_url}
                 </p>
                 <p>
-                  <strong>Thứ tự:</strong> {lesson.order_index}
+                  <strong>Order:</strong> {lesson.order_index}
                 </p>
               </Card>
             </Col>
@@ -200,64 +310,116 @@ const Lessons = () => {
         ) : (
           <Col span={24}>
             <Card>
-              <p>Không có bài học nào được tìm thấy.</p>
+              <p>No lessons found.</p>
             </Card>
           </Col>
         )}
       </Row>
 
       <Modal
-        title={editingLesson ? "Chỉnh Sửa Bài Học" : "Thêm Bài Học Mới"}
-        open={modalVisible}
-        onOk={() => form.submit()}
-        onCancel={() => {
-          setModalVisible(false);
-          form.resetFields();
-        }}
+        title={editingLesson ? "Edit Lesson" : "Add Lesson"}
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onOk={form.submit}
       >
-        <Form form={form} layout="vertical" onFinish={handleAddOrUpdateLesson}>
+        <Form form={form} onFinish={handleAddOrUpdateLesson}>
           <Form.Item
+            label="Title"
             name="title"
-            label="Tiêu đề"
-            rules={[
-              { required: true, message: "Vui lòng nhập tiêu đề bài học!" },
-            ]}
+            rules={[{ required: true, message: "Please enter title" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            name="content"
-            label="Nội dung"
-            rules={[
-              { required: true, message: "Vui lòng nhập nội dung bài học!" },
-            ]}
-          >
-            <Input.TextArea rows={4} />
-          </Form.Item>
-          <Form.Item
+            label="Description"
             name="description"
-            label="Mô tả"
-            rules={[
-              { required: true, message: "Vui lòng nhập mô tả bài học!" },
-            ]}
+            rules={[{ required: true, message: "Please enter description" }]}
           >
-            <Input.TextArea rows={2} />
+            <Input.TextArea />
           </Form.Item>
           <Form.Item
-            name="video_url"
+            label="Content"
+            name="content"
+            rules={[{ required: true, message: "Please enter content" }]}
+          >
+            <Input.TextArea />
+          </Form.Item>
+          <Form.Item
             label="Video URL"
-            rules={[{ required: true, message: "Vui lòng nhập URL video!" }]}
+            name="video_url"
+            rules={[{ required: true, message: "Please enter Video URL" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
+            label="Order"
             name="order_index"
-            label="Thứ tự"
-            rules={[
-              { required: true, message: "Vui lòng nhập thứ tự bài học!" },
-            ]}
+            rules={[{ required: true, message: "Please enter order" }]}
           >
             <Input type="number" />
+          </Form.Item>
+          <Form.Item label="Module">
+            <Select
+              value={selectedModule}
+              onChange={setSelectedModule}
+              style={{ width: "100%", marginBottom: 8 }}
+            >
+              {modules.map((module) => (
+                <Select.Option key={module.id} value={module.id}>
+                  {module.title}
+                </Select.Option>
+              ))}
+            </Select>
+            <Input
+              placeholder="Or enter new module name"
+              value={newModuleName}
+              onChange={(e) => setNewModuleName(e.target.value)}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Add New Module"
+        visible={moduleModalVisible}
+        onCancel={() => setModuleModalVisible(false)}
+        onOk={moduleForm.submit}
+      >
+        <Form form={moduleForm} onFinish={handleAddModule}>
+          <Form.Item
+            label="Course"
+            name="course_id"
+            initialValue={selectedCourse}
+            rules={[{ required: true, message: "Please select course" }]}
+          >
+            <Select
+              value={selectedCourse}
+              onChange={setSelectedCourse}
+              placeholder="Select a course"
+            >
+              {courses.map((course) => (
+                <Select.Option key={course.id} value={course.id}>
+                  {course.title}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Module Name"
+            name="title"
+            rules={[{ required: true, message: "Please enter module name" }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            label="Order"
+            name="order_index"
+            initialValue={0}
+            rules={[{ required: true, message: "Please enter order" }]}
+          >
+            <Input type="number" min={0} />
           </Form.Item>
         </Form>
       </Modal>

@@ -250,3 +250,80 @@ export const fetchCertificates = async (userId) => {
   });
   return response.data;
 };
+
+// Fetch modules
+export const fetchModulesAPI = async (courseId) => {
+  const response = await axios.get(`${API_URL}/courses/${courseId}/modules`);
+  return response.data;
+};
+
+// Add a new module
+export const addModuleAPI = async (moduleData, token) => {
+  try {
+    const response = await axios.post(`${API_URL}/modules`, moduleData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Thêm token vào header
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating module:", error);
+    throw error;
+  }
+};
+
+// Update an existing module
+export const updateModuleAPI = async (moduleId, moduleData) => {
+  const response = await axios.put(
+    `${API_URL}/modules/${moduleId}`,
+    moduleData,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  return response.data;
+};
+
+// Delete a module
+export const deleteModuleAPI = async (moduleId) => {
+  const response = await axios.delete(`${API_URL}/modules/${moduleId}`);
+  return response.data;
+};
+
+// Hàm xử lý cập nhật module
+export const handleUpdateModule = async (moduleId, values) => {
+  try {
+    await updateModuleAPI(moduleId, values); // Không cần token
+    message.success("Module updated successfully");
+    // Có thể gọi lại hàm fetchModules để tải lại danh sách modules
+  } catch (error) {
+    console.error("Error updating module:", error);
+    message.error("Unable to update module. Please try again.");
+  }
+};
+
+// Hàm xử lý xóa module
+export const handleDeleteModule = async (moduleId) => {
+  try {
+    await deleteModuleAPI(moduleId); // Không cần token
+    message.success("Module deleted successfully");
+    // Có thể gọi lại hàm fetchModules để tải lại danh sách modules
+  } catch (error) {
+    console.error("Error deleting module:", error);
+    message.error("Unable to delete module. Please try again.");
+  }
+};
+
+// Hàm gọi để lấy danh sách modules
+export const fetchModules = async (courseId) => {
+  try {
+    const modules = await fetchModulesAPI(courseId);
+    // Xử lý dữ liệu modules ở đây
+    console.log(modules);
+  } catch (error) {
+    console.error("Error fetching modules:", error);
+  }
+};

@@ -19,23 +19,25 @@ exports.getLessonsByCourseId = async (req, res) => {
 exports.addLesson = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { title, content, description, video_url, order_index } = req.body;
+    const { module_id, title, content, description, video_url, order_index } =
+      req.body;
 
     // Chèn bài học
     const result = await pool.query(
-      "INSERT INTO lessons (course_id, title, content, description, video_url, order_index) VALUES (?, ?, ?, ?, ?, ?)",
-      [courseId, title, content, description, video_url, order_index]
+      "INSERT INTO lessons (course_id, module_id, title, content, description, video_url, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [courseId, module_id, title, content, description, video_url, order_index]
     );
 
     // Lấy ID bài học vừa chèn
     const newLessonId = result.insertId;
 
-    // Truy vấn để lấy thông tin bài học vừa chèn
-    const [newLesson] = await pool.query("SELECT * FROM lessons WHERE id = ?", [
-      newLessonId,
-    ]);
+    // Truy vấn để lấy thông tin bài học vừa chèn (không bao gồm thời gian)
+    const [newLesson] = await pool.query(
+      "SELECT id, course_id, module_id, title, content, description, video_url, order_index FROM lessons WHERE id = ?",
+      [newLessonId]
+    );
 
-    // Trả về thông tin bài học vừa thêm
+    // Trả về thông tin bài học vừa thêm (không bao gồm thời gian)
     res.status(201).json(newLesson[0]);
   } catch (error) {
     console.error("Error adding lesson:", error);
