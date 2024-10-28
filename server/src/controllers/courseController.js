@@ -34,12 +34,20 @@ exports.getCourseById = async (req, res) => {
 
 // Thêm khóa học mới
 exports.addCourse = (req, res) => {
-  const { title, description, instructor_id, price, level, category, image } =
-    req.body;
+  const {
+    title,
+    description,
+    instructor_id,
+    price,
+    level,
+    category,
+    image,
+    intro_video_url,
+  } = req.body;
 
   const query = `
-        INSERT INTO courses (title, description, instructor_id, price, level, category, image)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO courses (title, description, instructor_id, price, level, category, image, intro_video_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
   const values = [
@@ -50,6 +58,7 @@ exports.addCourse = (req, res) => {
     level,
     category,
     image,
+    intro_video_url,
   ];
 
   pool.query(query, values, (err, results) => {

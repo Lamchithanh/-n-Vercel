@@ -46,6 +46,7 @@ const Courses = () => {
         ...values,
         price: values.priceOption === "free" ? "0" : values.price.toString(),
         image: editingCourse ? editingCourse.image : values.imageUrl || "",
+        intro_video_url: values.videoUrl, // Đổi tên thành intro_video_url để khớp với backend
       };
 
       // Gửi yêu cầu Axios
@@ -290,10 +291,16 @@ const Courses = () => {
             ]}
           >
             <Select
-              placeholder="Chọn hoặc nhập danh mục"
+              mode="tags" // Cho phép người dùng nhập nhiều giá trị tùy ý
+              placeholder="Nhập hoặc chọn danh mục"
               allowClear
-              showSearch // Cho phép người dùng nhập để tìm kiếm hoặc nhập mới
+              showSearch
+              onChange={(value) => {
+                // Xử lý giá trị được nhập vào đây
+                console.log(value); // Hoặc lưu giá trị vào state nếu cần
+              }}
             >
+              {/* Các tùy chọn mặc định */}
               <Option value="theory">Lý Thuyết</Option>
               <Option value="practice">Thực Hành</Option>
               <Option value="review">Ôn Tập</Option>
@@ -301,7 +308,13 @@ const Courses = () => {
               <Option value="other">Khác</Option>
             </Select>
           </Form.Item>
-
+          <Form.Item
+            name="videoUrl"
+            label="URL Video"
+            rules={[{ required: true, message: "Vui lòng nhập URL video!" }]}
+          >
+            <Input placeholder="Nhập URL video" />
+          </Form.Item>
           <Form.Item name="imageUrl" label="URL Ảnh">
             <Input />
           </Form.Item>

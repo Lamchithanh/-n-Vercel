@@ -119,15 +119,25 @@ const Lessons = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
+      // Xử lý tạo module mới nếu có
+      let finalModuleId = selectedModule;
+      if (newModuleName) {
+        const moduleData = {
+          title: newModuleName,
+          course_id: selectedCourse,
+          order_index: 0,
+        };
+        const newModule = await addModuleAPI(moduleData, token);
+        finalModuleId = newModule.id;
+      }
+
       const lessonData = {
         ...values,
         course_id: selectedCourse,
-        // Nếu selectedModule không có, hãy thêm logic để thêm module mới vào database
-        module_id: selectedModule
-          ? selectedModule
-          : await handleAddModuleAndGetId(newModuleName, token),
+        module_id: finalModuleId, // Sử dụng module_id mới hoặc đã chọn
       };
 
+      // Xử lý trùng order_index
       const conflictingLesson = lessons.find(
         (lesson) =>
           lesson.order_index === lessonData.order_index &&
@@ -144,7 +154,15 @@ const Lessons = () => {
       }
 
       if (editingLesson) {
-        await updateLessonAPI(editingLesson.id, lessonData, token);
+        // Đảm bảo cập nhật module_id khi edit
+        await updateLessonAPI(
+          editingLesson.id,
+          {
+            ...lessonData,
+            module_id: finalModuleId,
+          },
+          token
+        );
         message.success("Lesson updated successfully");
       } else {
         await addLessonAPI(lessonData, token);
@@ -154,7 +172,9 @@ const Lessons = () => {
       setModalVisible(false);
       form.resetFields();
       setNewModuleName("");
+      setSelectedModule(null);
       fetchLessons();
+      fetchModules();
     } catch (error) {
       console.error("Error adding/updating lesson:", error);
       message.error("Unable to add/update lesson. Please try again.");
@@ -324,10 +344,19 @@ const Lessons = () => {
       <Modal
         title={editingLesson ? "Edit Lesson" : "Add Lesson"}
         visible={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        onCancel={() => {
+          setModalVisible(false);
+          setSelectedModule(null);
+          setNewModuleName("");
+          form.resetFields();
+        }}
         onOk={form.submit}
       >
-        <Form form={form} onFinish={handleAddOrUpdateLesson}>
+        <Form
+          form={form}
+          onFinish={handleAddOrUpdateLesson}
+          initialValues={editingLesson}
+        >
           <Form.Item
             label="Title"
             name="title"
@@ -366,8 +395,13 @@ const Lessons = () => {
           <Form.Item label="Module">
             <Select
               value={selectedModule}
-              onChange={setSelectedModule}
+              onChange={(value) => {
+                setSelectedModule(value);
+                setNewModuleName(""); // Clear new module name when selecting existing module
+              }}
               style={{ width: "100%", marginBottom: 8 }}
+              allowClear
+              placeholder="Select existing module"
             >
               {modules.map((module) => (
                 <Select.Option key={module.id} value={module.id}>
@@ -378,7 +412,10 @@ const Lessons = () => {
             <Input
               placeholder="Or enter new module name"
               value={newModuleName}
-              onChange={(e) => setNewModuleName(e.target.value)}
+              onChange={(e) => {
+                setNewModuleName(e.target.value);
+                setSelectedModule(null); // Clear selected module when entering new name
+              }}
             />
           </Form.Item>
         </Form>

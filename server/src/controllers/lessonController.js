@@ -49,11 +49,21 @@ exports.addLesson = async (req, res) => {
 exports.updateLesson = async (req, res) => {
   try {
     const { courseId, lessonId } = req.params;
-    const { title, content, description, video_url, order_index } = req.body;
+    const { module_id, title, content, description, video_url, order_index } =
+      req.body;
 
     const [updatedLesson] = await pool.query(
-      "UPDATE lessons SET title = ?, content = ?, description = ?, video_url = ?, order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND course_id = ?",
-      [title, content, description, video_url, order_index, lessonId, courseId]
+      "UPDATE lessons SET module_id = ?, title = ?, content = ?, description = ?, video_url = ?, order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND course_id = ?",
+      [
+        module_id,
+        title,
+        content,
+        description,
+        video_url,
+        order_index,
+        lessonId,
+        courseId,
+      ]
     );
 
     if (updatedLesson.affectedRows === 0) {
