@@ -2,14 +2,14 @@ const pool = require("../config/pool"); // Kết nối tới cơ sở dữ liệ
 
 // Đăng ký khóa học
 exports.enrollCourse = async (req, res) => {
-  const { user_id, course_id } = req.body;
+  const { userId, courseId } = req.body; // Sử dụng tên thuộc tính từ frontend
 
-  console.log("user_id:", user_id, "course_id:", course_id); // Thêm log
+  console.log("userId:", userId, "courseId:", courseId); // Thêm log
 
   try {
     const result = await pool.query(
-      "INSERT INTO enrollments (user_id, course_id) VALUES (?, ?)",
-      [user_id, course_id]
+      "INSERT INTO enrollments (user_id, course_id, completed_at) VALUES (?, ?, ?)",
+      [userId, courseId] // Đảm bảo sử dụng đúng tên ở đây
     );
     res
       .status(201)
@@ -22,12 +22,12 @@ exports.enrollCourse = async (req, res) => {
 
 // Lấy danh sách khóa học đã đăng ký của người dùng
 exports.getEnrollments = async (req, res) => {
-  const { user_id } = req.params;
+  const { userId } = req.params;
 
   try {
     const [enrollments] = await pool.query(
       "SELECT * FROM enrollments WHERE user_id = ?",
-      [user_id]
+      [userId]
     );
     res.json(enrollments);
   } catch (error) {
