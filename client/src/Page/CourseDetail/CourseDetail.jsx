@@ -1,12 +1,9 @@
 import { useParams } from "react-router-dom";
-import { Card, Col, Row, Typography, message, Collapse, Button } from "antd";
+import { Card, Col, Row, Typography, message, Collapse } from "antd";
 import {
   fetchCourseById,
   fetchModulesAPI,
   fetchLessonsAPI,
-  enrollCourseAPI,
-  // getEnrollmentsAPI,
-  // completeCourseAPI
 } from "../../../../server/src/api";
 import { useEffect, useState } from "react";
 import defaultImage from "../../assets/img/sach.png";
@@ -21,8 +18,6 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
-  const [enrolling, setEnrolling] = useState(false);
-  const [isEnrolled, setIsEnrolled] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -31,7 +26,6 @@ const CourseDetail = () => {
       try {
         const data = await fetchCourseById(courseId);
         setCourse(data);
-        setIsEnrolled(data.isEnrolled); // Giả sử API trả về trường isEnrolled
 
         const modulesData = await fetchModulesAPI(courseId);
         setModules(modulesData);
@@ -46,43 +40,6 @@ const CourseDetail = () => {
 
     fetchCourseData();
   }, [courseId]);
-
-  const handleEnrollCourse = async () => {
-    if (!token) {
-      message.warning("Vui lòng đăng nhập để đăng ký khóa học!");
-      return;
-    }
-
-    setEnrolling(true);
-    try {
-      const userId = getUserIdFromToken(token); // Lấy user ID từ token
-      if (!userId) {
-        message.error("Không tìm thấy ID người dùng.");
-        return;
-      }
-
-      // Gọi API đăng ký khóa học với userId và courseId
-      await enrollCourseAPI(userId, courseId);
-      setIsEnrolled(true);
-      message.success("Đăng ký khóa học thành công!");
-    } catch (err) {
-      console.error("Lỗi khi đăng ký khóa học:", err);
-      message.error("Không thể đăng ký khóa học. Vui lòng thử lại sau.");
-    } finally {
-      setEnrolling(false);
-    }
-  };
-
-  // Hàm lấy user ID từ token (điều chỉnh nếu cần)
-  const getUserIdFromToken = (token) => {
-    try {
-      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Giải mã JWT
-      return decodedToken.user_id; // Thay đổi nếu cần
-    } catch (error) {
-      console.error("Lỗi khi giải mã token:", error);
-      return null;
-    }
-  };
 
   const loadLessons = async (moduleId) => {
     if (lessons[moduleId]) return;
@@ -104,6 +61,7 @@ const CourseDetail = () => {
     }
   };
 
+  // Hàm chuyển đổi URL YouTube thành embed URL
   const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
 
@@ -117,10 +75,6 @@ const CourseDetail = () => {
   };
 
   const handleLessonClick = (lesson) => {
-    if (!isEnrolled && !course?.isFree) {
-      message.warning("Vui lòng đăng ký khóa học để xem bài học!");
-      return;
-    }
     setSelectedLesson(lesson);
   };
 
@@ -242,11 +196,7 @@ const CourseDetail = () => {
                 <img
                   alt={course.title}
                   src={course.image || defaultImage}
-                  style={{
-                    width: "500px",
-                    height: "auto",
-                    borderRadius: "8px",
-                  }}
+                  style={{ width: "100%", height: "auto", borderRadius: "8px" }}
                 />
               )}
             </div>
@@ -285,19 +235,6 @@ const CourseDetail = () => {
               <strong>Thời gian:</strong>{" "}
               {course.duration || "Chưa có thông tin."}
             </p>
-
-            {!isEnrolled && (
-              <Button
-                type="primary"
-                block
-                size="large"
-                onClick={handleEnrollCourse}
-                loading={enrolling}
-                style={{ marginTop: "16px" }}
-              >
-                {course.isFree ? "Học Ngay" : "Đăng Ký Học"}
-              </Button>
-            )}
           </Card>
         </Col>
       </Row>

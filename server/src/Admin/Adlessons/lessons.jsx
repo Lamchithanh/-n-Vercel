@@ -107,7 +107,6 @@ const Lessons = () => {
       return;
     }
 
-    // Kiểm tra xem đã chọn module hay chưa
     if (!selectedModule && !newModuleName) {
       message.error(
         "Please enter a new module name or select an existing module"
@@ -119,7 +118,7 @@ const Lessons = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      // Xử lý tạo module mới nếu có
+      // Create a new module if needed
       let finalModuleId = selectedModule;
       if (newModuleName) {
         const moduleData = {
@@ -134,10 +133,9 @@ const Lessons = () => {
       const lessonData = {
         ...values,
         course_id: selectedCourse,
-        module_id: finalModuleId, // Sử dụng module_id mới hoặc đã chọn
+        module_id: finalModuleId,
       };
 
-      // Xử lý trùng order_index
       const conflictingLesson = lessons.find(
         (lesson) =>
           lesson.order_index === lessonData.order_index &&
@@ -145,7 +143,6 @@ const Lessons = () => {
       );
 
       if (conflictingLesson) {
-        const tempOrderIndex = conflictingLesson.order_index;
         conflictingLesson.order_index = editingLesson
           ? editingLesson.order_index
           : lessonData.order_index;
@@ -154,15 +151,7 @@ const Lessons = () => {
       }
 
       if (editingLesson) {
-        // Đảm bảo cập nhật module_id khi edit
-        await updateLessonAPI(
-          editingLesson.id,
-          {
-            ...lessonData,
-            module_id: finalModuleId,
-          },
-          token
-        );
+        await updateLessonAPI(editingLesson.id, lessonData, token);
         message.success("Lesson updated successfully");
       } else {
         await addLessonAPI(lessonData, token);
@@ -211,7 +200,6 @@ const Lessons = () => {
     });
   };
 
-  // Add new module
   const handleAddModule = async (values) => {
     if (!selectedCourse) {
       message.error("Please select a course first");
@@ -220,31 +208,21 @@ const Lessons = () => {
 
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        message.error("You must be logged in to add a module");
-        return;
-      }
 
-      // Prepare module data
       const moduleData = {
         title: values.title,
         course_id: selectedCourse,
-        order_index: values.order_index || 0, // Default order index if not provided
+        order_index: values.order_index || 0,
       };
 
       await addModuleAPI(moduleData, token);
       message.success("Module added successfully");
       setModuleModalVisible(false);
       moduleForm.resetFields();
-      fetchModules(); // Refresh module list after adding
+      fetchModules();
     } catch (error) {
       console.error("Error adding module:", error);
-      if (error.response) {
-        console.error("Response:", error.response);
-        message.error(error.response.data?.message || "Failed to add module");
-      } else {
-        message.error("Network error. Please try again.");
-      }
+      message.error("Failed to add module. Please try again.");
     }
   };
 
@@ -279,19 +257,20 @@ const Lessons = () => {
           Add New Lesson
         </Button>
 
-        <Button
-          style={{ marginLeft: 16 }}
-          onClick={() => {
-            if (!selectedCourse) {
-              message.warning("Please select a course first");
-              return;
-            }
-            setModuleModalVisible(true);
-            moduleForm.resetFields();
-          }}
+        {/* Phần lọc chương */}
+        <Select
+          style={{ width: 200, marginLeft: 16 }}
+          value={selectedModule}
+          onChange={setSelectedModule}
+          placeholder="Select a module"
         >
-          Add New Module
-        </Button>
+          <Select.Option value={null}>All Lessons</Select.Option>
+          {modules.map((module) => (
+            <Select.Option key={module.id} value={module.id}>
+              {module.title}
+            </Select.Option>
+          ))}
+        </Select>
       </div>
 
       <Row gutter={16}>
@@ -313,12 +292,18 @@ const Lessons = () => {
                     >
                       Edit
                     </Button>
-                    <Button onClick={() => handleDeleteLesson(lesson.id)}>
+                    <Button
+                      onClick={() => handleDeleteLesson(lesson.id)}
+                      danger
+                    >
                       Delete
                     </Button>
                   </>
                 }
               >
+                <p>
+                  <strong>Module:</strong> {lesson.module_name}
+                </p>
                 <p>{lesson.description}</p>
                 <p>
                   <strong>Content:</strong> {lesson.content}
@@ -334,74 +319,52 @@ const Lessons = () => {
           ))
         ) : (
           <Col span={24}>
-            <Card>
-              <p>No lessons found.</p>
-            </Card>
+            <Card>No lessons available</Card>
           </Col>
         )}
       </Row>
 
       <Modal
-        title={editingLesson ? "Edit Lesson" : "Add Lesson"}
+        title={editingLesson ? "Edit Lesson" : "Add New Lesson"}
         visible={modalVisible}
         onCancel={() => {
           setModalVisible(false);
-          setSelectedModule(null);
-          setNewModuleName("");
           form.resetFields();
+          setNewModuleName("");
         }}
-        onOk={form.submit}
+        onOk={() => form.submit()}
       >
-        <Form
-          form={form}
-          onFinish={handleAddOrUpdateLesson}
-          initialValues={editingLesson}
-        >
+        <Form form={form} onFinish={handleAddOrUpdateLesson}>
           <Form.Item
-            label="Title"
             name="title"
-            rules={[{ required: true, message: "Please enter title" }]}
+            label="Title"
+            rules={[
+              { required: true, message: "Please enter the lesson title" },
+            ]}
           >
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Description"
-            name="description"
-            rules={[{ required: true, message: "Please enter description" }]}
-          >
-            <Input.TextArea />
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item
-            label="Content"
-            name="content"
-            rules={[{ required: true, message: "Please enter content" }]}
-          >
-            <Input.TextArea />
+          <Form.Item name="content" label="Content">
+            <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item
-            label="Video URL"
-            name="video_url"
-            rules={[{ required: true, message: "Please enter Video URL" }]}
-          >
+          <Form.Item name="video_url" label="Video URL">
             <Input />
           </Form.Item>
           <Form.Item
-            label="Order"
             name="order_index"
-            rules={[{ required: true, message: "Please enter order" }]}
+            label="Order"
+            rules={[{ required: true, message: "Please enter the order" }]}
           >
             <Input type="number" />
           </Form.Item>
-          <Form.Item label="Module">
+          <Form.Item name="module_id" label="Select Module">
             <Select
               value={selectedModule}
-              onChange={(value) => {
-                setSelectedModule(value);
-                setNewModuleName(""); // Clear new module name when selecting existing module
-              }}
-              style={{ width: "100%", marginBottom: 8 }}
-              allowClear
-              placeholder="Select existing module"
+              onChange={setSelectedModule}
+              placeholder="Choose a module or add new"
             >
               {modules.map((module) => (
                 <Select.Option key={module.id} value={module.id}>
@@ -409,13 +372,12 @@ const Lessons = () => {
                 </Select.Option>
               ))}
             </Select>
+          </Form.Item>
+          <Form.Item label="New Module Name (Optional)">
             <Input
-              placeholder="Or enter new module name"
               value={newModuleName}
-              onChange={(e) => {
-                setNewModuleName(e.target.value);
-                setSelectedModule(null); // Clear selected module when entering new name
-              }}
+              onChange={(e) => setNewModuleName(e.target.value)}
+              placeholder="Enter a new module name"
             />
           </Form.Item>
         </Form>
@@ -425,43 +387,20 @@ const Lessons = () => {
         title="Add New Module"
         visible={moduleModalVisible}
         onCancel={() => setModuleModalVisible(false)}
-        onOk={moduleForm.submit}
+        onOk={() => moduleForm.submit()}
       >
         <Form form={moduleForm} onFinish={handleAddModule}>
           <Form.Item
-            label="Course"
-            name="course_id"
-            initialValue={selectedCourse}
-            rules={[{ required: true, message: "Please select course" }]}
-          >
-            <Select
-              value={selectedCourse}
-              onChange={setSelectedCourse}
-              placeholder="Select a course"
-            >
-              {courses.map((course) => (
-                <Select.Option key={course.id} value={course.id}>
-                  {course.title}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label="Module Name"
             name="title"
-            rules={[{ required: true, message: "Please enter module name" }]}
+            label="Module Name"
+            rules={[
+              { required: true, message: "Please enter the module name" },
+            ]}
           >
             <Input />
           </Form.Item>
-
-          <Form.Item
-            label="Order"
-            name="order_index"
-            initialValue={0}
-            rules={[{ required: true, message: "Please enter order" }]}
-          >
-            <Input type="number" min={0} />
+          <Form.Item name="order_index" label="Order">
+            <Input type="number" placeholder="Enter order number (optional)" />
           </Form.Item>
         </Form>
       </Modal>
