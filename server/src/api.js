@@ -329,16 +329,20 @@ export const fetchModules = async (courseId) => {
 };
 
 // đăng ký khóa học
-export const enrollCourseAPI = async (userId, courseId) => {
-  try {
-    const response = await axios.post(`${API_URL}/enroll`, {
-      user_id: userId,
-      course_id: courseId,
-    });
-    return response.data; // Trả về dữ liệu phản hồi
-  } catch (error) {
-    throw new Error("Lỗi khi đăng ký khóa học: " + error.message);
-  }
+export const enrollCourseAPI = async ({ userId, courseId }) => {
+  const token = localStorage.getItem("token"); // Lấy token từ localStorage
+
+  const response = await axios.post(
+    `${API_URL}/enrollments`,
+    { userId, courseId },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
 };
 
 export const getEnrollmentsAPI = async (userId) => {

@@ -1,9 +1,10 @@
 import { useParams } from "react-router-dom";
-import { Card, Col, Row, Typography, message, Collapse } from "antd";
+import { Card, Col, Row, Typography, message, Collapse, Button } from "antd";
 import {
   fetchCourseById,
   fetchModulesAPI,
   fetchLessonsAPI,
+  enrollCourseAPI, // Đảm bảo bạn đã có hàm này trong api
 } from "../../../../server/src/api";
 import { useEffect, useState } from "react";
 import defaultImage from "../../assets/img/sach.png";
@@ -18,8 +19,6 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
-
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -41,11 +40,31 @@ const CourseDetail = () => {
     fetchCourseData();
   }, [courseId]);
 
+  const handleEnroll = async () => {
+    // Lấy thông tin người dùng từ localStorage
+    const user = JSON.parse(localStorage.getItem("user")); // Đảm bảo bạn sử dụng đúng key ở đây
+
+    if (!user || !user.id) {
+      message.error("Bạn cần đăng nhập để đăng ký khóa học.");
+      return;
+    }
+
+    const userId = user.id; // Lấy userId từ thông tin người dùng
+
+    try {
+      const response = await enrollCourseAPI({ userId, courseId });
+      message.success(response.message || "Đăng ký khóa học thành công!");
+    } catch (err) {
+      console.error("Lỗi khi đăng ký khóa học:", err);
+      message.error("Đăng ký khóa học thất bại. Vui lòng thử lại sau.");
+    }
+  };
+
   const loadLessons = async (moduleId) => {
     if (lessons[moduleId]) return;
 
     try {
-      const lessonsData = await fetchLessonsAPI(courseId, moduleId, token);
+      const lessonsData = await fetchLessonsAPI(courseId, moduleId);
 
       if (Array.isArray(lessonsData)) {
         setLessons((prevLessons) => ({
@@ -61,7 +80,6 @@ const CourseDetail = () => {
     }
   };
 
-  // Hàm chuyển đổi URL YouTube thành embed URL
   const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
 
@@ -235,6 +253,10 @@ const CourseDetail = () => {
               <strong>Thời gian:</strong>{" "}
               {course.duration || "Chưa có thông tin."}
             </p>
+            {/* Nút đăng ký khóa học */}
+            <Button type="primary" onClick={handleEnroll}>
+              Đăng ký khóa học
+            </Button>
           </Card>
         </Col>
       </Row>
