@@ -53,15 +53,14 @@ const Lessons = () => {
 
   // Fetch lessons
   const fetchLessons = useCallback(async () => {
-    if (!selectedModule) {
-      setLessons([]);
-      return;
-    }
+    if (!selectedCourse) return;
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const lessonsData = await fetchLessonsAPI(selectedModule, token);
+      const lessonsData = await fetchLessonsAPI(
+        selectedModule || "all",
+        selectedCourse
+      ); // Truyền thêm selectedCourse
       setLessons(lessonsData);
     } catch (error) {
       console.error("Error fetching lessons:", error);
@@ -70,17 +69,15 @@ const Lessons = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedModule]);
+  }, [selectedModule, selectedCourse]);
 
   // Fetch modules
   const fetchModules = useCallback(async () => {
     if (!selectedCourse) return;
     try {
-      const modulesData = await fetchModulesAPI(selectedCourse);
+      const token = localStorage.getItem("token");
+      const modulesData = await fetchModulesAPI(selectedCourse, token);
       setModules(modulesData);
-      if (modulesData.length > 0 && !selectedModule) {
-        setSelectedModule(modulesData[0].id);
-      }
     } catch (error) {
       console.error("Error fetching modules:", error);
       message.error("Unable to load modules. Please try again later.");
@@ -88,19 +85,31 @@ const Lessons = () => {
     }
   }, [selectedCourse]);
 
-  // Effect cho việc fetch modules khi course thay đổi
+  useEffect(() => {
+    fetchCourses();
+  }, []); // Chỉ chạy một lần khi component mount
+
   useEffect(() => {
     if (selectedCourse) {
       fetchModules();
     }
   }, [selectedCourse, fetchModules]);
 
-  // Effect mới cho việc fetch lessons khi module thay đổi
   useEffect(() => {
-    if (selectedModule) {
+    if (selectedCourse) {
       fetchLessons();
     }
-  }, [selectedModule, fetchLessons]);
+  }, [selectedCourse, selectedModule, fetchLessons]);
+
+  const handleCourseChange = (courseId) => {
+    setSelectedCourse(courseId);
+    setSelectedModule(null); // Reset selected module when course changes
+    setLessons([]); // Reset lessons when course changes
+  };
+
+  const handleModuleChange = (moduleId) => {
+    setSelectedModule(moduleId);
+  };
 
   const handleAddOrUpdateLesson = async (values) => {
     if (!selectedCourse) {
@@ -233,7 +242,7 @@ const Lessons = () => {
         <Select
           style={{ width: 200, marginRight: 16 }}
           value={selectedCourse}
-          onChange={setSelectedCourse}
+          onChange={handleCourseChange}
           placeholder="Select a course"
         >
           {courses.map((course) => (
@@ -258,14 +267,14 @@ const Lessons = () => {
           Add New Lesson
         </Button>
 
-        {/* Phần lọc chương */}
         <Select
           style={{ width: 200, marginLeft: 16 }}
           value={selectedModule}
           onChange={setSelectedModule}
           placeholder="Select a module"
         >
-          <Select.Option value={null}>All Lessons</Select.Option>
+          <Select.Option value={null}>All Modules</Select.Option>{" "}
+          {/* Thêm dòng này */}
           {modules.map((module) => (
             <Select.Option key={module.id} value={module.id}>
               {module.title}

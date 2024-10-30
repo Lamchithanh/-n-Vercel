@@ -172,9 +172,17 @@ export const fetchCoursesAPI = async (token) => {
 };
 
 // api.js - Update these functions
-export const fetchLessonsAPI = async (moduleId) => {
+export const fetchLessonsAPI = async (moduleId, courseId) => {
+  // Thêm tham số courseId
   try {
-    const response = await axios.get(`${API_URL}/modules/${moduleId}/lessons`);
+    let url;
+    if (moduleId === "all") {
+      url = `${API_URL}/lessons?courseId=${courseId}`; // Thêm courseId vào query
+    } else {
+      url = `${API_URL}/modules/${moduleId}/lessons`;
+    }
+
+    const response = await axios.get(url);
     console.log("Response data:", response.data);
     return response.data;
   } catch (error) {
@@ -182,6 +190,7 @@ export const fetchLessonsAPI = async (moduleId) => {
     throw error;
   }
 };
+
 export const addLessonAPI = async (lessonData, token) => {
   const response = await axios.post(
     `${API_URL}/courses/${lessonData.course_id}/lessons`,

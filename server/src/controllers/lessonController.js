@@ -1,5 +1,43 @@
 const pool = require("../config/pool");
 
+// Hàm lấy tất cả bài học
+// Trong hàm getAllLessons
+exports.getAllLessons = async (req, res) => {
+  try {
+    const { courseId } = req.query;
+    const [lessons] = await pool.query(
+      `SELECT lessons.*, modules.title as module_name 
+       FROM lessons 
+       LEFT JOIN modules ON lessons.module_id = modules.id 
+       WHERE lessons.course_id = ? 
+       ORDER BY lessons.order_index`,
+      [courseId]
+    );
+    res.json(lessons);
+  } catch (error) {
+    console.error("Error fetching all lessons:", error);
+    res.status(500).json({ error: "Unable to fetch lessons" });
+  }
+};
+
+// Trong hàm getLessonsByModuleId
+exports.getLessonsByModuleId = async (req, res) => {
+  try {
+    const { moduleId } = req.params;
+    const [lessons] = await pool.query(
+      `SELECT lessons.*, modules.title as module_name 
+       FROM lessons 
+       LEFT JOIN modules ON lessons.module_id = modules.id 
+       WHERE lessons.module_id = ? 
+       ORDER BY lessons.order_index`,
+      [moduleId]
+    );
+    res.json(lessons);
+  } catch (error) {
+    console.error("Error fetching lessons:", error);
+    res.status(500).json({ error: "Unable to fetch lessons" });
+  }
+};
 // Lấy tất cả bài học theo khóa học ID
 exports.getLessonsByModuleId = async (req, res) => {
   try {
