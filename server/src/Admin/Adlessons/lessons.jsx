@@ -53,7 +53,7 @@ const Lessons = () => {
 
   // Fetch lessons
   const fetchLessons = useCallback(async () => {
-    if (!selectedCourse) {
+    if (!selectedModule) {
       setLessons([]);
       return;
     }
@@ -61,7 +61,7 @@ const Lessons = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const lessonsData = await fetchLessonsAPI(selectedCourse, token);
+      const lessonsData = await fetchLessonsAPI(selectedModule, token);
       setLessons(lessonsData);
     } catch (error) {
       console.error("Error fetching lessons:", error);
@@ -70,7 +70,7 @@ const Lessons = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCourse]);
+  }, [selectedModule]);
 
   // Fetch modules
   const fetchModules = useCallback(async () => {
@@ -88,18 +88,19 @@ const Lessons = () => {
     }
   }, [selectedCourse]);
 
-  // Fetch courses on mount
-  useEffect(() => {
-    fetchCourses();
-  }, [fetchCourses]);
-
-  // Fetch lessons and modules when selected course changes
+  // Effect cho việc fetch modules khi course thay đổi
   useEffect(() => {
     if (selectedCourse) {
-      fetchLessons();
       fetchModules();
     }
-  }, [selectedCourse, fetchLessons, fetchModules]);
+  }, [selectedCourse, fetchModules]);
+
+  // Effect mới cho việc fetch lessons khi module thay đổi
+  useEffect(() => {
+    if (selectedModule) {
+      fetchLessons();
+    }
+  }, [selectedModule, fetchLessons]);
 
   const handleAddOrUpdateLesson = async (values) => {
     if (!selectedCourse) {

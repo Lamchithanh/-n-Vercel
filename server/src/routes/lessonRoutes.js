@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const lessonController = require("../controllers/lessonController"); // Thay đường dẫn cho đúng
+const lessonController = require("../controllers/lessonController");
 
-// Các route cho bài học
-router.get("/courses/:courseId/lessons", lessonController.getLessonsByCourseId);
+// Route để lấy bài học theo module
+router.get("/modules/:moduleId/lessons", lessonController.getLessonsByModuleId);
+
+// Các route khác
 router.post("/courses/:courseId/lessons", lessonController.addLesson);
 router.put(
   "/courses/:courseId/lessons/:lessonId",

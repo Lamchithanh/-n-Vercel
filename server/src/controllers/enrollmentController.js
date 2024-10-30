@@ -8,7 +8,7 @@ exports.enrollCourse = async (req, res) => {
 
   try {
     const result = await pool.query(
-      "INSERT INTO enrollments (user_id, course_id, completed_at) VALUES (?, ?, ?)",
+      "INSERT INTO enrollments (user_id, course_id) VALUES (?, ?)",
       [userId, courseId] // Đảm bảo sử dụng đúng tên ở đây
     );
     res

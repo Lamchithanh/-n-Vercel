@@ -4,10 +4,11 @@ import {
   fetchCourseById,
   fetchModulesAPI,
   fetchLessonsAPI,
-  enrollCourseAPI, // Đảm bảo bạn đã có hàm này trong api
+  enrollCourseAPI,
 } from "../../../../server/src/api";
 import { useEffect, useState } from "react";
 import defaultImage from "../../assets/img/sach.png";
+import Loader from "../../context/Loader";
 
 const { Title, Paragraph } = Typography;
 
@@ -19,17 +20,29 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [isEnrolled, setIsEnrolled] = useState(false); // Thêm state để theo dõi việc đã đăng ký
 
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
+        setLoading(true);
         const data = await fetchCourseById(courseId);
         setCourse(data);
+        console.log("[Debug] Fetched course data:", data);
 
         const modulesData = await fetchModulesAPI(courseId);
+        console.log("[Debug] Fetched modules data:", modulesData);
         setModules(modulesData);
+
+        // Load lessons for each module
+        for (const module of modulesData) {
+          console.log(
+            `[Debug] Loading initial lessons for module ${module.id}`
+          );
+          await loadLessons(module.id);
+        }
       } catch (err) {
-        console.error("Lỗi khi tải thông tin khóa học:", err);
+        console.error("[Debug] Error in fetchCourseData:", err);
         setError("Lỗi khi tải thông tin khóa học. Vui lòng thử lại sau.");
         message.error("Lỗi khi tải thông tin khóa học. Vui lòng thử lại sau.");
       } finally {
@@ -41,19 +54,19 @@ const CourseDetail = () => {
   }, [courseId]);
 
   const handleEnroll = async () => {
-    // Lấy thông tin người dùng từ localStorage
-    const user = JSON.parse(localStorage.getItem("user")); // Đảm bảo bạn sử dụng đúng key ở đây
+    const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user || !user.id) {
       message.error("Bạn cần đăng nhập để đăng ký khóa học.");
       return;
     }
 
-    const userId = user.id; // Lấy userId từ thông tin người dùng
+    const userId = user.id;
 
     try {
       const response = await enrollCourseAPI({ userId, courseId });
       message.success(response.message || "Đăng ký khóa học thành công!");
+      setIsEnrolled(true); // Cập nhật trạng thái đã đăng ký
     } catch (err) {
       console.error("Lỗi khi đăng ký khóa học:", err);
       message.error("Đăng ký khóa học thất bại. Vui lòng thử lại sau.");
@@ -61,22 +74,41 @@ const CourseDetail = () => {
   };
 
   const loadLessons = async (moduleId) => {
-    if (lessons[moduleId]) return;
-
+    console.log(`[Debug] Loading lessons for moduleId: ${moduleId}`);
     try {
-      const lessonsData = await fetchLessonsAPI(courseId, moduleId);
+      const lessonsData = await fetchLessonsAPI(moduleId);
+      console.log(
+        `[Debug] Received lessons for module ${moduleId}:`,
+        lessonsData
+      );
 
       if (Array.isArray(lessonsData)) {
-        setLessons((prevLessons) => ({
-          ...prevLessons,
-          [moduleId]: lessonsData,
-        }));
+        setLessons((prevLessons) => {
+          const updatedLessons = {
+            ...prevLessons,
+            [moduleId]: lessonsData,
+          };
+          console.log(
+            `[Debug] Updated lessons state for module ${moduleId}:`,
+            updatedLessons
+          );
+          return updatedLessons;
+        });
       } else {
-        throw new Error("Dữ liệu bài học không hợp lệ");
+        console.error(
+          `[Debug] Invalid lessons data format for module ${moduleId}:`,
+          lessonsData
+        );
+        message.error(`Dữ liệu bài học không hợp lệ cho module ${moduleId}`);
       }
     } catch (err) {
-      console.error("Lỗi khi tải bài học:", err);
-      message.error("Không thể tải bài học cho module này.");
+      console.error(
+        `[Debug] Error loading lessons for module ${moduleId}:`,
+        err
+      );
+      message.error(
+        `Không thể tải bài học cho module ${moduleId}. Lỗi: ${err.message}`
+      );
     }
   };
 
@@ -93,8 +125,14 @@ const CourseDetail = () => {
   };
 
   const handleLessonClick = (lesson) => {
+    console.log("Selected lesson:", lesson);
     setSelectedLesson(lesson);
   };
+
+  useEffect(() => {
+    console.log("Current modules:", modules);
+    console.log("Current lessons:", lessons);
+  }, [modules, lessons]);
 
   const moduleItems = modules.map((module) => ({
     key: module.id.toString(),
@@ -137,10 +175,13 @@ const CourseDetail = () => {
         ))}
       </ul>
     ),
-    onExpand: () => loadLessons(module.id),
+    onExpand: () => {
+      console.log(`[Debug] Module ${module.id} expanded`);
+      loadLessons(module.id);
+    },
   }));
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
   if (!course) return <p>Không tìm thấy khóa học.</p>;
 
@@ -220,43 +261,33 @@ const CourseDetail = () => {
             </div>
 
             <Title level={4}>Nội dung khóa học</Title>
-            <Paragraph>{course.description || "Chưa có mô tả."}</Paragraph>
-
-            <Title level={5}>Các Modules</Title>
-            <Collapse
-              accordion
-              items={moduleItems}
-              onChange={(key) => {
-                if (key) {
-                  loadLessons(key);
-                }
-              }}
-            />
+            <Collapse items={moduleItems} />
           </Card>
         </Col>
+
         <Col span={6}>
-          <Card
-            title="Thông tin khóa học"
-            style={{ marginBottom: "20px", borderRadius: "8px" }}
-          >
+          <Card title="Thông tin khóa học">
             <p>
-              <strong>Giá:</strong>{" "}
-              {course.isFree
-                ? "Miễn phí"
-                : `${course.price.toLocaleString()} VND`}
+              <strong>Giá:</strong> {course.price} VND
             </p>
             <p>
-              <strong>Tổng số bài học:</strong>{" "}
-              {course.totalLessons || "Chưa có thông tin."}
+              <strong>Giảng viên:</strong> {course.instructor_name}
             </p>
             <p>
-              <strong>Thời gian:</strong>{" "}
-              {course.duration || "Chưa có thông tin."}
+              <strong>Thời gian:</strong> {course.duration} phút
+            </p>
+            <p>
+              <strong>Số bài học:</strong> {course.total_lessons}
+            </p>
+            <p>
+              <strong>Mô tả:</strong> {course.description}
             </p>
             {/* Nút đăng ký khóa học */}
-            <Button type="primary" onClick={handleEnroll}>
-              Đăng ký khóa học
-            </Button>
+            {!isEnrolled && (
+              <Button type="primary" onClick={handleEnroll}>
+                Đăng ký khóa học
+              </Button>
+            )}
           </Card>
         </Col>
       </Row>

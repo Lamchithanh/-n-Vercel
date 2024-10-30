@@ -1,12 +1,12 @@
 const pool = require("../config/pool");
 
 // Lấy tất cả bài học theo khóa học ID
-exports.getLessonsByCourseId = async (req, res) => {
+exports.getLessonsByModuleId = async (req, res) => {
   try {
-    const { courseId } = req.params;
+    const { moduleId } = req.params;
     const [lessons] = await pool.query(
-      "SELECT * FROM lessons WHERE course_id = ?",
-      [courseId]
+      "SELECT * FROM lessons WHERE module_id = ? ORDER BY order_index",
+      [moduleId]
     );
     res.json(lessons);
   } catch (error) {
@@ -14,7 +14,6 @@ exports.getLessonsByCourseId = async (req, res) => {
     res.status(500).json({ error: "Unable to fetch lessons" });
   }
 };
-
 // Thêm bài học mới
 exports.addLesson = async (req, res) => {
   try {
