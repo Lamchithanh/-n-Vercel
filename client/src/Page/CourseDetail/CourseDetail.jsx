@@ -7,6 +7,8 @@ import {
   enrollCourseAPI,
 } from "../../../../server/src/api";
 import { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import defaultImage from "../../assets/img/sach.png";
 import Loader from "../../context/Loader";
 
@@ -20,25 +22,27 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
-  const [isEnrolled, setIsEnrolled] = useState(false); // Thêm state để theo dõi việc đã đăng ký
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const enrolledCourses =
+      JSON.parse(localStorage.getItem("enrolledCourses")) || [];
+
+    if (user && enrolledCourses.includes(courseId)) {
+      setIsEnrolled(true);
+    }
+
     const fetchCourseData = async () => {
       try {
         setLoading(true);
         const data = await fetchCourseById(courseId);
         setCourse(data);
-        console.log("[Debug] Fetched course data:", data);
 
         const modulesData = await fetchModulesAPI(courseId);
-        console.log("[Debug] Fetched modules data:", modulesData);
         setModules(modulesData);
 
-        // Load lessons for each module
         for (const module of modulesData) {
-          console.log(
-            `[Debug] Loading initial lessons for module ${module.id}`
-          );
           await loadLessons(module.id);
         }
       } catch (err) {
@@ -61,78 +65,58 @@ const CourseDetail = () => {
       return;
     }
 
-    const userId = user.id;
-
     try {
-      const response = await enrollCourseAPI({ userId, courseId });
+      const response = await enrollCourseAPI({ userId: user.id, courseId });
       message.success(response.message || "Đăng ký khóa học thành công!");
-      setIsEnrolled(true); // Cập nhật trạng thái đã đăng ký
+
+      const enrolledCourses =
+        JSON.parse(localStorage.getItem("enrolledCourses")) || [];
+      enrolledCourses.push(courseId);
+      localStorage.setItem("enrolledCourses", JSON.stringify(enrolledCourses));
+
+      setIsEnrolled(true);
     } catch (err) {
-      console.error("Lỗi khi đăng ký khóa học:", err);
+      console.error("[Debug] Error in fetchCourseData:", err);
       message.error("Đăng ký khóa học thất bại. Vui lòng thử lại sau.");
     }
   };
 
   const loadLessons = async (moduleId) => {
-    console.log(`[Debug] Loading lessons for moduleId: ${moduleId}`);
     try {
       const lessonsData = await fetchLessonsAPI(moduleId);
-      console.log(
-        `[Debug] Received lessons for module ${moduleId}:`,
-        lessonsData
-      );
-
       if (Array.isArray(lessonsData)) {
-        setLessons((prevLessons) => {
-          const updatedLessons = {
-            ...prevLessons,
-            [moduleId]: lessonsData,
-          };
-          console.log(
-            `[Debug] Updated lessons state for module ${moduleId}:`,
-            updatedLessons
-          );
-          return updatedLessons;
-        });
+        setLessons((prevLessons) => ({
+          ...prevLessons,
+          [moduleId]: lessonsData,
+        }));
       } else {
-        console.error(
-          `[Debug] Invalid lessons data format for module ${moduleId}:`,
-          lessonsData
-        );
         message.error(`Dữ liệu bài học không hợp lệ cho module ${moduleId}`);
       }
     } catch (err) {
-      console.error(
-        `[Debug] Error loading lessons for module ${moduleId}:`,
-        err
-      );
-      message.error(
-        `Không thể tải bài học cho module ${moduleId}. Lỗi: ${err.message}`
-      );
+      console.error("[Debug] Error in fetchCourseData:", err);
+      message.error(`Không thể tải bài học cho module ${moduleId}.`);
     }
   };
 
   const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
-
-    const regExp =
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-
+    const match = url.match(
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    );
     return match && match[2].length === 11
       ? `https://www.youtube.com/embed/${match[2]}`
       : null;
   };
 
   const handleLessonClick = (lesson) => {
-    console.log("Selected lesson:", lesson);
-    setSelectedLesson(lesson);
+    if (isEnrolled) {
+      setSelectedLesson(lesson);
+    } else {
+      toast.warning("Bạn cần đăng ký khóa học để xem video của bài học này.", {
+        position: "top-center",
+      });
+    }
   };
-
-  useEffect(() => {
-    console.log("Current modules:", modules);
-    console.log("Current lessons:", lessons);
-  }, [modules, lessons]);
 
   const moduleItems = modules.map((module) => ({
     key: module.id.toString(),
@@ -142,6 +126,19 @@ const CourseDetail = () => {
         {lessons[module.id]?.length > 0 && (
           <span className="lesson-count">
             ({lessons[module.id].length} bài học)
+          </span>
+        )}
+        {!isEnrolled && ( // Chỉ hiển thị ổ khóa khi chưa đăng ký
+          <span
+            role="img"
+            aria-label="lock"
+            style={{
+              marginLeft: "8px",
+              color: "red",
+              fontSize: "16px",
+            }}
+          >
+            🔒
           </span>
         )}
       </div>
@@ -175,10 +172,7 @@ const CourseDetail = () => {
         ))}
       </ul>
     ),
-    onExpand: () => {
-      console.log(`[Debug] Module ${module.id} expanded`);
-      loadLessons(module.id);
-    },
+    onExpand: () => loadLessons(module.id),
   }));
 
   if (loading) return <Loader />;
@@ -193,38 +187,41 @@ const CourseDetail = () => {
             title={course.title}
             style={{ marginBottom: "20px", borderRadius: "8px" }}
           >
-            {/* Video Section */}
             <div className="video-section" style={{ marginBottom: "20px" }}>
               {selectedLesson ? (
-                <>
-                  <Title level={4}>{selectedLesson.title}</Title>
-                  <div
-                    style={{
-                      position: "relative",
-                      paddingBottom: "56.25%",
-                      height: 0,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <iframe
+                isEnrolled ? (
+                  <>
+                    <Title level={4}>{selectedLesson.title}</Title>
+                    <div
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        border: "none",
+                        position: "relative",
+                        paddingBottom: "56.25%",
+                        height: 0,
+                        overflow: "hidden",
                       }}
-                      src={getYoutubeEmbedUrl(selectedLesson.video_url)}
-                      allowFullScreen
-                      title={selectedLesson.title}
-                    />
-                  </div>
-                  <Paragraph style={{ marginTop: "16px" }}>
-                    {selectedLesson.description ||
-                      "Chưa có mô tả cho bài học này."}
-                  </Paragraph>
-                </>
+                    >
+                      <iframe
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          border: "none",
+                        }}
+                        src={getYoutubeEmbedUrl(selectedLesson.video_url)}
+                        allowFullScreen
+                        title={selectedLesson.title}
+                      />
+                    </div>
+                    <Paragraph style={{ marginTop: "16px" }}>
+                      {selectedLesson.description ||
+                        "Chưa có mô tả cho bài học này."}
+                    </Paragraph>
+                  </>
+                ) : (
+                  <p>Bạn cần đăng ký khóa học để xem video của bài học này.</p>
+                )
               ) : course.intro_video_url ? (
                 <>
                   <Title level={4}>Giới thiệu khóa học</Title>
@@ -282,15 +279,17 @@ const CourseDetail = () => {
             <p>
               <strong>Mô tả:</strong> {course.description}
             </p>
-            {/* Nút đăng ký khóa học */}
             {!isEnrolled && (
               <Button type="primary" onClick={handleEnroll}>
                 Đăng ký khóa học
               </Button>
             )}
+            {isEnrolled && <p>Đã đăng ký khóa học này</p>}
           </Card>
         </Col>
       </Row>
+
+      <ToastContainer />
     </div>
   );
 };
