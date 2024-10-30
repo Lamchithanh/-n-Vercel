@@ -64,8 +64,15 @@ const updateModule = async (req, res) => {
 // Xóa module
 const deleteModule = async (req, res) => {
   try {
-    await pool.query("DELETE FROM modules WHERE id = ?", [req.params.id]);
-    res.json({ message: "Module deleted successfully" });
+    const moduleId = req.params.id;
+
+    // Xóa các bài học liên quan đến module
+    await pool.query("DELETE FROM lessons WHERE module_id = ?", [moduleId]);
+
+    // Xóa module
+    await pool.query("DELETE FROM modules WHERE id = ?", [moduleId]);
+
+    res.json({ message: "Module and associated lessons deleted successfully" });
   } catch (error) {
     console.error("Error deleting module:", error.message);
     res.status(500).json({ message: "Internal server error" });

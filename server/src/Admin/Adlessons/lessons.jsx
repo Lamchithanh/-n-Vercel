@@ -19,6 +19,7 @@ import {
   updateLessonAPI,
   deleteLessonAPI,
   addModuleAPI,
+  deleteModuleAPI,
 } from "../../api";
 
 const Lessons = () => {
@@ -236,9 +237,45 @@ const Lessons = () => {
     }
   };
 
+  const handleDeleteModule = async (moduleId) => {
+    if (!selectedCourse) {
+      message.error("Course information is missing");
+      return;
+    }
+
+    Modal.confirm({
+      title: "Are you sure you want to delete this module?",
+      content: "This will also delete all lessons associated with this module.",
+      okText: "Delete",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          setLoading(true);
+          const token = localStorage.getItem("token");
+          await deleteModuleAPI(moduleId, token);
+          message.success("Module deleted successfully!");
+          fetchModules();
+          fetchLessons();
+        } catch (error) {
+          console.error("Error deleting module:", error);
+          message.error("Failed to delete module. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
+
   return (
     <Spin spinning={loading}>
-      <div style={{ marginBottom: 16 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          marginBottom: 16,
+          marginRight: 16,
+        }}
+      >
         <Select
           style={{ width: 200, marginRight: 16 }}
           value={selectedCourse}
@@ -268,19 +305,31 @@ const Lessons = () => {
         </Button>
 
         <Select
-          style={{ width: 200, marginLeft: 16 }}
+          style={{ width: 200, marginRight: 16, marginLeft: 16 }}
           value={selectedModule}
-          onChange={setSelectedModule}
+          onChange={handleModuleChange}
           placeholder="Select a module"
         >
-          <Select.Option value={null}>All Modules</Select.Option>{" "}
-          {/* Thêm dòng này */}
+          <Select.Option value={null}>All Modules</Select.Option>
           {modules.map((module) => (
             <Select.Option key={module.id} value={module.id}>
               {module.title}
             </Select.Option>
           ))}
         </Select>
+
+        <Button
+          onClick={() => {
+            if (!selectedModule) {
+              message.error("Please select a module to delete");
+              return;
+            }
+            handleDeleteModule(selectedModule);
+          }}
+          danger
+        >
+          Delete Module
+        </Button>
       </div>
 
       <Row gutter={16}>
