@@ -32,6 +32,23 @@ exports.getCourseById = async (req, res) => {
   }
 };
 
+// exports.getMyCourses = async (req, res) => {
+//   try {
+//     const userId = req.query.user_id || req.body.user_id || 1; // Có thể truyền trực tiếp user_id
+//     const query = `
+//       SELECT courses.*
+//       FROM courses
+//       JOIN enrollments ON courses.id = enrollments.course_id
+//       WHERE enrollments.user_id = ?;
+//     `;
+//     const [courses] = await pool.query(query, [userId]);
+//     res.json(courses);
+//   } catch (error) {
+//     console.error("Error fetching my courses:", error);
+//     res.status(500).json({ message: "Không thể tải khóa học cá nhân." });
+//   }
+// };
+
 // Thêm khóa học mới
 exports.addCourse = (req, res) => {
   const {

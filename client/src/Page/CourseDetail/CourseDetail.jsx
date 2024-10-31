@@ -25,13 +25,18 @@ const CourseDetail = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const enrolledCourses =
-      JSON.parse(localStorage.getItem("enrolledCourses")) || [];
+    const checkEnrollmentStatus = () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) return false;
 
-    if (user && enrolledCourses.includes(courseId)) {
-      setIsEnrolled(true);
-    }
+      const enrolledCoursesData =
+        JSON.parse(localStorage.getItem("enrolledCourses")) || {};
+      const userEnrolledCourses = enrolledCoursesData[user.id] || [];
+
+      return userEnrolledCourses.includes(courseId);
+    };
+
+    setIsEnrolled(checkEnrollmentStatus());
 
     const fetchCourseData = async () => {
       try {
@@ -67,16 +72,34 @@ const CourseDetail = () => {
 
     try {
       const response = await enrollCourseAPI({ userId: user.id, courseId });
-      message.success(response.message || "Đăng ký khóa học thành công!");
 
-      const enrolledCourses =
-        JSON.parse(localStorage.getItem("enrolledCourses")) || [];
-      enrolledCourses.push(courseId);
-      localStorage.setItem("enrolledCourses", JSON.stringify(enrolledCourses));
+      // Lấy và kiểm tra dữ liệu đăng ký khóa học hiện tại
+      let enrolledCoursesData;
+      try {
+        enrolledCoursesData =
+          JSON.parse(localStorage.getItem("enrolledCourses")) || {};
+      } catch {
+        enrolledCoursesData = {};
+      }
+
+      // Đảm bảo mảng khóa học của user tồn tại
+      if (!Array.isArray(enrolledCoursesData[user.id])) {
+        enrolledCoursesData[user.id] = [];
+      }
+
+      // Thêm khóa học mới nếu chưa tồn tại
+      if (!enrolledCoursesData[user.id].includes(courseId)) {
+        enrolledCoursesData[user.id].push(courseId);
+        localStorage.setItem(
+          "enrolledCourses",
+          JSON.stringify(enrolledCoursesData)
+        );
+      }
 
       setIsEnrolled(true);
+      message.success(response.message || "Đăng ký khóa học thành công!");
     } catch (err) {
-      console.error("[Debug] Error in fetchCourseData:", err);
+      console.error("[Debug] Error in handleEnroll:", err);
       message.error("Đăng ký khóa học thất bại. Vui lòng thử lại sau.");
     }
   };

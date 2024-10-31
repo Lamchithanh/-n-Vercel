@@ -119,6 +119,19 @@ export const fetchCourseById = async (id) => {
   }
 };
 
+export const getEnrolledCoursesAPI = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/enrollments?userId=${userId}&_expand=course`
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      "Lỗi khi lấy danh sách khóa học đã đăng ký: " + error.message
+    );
+  }
+};
+
 // Thêm khóa học mới (chỉ instructor hoặc admin mới có quyền)
 export const addCourse = async (courseData) => {
   const response = await axios.post(`${API_URL}/courses`, courseData, {

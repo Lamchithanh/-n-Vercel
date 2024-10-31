@@ -48,7 +48,7 @@ const HomePage = () => {
       const submenuLabels = {
         0: [{ label: "Thông tin cá nhân", path: "user-info" }],
         1: [
-          { label: "Khóa học của tôi", path: "my-courses" }, // Cập nhật đường dẫn
+          { label: "Khóa học của tôi", path: "my-courses" },
           { label: "Khóa học mới", path: "/" },
           { label: "Khóa học yêu thích", path: "/" },
         ],
