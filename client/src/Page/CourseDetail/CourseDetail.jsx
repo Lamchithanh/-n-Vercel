@@ -1,17 +1,15 @@
 import { useParams } from "react-router-dom";
 import { Card, Col, Row, Typography, message, Collapse, Button } from "antd";
-import {
-  fetchCourseById,
-  fetchModulesAPI,
-  fetchLessonsAPI,
-  enrollCourseAPI,
-} from "../../../../server/src/api";
+import { fetchCourseById } from "../../../../server/src/Api/courseApi";
+import { enrollCourseAPI } from "../../../../server/src/Api/enrollmentApi";
+import { fetchLessonsAPI } from "../../../../server/src/Api/lessonApi";
+import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import defaultImage from "../../assets/img/sach.png";
 import Loader from "../../context/Loader";
-
+import CourseReviews from "./CourseReviews ";
 const { Title, Paragraph } = Typography;
 
 const CourseDetail = () => {
@@ -282,6 +280,8 @@ const CourseDetail = () => {
 
             <Title level={4}>Nội dung khóa học</Title>
             <Collapse items={moduleItems} />
+            <Title level={4}>Đánh giá khóa học</Title>
+            <CourseReviews courseId={courseId} isEnrolled={isEnrolled} />
           </Card>
         </Col>
 
