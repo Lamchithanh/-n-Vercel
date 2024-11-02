@@ -8,6 +8,7 @@ import {
   message,
   Pagination,
 } from "antd";
+
 import {
   LaptopOutlined,
   NotificationOutlined,
@@ -97,7 +98,7 @@ const HomePage = () => {
     const currentCourses = courses.slice(startIndex, endIndex);
 
     return (
-      <div className="course-list ">
+      <div className="course-list">
         {currentCourses.map((course) => (
           <Card
             key={course.id}
@@ -108,27 +109,54 @@ const HomePage = () => {
                 src={course.image || defaultImage}
                 style={{
                   width: "100%",
-                  height: "auto",
-                  objectFit: "contain",
+                  height: "200px", // Đặt chiều cao cố định để tạo hình chữ nhật
+                  objectFit: "revert", // Sử dụng cover để hình ảnh không bị méo
                 }}
               />
             }
-            style={{ marginBottom: "16px", cursor: "pointer" }}
+            style={{
+              marginBottom: "16px",
+              cursor: "pointer",
+              borderRadius: "8px",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            }}
           >
-            <h5>
-              {course.title}
-              {course.price &&
-                course.price !== "0" &&
-                course.price !== "0.00" && <span> (PRO)</span>}
-            </h5>
-            <p>{course.description}</p>
-            <p>
-              Price:{" "}
-              {course.price === "0" || course.price === "0.00"
-                ? "Miễn phí"
-                : `${course.price} vnd`}
-            </p>
-            <p>Level: {course.level}</p>
+            <div className="relative">
+              <h5
+                className="text-lg font-medium"
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                <div style={{ marginRight: "8px" }}>
+                  {" "}
+                  {course.price &&
+                    course.price !== "0" &&
+                    course.price !== "0.00" && (
+                      <img
+                        width="40"
+                        height="40"
+                        src="https://img.icons8.com/external-basicons-color-edtgraphics/50/external-Crown-crowns-basicons-color-edtgraphics-6.png"
+                        alt="external-Crown-crowns-basicons-color-edtgraphics-6"
+                      />
+                    )}
+                </div>
+                <div>{course.title}</div>
+              </h5>
+
+              <div
+                className="mt-2"
+                style={{
+                  marginBottom: "8px",
+                  fontWeight: "bold",
+                  color: "#f47425",
+                }}
+              >
+                {course.price === "0" || course.price === "0.00"
+                  ? "Miễn phí"
+                  : `${course.price} vnd`}
+              </div>
+
+              <div className="mt-1">Level: {course.level}</div>
+            </div>
           </Card>
         ))}
       </div>

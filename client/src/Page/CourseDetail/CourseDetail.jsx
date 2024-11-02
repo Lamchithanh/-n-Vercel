@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, Col, Row, Typography, message, Collapse, Button } from "antd";
 import { fetchCourseById } from "../../../../server/src/Api/courseApi";
 import { enrollCourseAPI } from "../../../../server/src/Api/enrollmentApi";
@@ -9,7 +9,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import defaultImage from "../../assets/img/sach.png";
 import Loader from "../../context/Loader";
-import CourseReviews from "./CourseReviews ";
+// import CourseReviews from "./CourseReviews ";
 const { Title, Paragraph } = Typography;
 
 const CourseDetail = () => {
@@ -21,6 +21,7 @@ const CourseDetail = () => {
   const [error, setError] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkEnrollmentStatus = () => {
@@ -204,6 +205,14 @@ const CourseDetail = () => {
 
   return (
     <div className="course-detail container">
+      <Button
+        className="btn-back"
+        onClick={() => navigate(-1)}
+        style={{ marginBottom: 16 }}
+      >
+        Quay lại
+      </Button>
+
       <Row gutter={16}>
         <Col span={18}>
           <Card
@@ -275,15 +284,19 @@ const CourseDetail = () => {
                 <img
                   alt={course.title}
                   src={course.image || defaultImage}
-                  style={{ width: "100%", height: "auto", borderRadius: "8px" }}
+                  style={{
+                    width: "300px",
+                    height: "auto",
+                    borderRadius: "8px",
+                  }}
                 />
               )}
             </div>
             <Title level={4}>Nội dung khóa học</Title>
             <Collapse items={moduleItems} />
           </Card>{" "}
-          <Title level={4}>Đánh giá khóa học</Title>
-          <CourseReviews courseId={courseId} isEnrolled={isEnrolled} />
+          {/* <Title level={4}>Đánh giá khóa học</Title>
+          <CourseReviews courseId={courseId} isEnrolled={isEnrolled} /> */}
         </Col>
 
         <Col span={6}>

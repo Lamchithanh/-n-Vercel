@@ -1,8 +1,8 @@
 import {
-    BrowserRouter as Router,
-    Route,
-    Routes,
-    Navigate,
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,60 +17,53 @@ import ChangePassword from "./Page/ChangePassword/ChangePassword";
 import MyCourses from "./Page/MyCourses/MyCourses";
 import AccountSettings from "./Page/AccountSettings/AccountSettings";
 import CourseDetail from "./Page/CourseDetail/CourseDetail"; // Nhập CourseDetail
-import PropTypes from 'prop-types'; // Thêm import PropTypes
+import PropTypes from "prop-types"; // Thêm import PropTypes
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || !allowedRoles.includes(user.role)) {
-        return <Navigate to="/login" replace />;
-    }
-    return children;
+  const user = JSON.parse(localStorage.getItem("user"));
+  // Kiểm tra xem người dùng có quyền truy cập hay không
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
 };
 
 // Thêm khai báo PropTypes cho các props
 ProtectedRoute.propTypes = {
-    children: PropTypes.node.isRequired,
-    allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
+  children: PropTypes.node.isRequired,
+  allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 const App = () => {
-    return (
-        <Router>
-            <div className="app">
-                <ToastContainer />
-                <Routes>
-                    <Route path="/" element={<User />}>
-                        <Route index element={<HomePage />} />
-                        <Route path="user-info" element={<UserInfo />} />
-                        <Route
-                            path="change-password"
-                            element={<ChangePassword />}
-                        />
-                        <Route path="my-courses" element={<MyCourses />} />
-                        <Route
-                            path="account-settings"
-                            element={<AccountSettings />}
-                        />
-                        <Route path="courses/:id" element={<CourseDetail />} /> {/* Thêm route cho khóa học */}
-                    </Route>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route
-                        path="/forgot-password"
-                        element={<ForgotPassword />}
-                    />
-                    <Route
-                        path="/admin"
-                        element={
-                            <ProtectedRoute allowedRoles={["admin"]}>
-                                <AdminDashboard />
-                            </ProtectedRoute>
-                        }
-                    />
-                </Routes>
-            </div>
-        </Router>
-    );
+  return (
+    <Router>
+      <div className="app">
+        <ToastContainer />
+        <Routes>
+          <Route path="/" element={<User />}>
+            <Route index element={<HomePage />} />
+            <Route path="user-info" element={<UserInfo />} />
+            <Route path="change-password" element={<ChangePassword />} />
+            <Route path="my-courses" element={<MyCourses />} />
+            <Route path="account-settings" element={<AccountSettings />} />
+            <Route path="courses/:id" element={<CourseDetail />} />{" "}
+            {/* Thêm route cho khóa học */}
+          </Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
+  );
 };
 
 export default App;
