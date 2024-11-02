@@ -23,6 +23,7 @@ const Header = () => {
 
   // Điều hướng về trang chủ khi click vào logo
   const handleLogoClick = () => {
+    console.log("Navigating to home");
     navigate("/");
   };
 

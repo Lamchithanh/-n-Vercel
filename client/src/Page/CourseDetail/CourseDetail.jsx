@@ -71,7 +71,10 @@ const CourseDetail = () => {
     try {
       const response = await enrollCourseAPI({ userId: user.id, courseId });
 
-      // Lấy và kiểm tra dữ liệu đăng ký khóa học hiện tại
+      // Cập nhật trạng thái isEnrolled mà không cần tải lại
+      setIsEnrolled(true);
+
+      // Lưu vào localStorage
       let enrolledCoursesData;
       try {
         enrolledCoursesData =
@@ -94,7 +97,6 @@ const CourseDetail = () => {
         );
       }
 
-      setIsEnrolled(true);
       message.success(response.message || "Đăng ký khóa học thành công!");
     } catch (err) {
       console.error("[Debug] Error in handleEnroll:", err);
@@ -277,12 +279,11 @@ const CourseDetail = () => {
                 />
               )}
             </div>
-
             <Title level={4}>Nội dung khóa học</Title>
             <Collapse items={moduleItems} />
-            <Title level={4}>Đánh giá khóa học</Title>
-            <CourseReviews courseId={courseId} isEnrolled={isEnrolled} />
-          </Card>
+          </Card>{" "}
+          <Title level={4}>Đánh giá khóa học</Title>
+          <CourseReviews courseId={courseId} isEnrolled={isEnrolled} />
         </Col>
 
         <Col span={6}>
