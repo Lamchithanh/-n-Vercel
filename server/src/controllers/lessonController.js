@@ -1,4 +1,5 @@
 const pool = require("../config/pool");
+const { getVideoDuration } = require("../utils/youtubeUtils");
 
 // Hàm lấy tất cả bài học
 // Trong hàm getAllLessons
@@ -38,20 +39,7 @@ exports.getLessonsByModuleId = async (req, res) => {
     res.status(500).json({ error: "Unable to fetch lessons" });
   }
 };
-// Lấy tất cả bài học theo khóa học ID
-exports.getLessonsByModuleId = async (req, res) => {
-  try {
-    const { moduleId } = req.params;
-    const [lessons] = await pool.query(
-      "SELECT * FROM lessons WHERE module_id = ? ORDER BY order_index",
-      [moduleId]
-    );
-    res.json(lessons);
-  } catch (error) {
-    console.error("Error fetching lessons:", error);
-    res.status(500).json({ error: "Unable to fetch lessons" });
-  }
-};
+
 // Thêm bài học mới
 exports.addLesson = async (req, res) => {
   try {
@@ -59,44 +47,61 @@ exports.addLesson = async (req, res) => {
     const { module_id, title, content, description, video_url, order_index } =
       req.body;
 
-    // Chèn bài học
-    const result = await pool.query(
-      "INSERT INTO lessons (course_id, module_id, title, content, description, video_url, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [courseId, module_id, title, content, description, video_url, order_index]
+    // Lấy thời lượng video nếu có URL
+    let duration = null;
+    if (video_url) {
+      duration = await getVideoDuration(video_url);
+    }
+
+    // Chèn bài học với duration
+    const [result] = await pool.query(
+      "INSERT INTO lessons (course_id, module_id, title, content, description, video_url, duration, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        courseId,
+        module_id,
+        title,
+        content,
+        description,
+        video_url,
+        duration,
+        order_index,
+      ]
     );
 
-    // Lấy ID bài học vừa chèn
-    const newLessonId = result.insertId;
+    const [newLesson] = await pool.query("SELECT * FROM lessons WHERE id = ?", [
+      result.insertId,
+    ]);
 
-    // Truy vấn để lấy thông tin bài học vừa chèn (không bao gồm thời gian)
-    const [newLesson] = await pool.query(
-      "SELECT id, course_id, module_id, title, content, description, video_url, order_index FROM lessons WHERE id = ?",
-      [newLessonId]
-    );
-
-    // Trả về thông tin bài học vừa thêm (không bao gồm thời gian)
     res.status(201).json(newLesson[0]);
   } catch (error) {
     console.error("Error adding lesson:", error);
     res.status(500).json({ error: "Unable to add lesson" });
   }
 };
-
 // Cập nhật bài học
+
+// Cập nhật hàm updateLesson
 exports.updateLesson = async (req, res) => {
   try {
     const { courseId, lessonId } = req.params;
     const { module_id, title, content, description, video_url, order_index } =
       req.body;
 
+    // Lấy thời lượng video mới nếu URL thay đổi
+    let duration = null;
+    if (video_url) {
+      duration = await getVideoDuration(video_url);
+    }
+
     const [updatedLesson] = await pool.query(
-      "UPDATE lessons SET module_id = ?, title = ?, content = ?, description = ?, video_url = ?, order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND course_id = ?",
+      "UPDATE lessons SET module_id = ?, title = ?, content = ?, description = ?, video_url = ?, duration = ?, order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND course_id = ?",
       [
         module_id,
         title,
         content,
         description,
         video_url,
+        duration,
         order_index,
         lessonId,
         courseId,
@@ -107,7 +112,6 @@ exports.updateLesson = async (req, res) => {
       return res.status(404).json({ error: "Lesson not found" });
     }
 
-    // Truy vấn để lấy thông tin bài học đã cập nhật
     const [lesson] = await pool.query("SELECT * FROM lessons WHERE id = ?", [
       lessonId,
     ]);

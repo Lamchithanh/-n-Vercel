@@ -10,6 +10,7 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const lessonRoutes = require("./routes/lessonRoutes");
 const moduleRoutes = require("./routes/moduleRoutes"); // Thêm import cho moduleRoutes
 const enrollmentRoutes = require("./routes/enrollmentRoutes");
+const courseReviewsRoutes = require("./routes/courseReviewsRoutes");
 
 const app = express();
 const port = process.env.PORT || 9000;
@@ -32,6 +33,7 @@ app.use("/api", uploadRoutes);
 app.use("/api", lessonRoutes);
 app.use("/api", moduleRoutes); // Thêm moduleRoutes vào middleware chain
 app.use("/api", enrollmentRoutes);
+app.use("/api", courseReviewsRoutes); // Đường dẫn tới API đánh giá khóa học
 
 // Middleware xử lý lỗi
 app.use((err, req, res, next) => {

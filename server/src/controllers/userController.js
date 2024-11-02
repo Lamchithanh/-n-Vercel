@@ -84,11 +84,6 @@ exports.register = async (req, res) => {
     }
 };
 
-exports.forgotPassword = (req, res) => {
-    const { email } = req.body;
-    // Implement forgot password logic here
-};
-
 // Đảm bảo kết nối database đã được import
 
 exports.createUser = async (req, res) => {

@@ -11,17 +11,14 @@ import {
   Col,
   Select,
 } from "antd";
-import {
-  fetchCoursesAPI,
-  fetchLessonsAPI,
-  fetchModulesAPI,
-  addLessonAPI,
-  updateLessonAPI,
-  deleteLessonAPI,
-  addModuleAPI,
-  deleteModuleAPI,
-} from "../../api";
-
+import { fetchCoursesAPI } from "../../Api/courseApi";
+import { fetchLessonsAPI } from "../../Api/lessonApi";
+import { fetchModulesAPI } from "../../Api/moduleApi";
+import { addModuleAPI } from "../../Api/moduleApi";
+import { deleteModuleAPI } from "../../Api/moduleApi";
+import { addLessonAPI } from "../../Api/lessonApi";
+import { updateLessonAPI } from "../../Api/lessonApi";
+import { deleteLessonAPI } from "../../Api/lessonApi";
 const Lessons = () => {
   const [lessons, setLessons] = useState([]);
   const [courses, setCourses] = useState([]);
