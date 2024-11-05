@@ -18,6 +18,14 @@ const Login = () => {
       const response = await login(email, password);
       console.log("Response received:", response); // Log phản hồi từ API
 
+      if (response.user.isLocked) {
+        // Kiểm tra nếu tài khoản bị khóa
+        toast.error(
+          "Tài khoản của bạn đã bị khóa: " + response.user.lockReason
+        );
+        return; // Dừng lại, không cho phép tiếp tục đăng nhập
+      }
+
       toast.success("Đăng nhập thành công!");
 
       localStorage.setItem("user", JSON.stringify(response.user));
@@ -77,7 +85,12 @@ const Login = () => {
         </Form.Item>
 
         <Form.Item>
-          <Button style={{ backgroundColor: '#4caf50', borderColor: '#4caf50' }} className="btn-signin" type="primary" htmlType="submit">
+          <Button
+            style={{ backgroundColor: "#4caf50", borderColor: "#4caf50" }}
+            className="btn-signin"
+            type="primary"
+            htmlType="submit"
+          >
             Đăng nhập
           </Button>
         </Form.Item>

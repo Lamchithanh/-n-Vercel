@@ -10,6 +10,7 @@ import {
   Drawer,
   List,
   theme,
+  Tag,
 } from "antd";
 
 import {
@@ -27,6 +28,7 @@ const { Header, Content } = Layout;
 
 const HomePage = () => {
   const [courses, setCourses] = useState([]);
+  const [newlyAddedCourses, setNewlyAddedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,6 +70,7 @@ const HomePage = () => {
           (course) =>
             !lastKnownCourses.some((prevCourse) => prevCourse.id === course.id)
         );
+        setNewlyAddedCourses(newAddedCourses.map((course) => course.id));
 
         if (newAddedCourses.length > 0) {
           const newNotifications = newAddedCourses.map((course) => ({
@@ -230,7 +233,15 @@ const HomePage = () => {
                       />
                     )}
                 </div>
-                <div>{course.title}</div>
+                <div
+                  style={{
+                    color: newlyAddedCourses.includes(course.id)
+                      ? "red"
+                      : "inherit",
+                  }}
+                >
+                  {course.title}
+                </div>
               </h5>
 
               <div
@@ -310,8 +321,9 @@ const HomePage = () => {
                     {notification.title}
                     {!notification.read && (
                       <span style={{ marginLeft: "8px", color: "red" }}>
-                        <i className="fas fa-bell" />{" "}
-                        {/* Hoặc bạn có thể sử dụng biểu tượng khác */}
+                        <Tag color="red" style={{ marginRight: "8px" }}>
+                          New
+                        </Tag>
                       </span>
                     )}
                   </span>

@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, Col, Row, Typography, message, Collapse, Button } from "antd";
+import { FaCheck } from "react-icons/fa";
 import { fetchCourseById } from "../../../../server/src/Api/courseApi";
 import { enrollCourseAPI } from "../../../../server/src/Api/enrollmentApi";
 import { fetchLessonsAPI } from "../../../../server/src/Api/lessonApi";
@@ -21,6 +22,7 @@ const CourseDetail = () => {
   const [error, setError] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [totalLessons, setTotalLessons] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,15 +46,30 @@ const CourseDetail = () => {
         setCourse(data);
 
         const modulesData = await fetchModulesAPI(courseId);
-        setModules(modulesData);
+        const allLessons = {};
 
         for (const module of modulesData) {
-          await loadLessons(module.id);
+          const moduleLessons = await loadLessons(module.id);
+          allLessons[module.id] = moduleLessons;
         }
+
+        const updatedModulesWithOrder = updateLessonOrder(
+          modulesData.map((module) => ({
+            ...module,
+            lessons: allLessons[module.id] || [],
+          }))
+        );
+
+        setModules(updatedModulesWithOrder); // Cập nhật danh sách chương với thứ tự bài học
+        setTotalLessons(
+          updatedModulesWithOrder.reduce(
+            (total, module) => total + module.lessons.length,
+            0
+          )
+        ); // Tổng số bài học
       } catch (err) {
         console.error("[Debug] Error in fetchCourseData:", err);
         setError("Lỗi khi tải thông tin khóa học. Vui lòng thử lại sau.");
-        message.error("Lỗi khi tải thông tin khóa học. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
@@ -113,12 +130,15 @@ const CourseDetail = () => {
           ...prevLessons,
           [moduleId]: lessonsData,
         }));
+        return lessonsData; // Trả về dữ liệu bài học của module
       } else {
         message.error(`Dữ liệu bài học không hợp lệ cho module ${moduleId}`);
+        return [];
       }
     } catch (err) {
       console.error("[Debug] Error in fetchCourseData:", err);
       message.error(`Không thể tải bài học cho module ${moduleId}.`);
+      return [];
     }
   };
 
@@ -142,11 +162,27 @@ const CourseDetail = () => {
     }
   };
 
-  const moduleItems = modules.map((module) => ({
+  // Hàm cập nhật thứ tự bài học từ các chương và bài học hiện có
+  const updateLessonOrder = (modules) => {
+    let orderIndex = 1;
+    return modules.map((module) => {
+      const updatedLessons = module.lessons.map((lesson) => {
+        return { ...lesson, order: orderIndex++ }; // Continuously increment across modules
+      });
+      return { ...module, lessons: updatedLessons };
+    });
+  };
+  let lessonCounter = 1;
+
+  const moduleItems = modules.map((module, index) => ({
     key: module.id.toString(),
     label: (
       <div className="module-header">
-        <span>{module.title}</span>
+        <span>
+          <strong>Chương {index + 1}: </strong>
+          <strong style={{ color: "orange" }}>{module.title}</strong>
+        </span>
+        <span> </span>
         {lessons[module.id]?.length > 0 && (
           <span className="lesson-count">
             ({lessons[module.id].length} bài học)
@@ -169,7 +205,7 @@ const CourseDetail = () => {
     ),
     children: (
       <ul className="lesson-list">
-        {lessons[module.id]?.map((lesson) => (
+        {lessons[module.id]?.map((lesson, index) => (
           <li
             key={lesson.id}
             className={`lesson-item ${
@@ -178,17 +214,25 @@ const CourseDetail = () => {
             onClick={() => handleLessonClick(lesson)}
             style={{
               cursor: "pointer",
-              padding: "8px",
+              padding: "10px",
               backgroundColor:
-                selectedLesson?.id === lesson.id ? "#f0f0f0" : "transparent",
+                selectedLesson?.id === lesson.id ? "#f0f0f0" : "#d0ebf1",
               borderRadius: "4px",
-              marginBottom: "4px",
+              marginBottom: "8px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              transition: "background-color 0.3s ease",
+              boxShadow:
+                selectedLesson?.id === lesson.id
+                  ? "0 0 8px rgba(0, 123, 255, 0.3)"
+                  : "none",
             }}
           >
-            <span className="lesson-title">{lesson.title}</span>
+            <span className="lesson-title">
+              <strong>{`Bài ${lessonCounter++}: `}</strong>
+              {lesson.title}
+            </span>
             {lesson.duration && (
               <span className="lesson-duration">{lesson.duration}</span>
             )}
@@ -198,6 +242,27 @@ const CourseDetail = () => {
     ),
     onExpand: () => loadLessons(module.id),
   }));
+
+  // Hàm chuyển đổi phút sang giờ, phút, giây
+  const convertMinutesToHMS = (totalMinutes) => {
+    const totalSeconds = totalMinutes * 60; // Chuyển đổi phút sang giây
+    const hours = Math.floor(totalSeconds / 3600); // Tính số giờ
+    const minutes = Math.floor((totalSeconds % 3600) / 60); // Tính số phút
+
+    return `${hours}h ${minutes}p`;
+  };
+
+  // Tính tổng thời gian
+  const totalDuration = modules.reduce((total, module) => {
+    const moduleLessons = lessons[module.id] || [];
+    const moduleDuration = moduleLessons.reduce((moduleTotal, lesson) => {
+      return moduleTotal + (lesson.duration || 0);
+    }, 0);
+    return total + moduleDuration;
+  }, 0);
+
+  // Sử dụng hàm convert để hiển thị thời gian
+  const formattedDuration = convertMinutesToHMS(totalDuration);
 
   if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
@@ -304,14 +369,14 @@ const CourseDetail = () => {
             <p>
               <strong>Giá:</strong> {course.price} VND
             </p>
-            <p>
+            {/* <p>
               <strong>Giảng viên:</strong> {course.instructor_name}
+            </p> */}
+            <p>
+              <strong>Thời gian tổng:</strong> {formattedDuration}
             </p>
             <p>
-              <strong>Thời gian:</strong> {course.duration} phút
-            </p>
-            <p>
-              <strong>Số bài học:</strong> {course.total_lessons}
+              <strong>Số bài học:</strong> {totalLessons} bài
             </p>
             <p>
               <strong>Mô tả:</strong> {course.description}
@@ -325,7 +390,14 @@ const CourseDetail = () => {
                 Đăng ký khóa học
               </Button>
             )}
-            {isEnrolled && <p>Đã đăng ký khóa học này</p>}
+            {isEnrolled && (
+              <h6>
+                Đã đăng ký
+                <span style={{ marginLeft: 10 }}>
+                  <FaCheck />
+                </span>
+              </h6>
+            )}
           </Card>
         </Col>
       </Row>

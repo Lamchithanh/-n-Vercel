@@ -96,10 +96,24 @@ const Header = () => {
         ) : (
           <>
             <NavLink to="/register">
-              <button style={{ backgroundColor: '#4caf50', borderColor: '#4caf50' }} className="btn btn--outline">Đăng ký</button>
+              <button
+                style={{
+                  backgroundColor: "#4caf50",
+                  borderColor: "#4caf50",
+                  color: "#fff",
+                }}
+                className="btn btn--outline"
+              >
+                Đăng ký
+              </button>
             </NavLink>
             <NavLink to="/login">
-              <button style={{ backgroundColor: '#4caf50', borderColor: '#4caf50' }} className="btn btn--primary">Đăng nhập</button>
+              <button
+                style={{ backgroundColor: "#4caf50", borderColor: "#4caf50" }}
+                className="btn btn--primary"
+              >
+                Đăng nhập
+              </button>
             </NavLink>
           </>
         )}

@@ -13,7 +13,20 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   reset_token VARCHAR(64),
-  reset_token_expiry BIGINT
+  reset_token_expiry BIGINT,
+  isLocked BOOLEAN DEFAULT FALSE,
+  lockReason VARCHAR(255),
+  lockedAt DATETIME
+);
+
+-- Tạo bảng lưu lịch sử khóa (tùy chọn)
+CREATE TABLE user_lock_history (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    userId BIGINT UNSIGNED,
+    actionType ENUM('LOCK', 'UNLOCK'),
+    reason VARCHAR(255),
+    createdAt DATETIME,
+    FOREIGN KEY (userId) REFERENCES users(id)
 );
 
 -- Bảng Courses
@@ -48,7 +61,7 @@ CREATE TABLE modules (
 CREATE TABLE lessons (
   id SERIAL PRIMARY KEY,
   course_id BIGINT UNSIGNED,
-  module_id BIGINT UNSIGNED, -- Liên kết bài học với module
+  module_id BIGINT UNSIGNED,
   title VARCHAR(255) NOT NULL,
   content TEXT,
   description TEXT,
@@ -106,7 +119,7 @@ CREATE TABLE certificates (
   id SERIAL PRIMARY KEY,
   user_id BIGINT UNSIGNED,
   course_id BIGINT UNSIGNED,
-  issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  issued_at DATE,
   certificate_url VARCHAR(255),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
@@ -114,15 +127,15 @@ CREATE TABLE certificates (
 
 -- Bảng Course Reviews
 CREATE TABLE course_reviews (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,  -- Khóa chính của bảng
-  course_id BIGINT UNSIGNED NOT NULL,             -- Khóa ngoại tham chiếu đến courses.id
-  user_id BIGINT UNSIGNED NOT NULL,               -- Khóa ngoại tham chiếu đến users.id
-  rating TINYINT UNSIGNED CHECK (rating BETWEEN 1 AND 5),  -- Đánh giá từ 1 đến 5
-  review_text TEXT,                               -- Nội dung đánh giá
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian tạo đánh giá
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Thời gian cập nhật
-  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,  -- Xóa đánh giá khi khóa ngoại bị xóa
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE       -- Xóa đánh giá khi khóa ngoại bị xóa
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  course_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  rating TINYINT UNSIGNED CHECK (rating BETWEEN 1 AND 5),
+  review_text TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Thêm dữ liệu vào bảng courses
