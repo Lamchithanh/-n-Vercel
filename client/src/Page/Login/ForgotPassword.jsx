@@ -18,7 +18,7 @@ const ForgotPassword = () => {
         "Nếu tài khoản với email đó tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu."
       );
       // Có thể điều hướng đến một trang khác hoặc reset form nếu cần
-    } catch (error) {
+    } catch {
       toast.error("Đã xảy ra lỗi. Vui lòng thử lại.");
     }
   };
@@ -49,7 +49,15 @@ const ForgotPassword = () => {
           />
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" style={{ width: "100%" }}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            style={{
+              backgroundColor: "#4caf50",
+              borderColor: "#4caf50",
+              width: "100%",
+            }}
+          >
             Đặt lại Mật Khẩu
           </Button>
         </Form.Item>

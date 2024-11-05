@@ -248,6 +248,7 @@ const CourseReviews = ({ courseId, isEnrolled }) => {
 
       {canAddReview && (
         <Button
+        style={{ backgroundColor: '#4caf50', borderColor: '#4caf50' }}
           type="primary"
           onClick={() => {
             setEditingReview(null);
@@ -383,7 +384,7 @@ const CourseReviews = ({ courseId, isEnrolled }) => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="dashed" htmlType="submit" loading={loading}>
                 {editingReview ? "Cập nhật" : "Gửi đánh giá"}
               </Button>
               <Button

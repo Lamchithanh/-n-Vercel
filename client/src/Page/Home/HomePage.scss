@@ -42,7 +42,7 @@
 
       .ant-card-cover {
         img {
-          object-fit: cover; // Đảm bảo hình ảnh vừa vặn trong card
+          object-fit: contain; // Đảm bảo hình ảnh vừa vặn trong card
           height: 200px; // Chiều cao cố định cho hình ảnh
           border-top-left-radius: 10px; // Bo góc cho hình ảnh
           border-top-right-radius: 10px;

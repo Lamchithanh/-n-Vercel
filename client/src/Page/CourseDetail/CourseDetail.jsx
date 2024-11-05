@@ -317,7 +317,11 @@ const CourseDetail = () => {
               <strong>Mô tả:</strong> {course.description}
             </p>
             {!isEnrolled && (
-              <Button type="primary" onClick={handleEnroll}>
+              <Button
+                style={{ backgroundColor: "#4caf50", borderColor: "#4caf50" }}
+                type="primary"
+                onClick={handleEnroll}
+              >
                 Đăng ký khóa học
               </Button>
             )}

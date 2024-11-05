@@ -77,7 +77,7 @@ const Login = () => {
         </Form.Item>
 
         <Form.Item>
-          <Button className="btn-signin" type="primary" htmlType="submit">
+          <Button style={{ backgroundColor: '#4caf50', borderColor: '#4caf50' }} className="btn-signin" type="primary" htmlType="submit">
             Đăng nhập
           </Button>
         </Form.Item>

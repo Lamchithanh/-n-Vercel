@@ -5,11 +5,13 @@ import {
   BookOutlined,
   PlayCircleOutlined,
   AppstoreOutlined,
+  TrophyOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import Courses from "./AdCourses/Courses.jsx";
 import Users from "./AdUsers/Users.jsx";
 import Lessons from "./Adlessons/lessons.jsx";
+import Certificates from "./AdCertificates/Certificates.jsx";
 
 const { Header, Content, Sider } = Layout;
 
@@ -53,10 +55,12 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (selectedMenu) {
-      case "users":
-        return <Users fetchUsers={fetchUsers} />;
+      case "certificates":
+        return (
+          <Certificates fetchUsers={fetchUsers} fetchCourses={fetchCourses} />
+        );
       case "courses":
-        return <Courses fetchCourses={fetchCourses} />; // Truyền fetchCourses
+        return <Courses fetchCourses={fetchCourses} />;
       case "lessons":
         return (
           <Lessons
@@ -65,6 +69,8 @@ const AdminDashboard = () => {
             fetchModules={fetchModules}
           />
         );
+      case "users":
+        return <Users fetchUsers={fetchUsers} />;
       default:
         return null;
     }
@@ -93,6 +99,9 @@ const AdminDashboard = () => {
           </Menu.Item>
           <Menu.Item key="lessons" icon={<PlayCircleOutlined />}>
             Lessons & Modules
+          </Menu.Item>
+          <Menu.Item key="certificates" icon={<TrophyOutlined />}>
+            Certificates
           </Menu.Item>
         </Menu>
       </Sider>

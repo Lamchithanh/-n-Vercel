@@ -3,10 +3,13 @@ import {
   Layout,
   Menu,
   Breadcrumb,
-  theme,
   Card,
   message,
   Pagination,
+  Badge,
+  Drawer,
+  List,
+  theme,
 } from "antd";
 
 import {
@@ -17,8 +20,8 @@ import {
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import "./HomePage.scss";
 import Loader from "../../context/Loader";
-import { fetchCoursesAPI } from "../../../../server/src/Api/courseApi"; // Đường dẫn tới file API
-import defaultImage from "../../assets/img/sach.png"; // Đường dẫn tới ảnh mặc định
+import { fetchCoursesAPI } from "../../../../server/src/Api/courseApi";
+import defaultImage from "../../assets/img/sach.png";
 
 const { Header, Content } = Layout;
 
@@ -27,15 +30,70 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(8); // Số thẻ trên mỗi trang
+  const [pageSize] = useState(8);
+  const [notifications, setNotifications] = useState(() => {
+    // Khởi tạo từ localStorage nếu có
+    const savedNotifications = localStorage.getItem("courseNotifications");
+    return savedNotifications ? JSON.parse(savedNotifications) : [];
+  });
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] =
+    useState(false);
+  const [lastKnownCourses, setLastKnownCourses] = useState(() => {
+    // Lấy danh sách khóa học đã biết từ localStorage
+    const saved = localStorage.getItem("lastKnownCourses");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Cập nhật unreadCount khi component mount
+  useEffect(() => {
+    const unreadNotifications = notifications.filter(
+      (notification) => !notification.read
+    );
+    setUnreadCount(unreadNotifications.length);
+  }, []);
+
+  // Theo dõi khóa học mới
   useEffect(() => {
     const fetchCoursesData = async () => {
       try {
-        const courses = await fetchCoursesAPI();
-        setCourses(courses);
+        const newCourses = await fetchCoursesAPI();
+        setCourses(newCourses);
+
+        // Kiểm tra khóa học mới bằng cách so sánh với lastKnownCourses
+        const newAddedCourses = newCourses.filter(
+          (course) =>
+            !lastKnownCourses.some((prevCourse) => prevCourse.id === course.id)
+        );
+
+        if (newAddedCourses.length > 0) {
+          const newNotifications = newAddedCourses.map((course) => ({
+            id: Date.now() + Math.random(),
+            courseId: course.id,
+            title: course.title,
+            message: `Khóa học mới: ${course.title}`,
+            timestamp: new Date().toISOString(),
+            read: false,
+          }));
+
+          // Cập nhật notifications và localStorage
+          const updatedNotifications = [...newNotifications, ...notifications];
+          setNotifications(updatedNotifications);
+          localStorage.setItem(
+            "courseNotifications",
+            JSON.stringify(updatedNotifications)
+          );
+
+          // Cập nhật unreadCount
+          setUnreadCount((prev) => prev + newAddedCourses.length);
+
+          // Cập nhật lastKnownCourses
+          setLastKnownCourses(newCourses);
+          localStorage.setItem("lastKnownCourses", JSON.stringify(newCourses));
+        }
       } catch (err) {
         console.error("Lỗi khi tải danh sách khóa học:", err);
         setError("Lỗi khi tải danh sách khóa học. Vui lòng thử lại sau.");
@@ -46,11 +104,44 @@ const HomePage = () => {
     };
 
     fetchCoursesData();
-  }, []);
+    // Kiểm tra khóa học mới mỗi 30 giây
+    const interval = setInterval(fetchCoursesData, 30000);
+
+    return () => clearInterval(interval);
+  }, [lastKnownCourses]);
+
+  const handleNotificationClick = () => {
+    setIsNotificationDrawerOpen(true);
+  };
+
+  const handleNotificationClose = () => {
+    setIsNotificationDrawerOpen(false);
+
+    // Đánh dấu tất cả thông báo là đã đọc
+    const updatedNotifications = notifications.map((notification) => ({
+      ...notification,
+      read: true,
+    }));
+
+    // Cập nhật state và localStorage
+    setNotifications(updatedNotifications);
+    localStorage.setItem(
+      "courseNotifications",
+      JSON.stringify(updatedNotifications)
+    );
+    setUnreadCount(0);
+  };
 
   const handleMenuClick = (path) => {
-    navigate(path);
+    if (path === "notifications") {
+      handleNotificationClick();
+    } else {
+      navigate(path);
+    }
   };
+  const {
+    token: { colorBgContainer },
+  } = theme.useToken();
 
   const items2 = [
     {
@@ -72,9 +163,13 @@ const HomePage = () => {
     {
       key: "3",
       icon: <NotificationOutlined />,
-      label: "Thông báo",
+      label: (
+        <Badge count={unreadCount} offset={[10, 0]}>
+          Thông báo
+        </Badge>
+      ),
       children: [
-        { label: "Thông báo mới", path: "/" },
+        { label: "Thông báo mới", path: "notifications" },
         { label: "Thông báo quan trọng", path: "/" },
         { label: "Thông báo khác", path: "/" },
       ],
@@ -88,10 +183,7 @@ const HomePage = () => {
     })),
   }));
 
-  const {
-    token: { colorBgContainer },
-  } = theme.useToken();
-
+  // Render function cho các khóa học
   const renderHomeContent = () => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -109,8 +201,8 @@ const HomePage = () => {
                 src={course.image || defaultImage}
                 style={{
                   width: "100%",
-                  height: "200px", // Đặt chiều cao cố định để tạo hình chữ nhật
-                  objectFit: "revert", // Sử dụng cover để hình ảnh không bị méo
+                  height: "200px",
+                  objectFit: "contain",
                 }}
               />
             }
@@ -127,7 +219,6 @@ const HomePage = () => {
                 style={{ display: "flex", alignItems: "center" }}
               >
                 <div style={{ marginRight: "8px" }}>
-                  {" "}
                   {course.price &&
                     course.price !== "0" &&
                     course.price !== "0.00" && (
@@ -168,7 +259,6 @@ const HomePage = () => {
 
   return (
     <Layout className="">
-      {/* Header với Menu ngang */}
       <Header style={{ background: colorBgContainer }}>
         <Menu
           mode="horizontal"
@@ -182,7 +272,6 @@ const HomePage = () => {
         <Breadcrumb className="breadcrumb" items={[{ title: "Trang chủ" }]} />
         <div className="content">
           {location.pathname === "/" ? renderHomeContent() : <Outlet />}
-          {/* Pagination */}
           <Pagination
             current={currentPage}
             pageSize={pageSize}
@@ -192,6 +281,55 @@ const HomePage = () => {
           />
         </div>
       </Content>
+
+      <Drawer
+        title="Thông báo mới"
+        placement="right"
+        onClose={handleNotificationClose}
+        open={isNotificationDrawerOpen}
+        width={320}
+      >
+        <List
+          dataSource={notifications}
+          renderItem={(notification) => (
+            <List.Item
+              style={{
+                cursor: "pointer",
+                transition: "background-color 0.3s",
+                padding: "12px",
+              }}
+              className="hover:bg-gray-100"
+            >
+              <List.Item.Meta
+                onClick={() => {
+                  navigate(`/courses/${notification.courseId}`);
+                  handleNotificationClose();
+                }}
+                title={
+                  <span style={{ color: notification.read ? "#666" : "#000" }}>
+                    {notification.title}
+                    {!notification.read && (
+                      <span style={{ marginLeft: "8px", color: "red" }}>
+                        <i className="fas fa-bell" />{" "}
+                        {/* Hoặc bạn có thể sử dụng biểu tượng khác */}
+                      </span>
+                    )}
+                  </span>
+                }
+                description={
+                  <>
+                    <div>{notification.message}</div>
+                    <div style={{ fontSize: "12px", color: "#888" }}>
+                      {new Date(notification.timestamp).toLocaleString()}
+                    </div>
+                  </>
+                }
+              />
+            </List.Item>
+          )}
+          locale={{ emptyText: "Không có thông báo mới" }}
+        />
+      </Drawer>
     </Layout>
   );
 };

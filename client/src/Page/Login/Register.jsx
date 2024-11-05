@@ -128,7 +128,8 @@ const Register = () => {
               className="btn-Register"
               type="primary"
               htmlType="submit"
-              style={{ width: "100%" }}
+             
+              style={{width: "100%", backgroundColor: '#4caf50', borderColor: '#4caf50' }}
             >
               Đăng ký
             </Button>

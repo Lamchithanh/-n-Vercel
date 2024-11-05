@@ -42,11 +42,13 @@ const Courses = () => {
 
       const method = editingCourse ? "put" : "post";
 
+      // Xử lý dữ liệu trước khi gửi
       const courseData = {
         ...values,
         price: values.priceOption === "free" ? "0" : values.price.toString(),
-        image: editingCourse ? editingCourse.image : values.imageUrl || "",
-        intro_video_url: values.videoUrl, // Đổi tên thành intro_video_url để khớp với backend
+        // Chỉ cập nhật image nếu có giá trị mới được nhập vào
+        image: values.imageUrl || (editingCourse ? editingCourse.image : ""),
+        intro_video_url: values.videoUrl,
       };
 
       // Gửi yêu cầu Axios
@@ -60,15 +62,11 @@ const Courses = () => {
         } thành công`
       );
 
-      // Đóng modal và reset form
       setModalVisible(false);
       form.resetFields();
-
-      // Làm mới danh sách khóa học
       await fetchCourses();
     } catch (error) {
       console.error("Error adding/updating course:", error);
-      // Thông báo lỗi cho người dùng
       message.error(
         error.response?.data?.message ||
           "Không thể thêm/cập nhật khóa học. Vui lòng thử lại."
@@ -169,12 +167,19 @@ const Courses = () => {
           <Button
             onClick={() => {
               setEditingCourse(record);
+              // Thiết lập giá trị ban đầu cho form khi chỉnh sửa
               form.setFieldsValue({
-                ...record,
+                title: record.title,
+                description: record.description,
                 priceOption:
                   record.price === "0" || record.price === "0.00"
                     ? "free"
                     : "paid",
+                price: record.price === "0" ? "" : record.price,
+                level: record.level,
+                category: record.category,
+                videoUrl: record.intro_video_url,
+                imageUrl: record.image, // Thiết lập giá trị ảnh hiện tại
               });
               setPriceRequired(record.price !== "0");
               setModalVisible(true);
@@ -198,12 +203,12 @@ const Courses = () => {
     <Spin spinning={loading}>
       <Button
         onClick={() => {
-          setEditingCourse(null); // Đặt khóa học đang chỉnh sửa về null để chuẩn bị thêm khóa học mới
-          form.resetFields(); // Reset tất cả các trường trong form để người dùng có thể nhập dữ liệu mới
-          setPriceRequired(true); // Đặt lại trạng thái yêu cầu nhập giá cho form (nếu có)
-          setModalVisible(true); // Mở modal để người dùng có thể nhập thông tin khóa học
+          setEditingCourse(null);
+          form.resetFields();
+          setPriceRequired(true);
+          setModalVisible(true);
         }}
-        style={{ marginBottom: 16 }} // Thêm khoảng cách phía dưới nút
+        style={{ marginBottom: 16 }}
       >
         Thêm Khóa Học Mới
       </Button>
@@ -219,7 +224,14 @@ const Courses = () => {
           form.resetFields();
         }}
       >
-        <Form form={form} layout="vertical" onFinish={handleAddOrUpdateCourse}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleAddOrUpdateCourse}
+          initialValues={{
+            priceOption: "paid",
+          }}
+        >
           <Form.Item
             name="title"
             label="Tiêu Đề"
@@ -248,7 +260,9 @@ const Courses = () => {
             <Select
               onChange={(value) => {
                 setPriceRequired(value !== "free");
-                if (value === "free") form.setFieldsValue({ price: "0" });
+                if (value === "free") {
+                  form.setFieldsValue({ price: "0" });
+                }
               }}
             >
               <Option value="free">Miễn Phí</Option>
@@ -291,16 +305,11 @@ const Courses = () => {
             ]}
           >
             <Select
-              mode="tags" // Cho phép người dùng nhập nhiều giá trị tùy ý
+              mode="tags"
               placeholder="Nhập hoặc chọn danh mục"
               allowClear
               showSearch
-              onChange={(value) => {
-                // Xử lý giá trị được nhập vào đây
-                console.log(value); // Hoặc lưu giá trị vào state nếu cần
-              }}
             >
-              {/* Các tùy chọn mặc định */}
               <Option value="theory">Lý Thuyết</Option>
               <Option value="practice">Thực Hành</Option>
               <Option value="review">Ôn Tập</Option>
@@ -315,8 +324,12 @@ const Courses = () => {
           >
             <Input placeholder="Nhập URL video" />
           </Form.Item>
-          <Form.Item name="imageUrl" label="URL Ảnh">
-            <Input />
+          <Form.Item
+            name="imageUrl"
+            label="URL Ảnh"
+            extra={editingCourse ? "Để trống nếu muốn giữ ảnh hiện tại" : ""}
+          >
+            <Input placeholder="Nhập URL ảnh mới" />
           </Form.Item>
         </Form>
       </Modal>

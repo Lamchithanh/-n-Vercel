@@ -47,11 +47,12 @@ const App = () => {
             <Route path="my-courses" element={<MyCourses />} />
             <Route path="account-settings" element={<AccountSettings />} />
             <Route path="courses/:id" element={<CourseDetail />} />{" "}
-            {/* Thêm route cho khóa học */}
           </Route>
+
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+
           <Route
             path="/admin"
             element={
