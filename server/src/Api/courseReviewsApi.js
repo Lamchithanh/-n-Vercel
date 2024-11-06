@@ -1,91 +1,90 @@
-// courseReviewsApi.js
-import axios from "axios";
+// courseReviewApi.js
+const express = require("express");
+const router = express.Router();
+const pool = require("../config/pool");
 
-const API_URL = "http://localhost:9000/api";
-
-// Lấy danh sách đánh giá của khóa học
-export const fetchCourseReviews = async (courseId) => {
+// Lấy danh sách đánh giá
+router.get("/courses/:courseId/reviews", async (req, res) => {
   try {
-    const response = await axios.get(`${API_URL}/courses/${courseId}/reviews`);
-    console.log("Dữ liệu đánh giá:", response.data); // Log dữ liệu
-    return response.data;
-  } catch (error) {
-    console.error(
-      "Lỗi khi lấy đánh giá:",
-      error.response ? error.response.data : error.message
+    const [reviews] = await pool.query(
+      `
+      SELECT cr.*, u.username AS user_name
+      FROM course_reviews cr
+      JOIN users u ON cr.user_id = u.id
+      WHERE cr.course_id = ?
+      ORDER BY cr.created_at DESC
+    `,
+      [req.params.courseId]
     );
-    throw error;
-  }
-};
 
-// Thêm đánh giá mới
-export const addCourseReview = async ({ courseId, rating, reviewText }) => {
-  try {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const response = await axios.post(
-      `${API_URL}/courses/${courseId}/reviews`,
-      {
-        userId: user.id,
-        rating,
-        reviewText,
-      }
-    );
-    return response.data;
+    res.json({ reviews });
   } catch (error) {
-    console.error("Lỗi khi thêm đánh giá:", error);
-    throw error;
+    res.status(500).json({ error: "Lỗi khi lấy đánh giá" });
   }
-};
-
-// Cập nhật đánh giá
-export const updateCourseReview = async (reviewId, { rating, reviewText }) => {
-  try {
-    const response = await axios.put(`${API_URL}/reviews/${reviewId}`, {
-      rating,
-      reviewText,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi cập nhật đánh giá:", error);
-    throw error;
-  }
-};
-
-// Xóa đánh giá
-export const deleteCourseReview = async (reviewId) => {
-  try {
-    const response = await axios.delete(`${API_URL}/reviews/${reviewId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi xóa đánh giá:", error);
-    throw error;
-  }
-};
+});
 
 // Lấy thống kê đánh giá
-export const getCourseReviewStats = async (courseId) => {
+router.get("/courses/:courseId/review-stats", async (req, res) => {
   try {
-    const response = await axios.get(
-      `${API_URL}/courses/${courseId}/review-stats`
+    const [stats] = await pool.query(
+      `
+      SELECT 
+        COUNT(*) as totalReviews,
+        AVG(rating) as averageRating
+      FROM course_reviews
+      WHERE course_id = ?
+    `,
+      [req.params.courseId]
     );
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy thống kê đánh giá:", error);
-    throw error;
-  }
-};
 
-// Kiểm tra người dùng đã đánh giá chưa
-export const hasUserReviewedCourse = async (courseId) => {
-  try {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const response = await axios.get(
-      `${API_URL}/courses/${courseId}/user-review-status`,
-      { params: { userId: user.id } }
-    );
-    return response.data.hasReviewed;
+    res.json(stats[0]);
   } catch (error) {
-    console.error("Lỗi khi kiểm tra trạng thái đánh giá:", error);
-    throw error;
+    res.status(500).json({ error: "Lỗi khi lấy thống kê" });
   }
-};
+});
+
+// Thêm đánh giá mới
+router.post("/courses/:courseId/reviews", async (req, res) => {
+  const { userId, rating, reviewText } = req.body;
+
+  try {
+    const [result] = await pool.query(
+      "INSERT INTO course_reviews (course_id, user_id, rating, review_text) VALUES (?, ?, ?, ?)",
+      [req.params.courseId, userId, rating, reviewText]
+    );
+
+    res.status(201).json({ id: result.insertId });
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi khi thêm đánh giá" });
+  }
+});
+
+// Cập nhật đánh giá
+router.put("/reviews/:reviewId", async (req, res) => {
+  const { rating, reviewText } = req.body;
+
+  try {
+    await pool.query(
+      "UPDATE course_reviews SET rating = ?, review_text = ? WHERE id = ?",
+      [rating, reviewText, req.params.reviewId]
+    );
+
+    res.json({ message: "Cập nhật thành công" });
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi khi cập nhật đánh giá" });
+  }
+});
+
+// Xóa đánh giá
+router.delete("/reviews/:reviewId", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM course_reviews WHERE id = ?", [
+      req.params.reviewId,
+    ]);
+    res.json({ message: "Xóa thành công" });
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi khi xóa đánh giá" });
+  }
+});
+
+module.exports = router;

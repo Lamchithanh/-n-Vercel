@@ -257,7 +257,12 @@ const HomePage = () => {
                   : `${course.price} vnd`}
               </div>
 
-              <div className="mt-1">Level: {course.level}</div>
+              <div
+                className="mt-1"
+                style={{ color: "#a7aeae", marginBottom: 15 }}
+              >
+                Level: {course.level}
+              </div>
             </div>
           </Card>
         ))}

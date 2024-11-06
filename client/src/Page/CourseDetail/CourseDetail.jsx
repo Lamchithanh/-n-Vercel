@@ -8,6 +8,7 @@ import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CourseReviews from "./CourseReviews ";
 import defaultImage from "../../assets/img/sach.png";
 import Loader from "../../context/Loader";
 // import CourseReviews from "./CourseReviews ";
@@ -26,6 +27,7 @@ const CourseDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Kiểm tra trạng thái đăng ký của người dùng hiện tại
     const checkEnrollmentStatus = () => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) return false;
@@ -37,22 +39,29 @@ const CourseDetail = () => {
       return userEnrolledCourses.includes(courseId);
     };
 
+    // Khởi tạo trạng thái đăng ký của người dùng
     setIsEnrolled(checkEnrollmentStatus());
 
+    // Hàm tải dữ liệu khóa học
     const fetchCourseData = async () => {
       try {
         setLoading(true);
+
+        // Tải thông tin khóa học từ API
         const data = await fetchCourseById(courseId);
         setCourse(data);
 
+        // Tải danh sách chương của khóa học
         const modulesData = await fetchModulesAPI(courseId);
         const allLessons = {};
 
+        // Tải bài học cho từng chương và gán vào `allLessons`
         for (const module of modulesData) {
           const moduleLessons = await loadLessons(module.id);
           allLessons[module.id] = moduleLessons;
         }
 
+        // Cập nhật thứ tự bài học cho từng chương
         const updatedModulesWithOrder = updateLessonOrder(
           modulesData.map((module) => ({
             ...module,
@@ -60,13 +69,16 @@ const CourseDetail = () => {
           }))
         );
 
-        setModules(updatedModulesWithOrder); // Cập nhật danh sách chương với thứ tự bài học
+        // Cập nhật danh sách chương với thứ tự bài học đã sắp xếp
+        setModules(updatedModulesWithOrder);
+
+        // Tính tổng số bài học
         setTotalLessons(
           updatedModulesWithOrder.reduce(
             (total, module) => total + module.lessons.length,
             0
           )
-        ); // Tổng số bài học
+        );
       } catch (err) {
         console.error("[Debug] Error in fetchCourseData:", err);
         setError("Lỗi khi tải thông tin khóa học. Vui lòng thử lại sau.");
@@ -75,6 +87,7 @@ const CourseDetail = () => {
       }
     };
 
+    // Tải dữ liệu khóa học khi `courseId` thay đổi
     fetchCourseData();
   }, [courseId]);
 
@@ -205,7 +218,7 @@ const CourseDetail = () => {
     ),
     children: (
       <ul className="lesson-list">
-        {lessons[module.id]?.map((lesson, index) => (
+        {lessons[module.id]?.map((lesson) => (
           <li
             key={lesson.id}
             className={`lesson-item ${
@@ -284,11 +297,13 @@ const CourseDetail = () => {
             title={course.title}
             style={{ marginBottom: "20px", borderRadius: "8px" }}
           >
-            <div className="video-section" style={{ marginBottom: "20px" }}>
+            <div className="video-section">
               {selectedLesson ? (
                 isEnrolled ? (
                   <>
-                    <Title level={4}>{selectedLesson.title}</Title>
+                    <Title level={4} style={{ fontSize: 25 }}>
+                      {selectedLesson.title}
+                    </Title>
                     <div
                       style={{
                         position: "relative",
@@ -305,6 +320,7 @@ const CourseDetail = () => {
                           width: "100%",
                           height: "100%",
                           border: "none",
+                          borderRadius: "8px",
                         }}
                         src={getYoutubeEmbedUrl(selectedLesson.video_url)}
                         allowFullScreen
@@ -321,7 +337,9 @@ const CourseDetail = () => {
                 )
               ) : course.intro_video_url ? (
                 <>
-                  <Title level={4}>Giới thiệu khóa học</Title>
+                  <Title style={{ margin: "10px 20px" }} level={4}>
+                    Giới thiệu khóa học
+                  </Title>
                   <div
                     style={{
                       position: "relative",
@@ -338,6 +356,7 @@ const CourseDetail = () => {
                         width: "100%",
                         height: "100%",
                         border: "none",
+                        borderRadius: "8px",
                       }}
                       src={getYoutubeEmbedUrl(course.intro_video_url)}
                       allowFullScreen
@@ -357,29 +376,44 @@ const CourseDetail = () => {
                 />
               )}
             </div>
-            <Title level={4}>Nội dung khóa học</Title>
+            <Title level={4} style={{ margin: "20px 20px" }}>
+              Nội dung khóa học
+            </Title>
             <Collapse items={moduleItems} />
           </Card>{" "}
-          {/* <Title level={4}>Đánh giá khóa học</Title>
-          <CourseReviews courseId={courseId} isEnrolled={isEnrolled} /> */}
+          <Title style={{ margin: "20px 40px" }} level={4}>
+            Đánh giá khóa học
+          </Title>
+          <CourseReviews courseId={courseId} isEnrolled={isEnrolled} />
         </Col>
 
         <Col span={6}>
           <Card title="Thông tin khóa học">
             <p>
-              <strong>Giá:</strong> {course.price} VND
+              <strong>Giá:</strong>
+              <strong style={{ color: "orange" }}> {course.price} VND</strong>
             </p>
             {/* <p>
               <strong>Giảng viên:</strong> {course.instructor_name}
             </p> */}
             <p>
-              <strong>Thời gian tổng:</strong> {formattedDuration}
+              <strong>Thời gian tổng:</strong>
+              <span className="course-detail-min" style={{ color: "#a7aeae" }}>
+                {" "}
+                {formattedDuration}
+              </span>
             </p>
             <p>
-              <strong>Số bài học:</strong> {totalLessons} bài
+              <strong>Số bài học:</strong>{" "}
+              <span className="course-detail-min" style={{ color: "#a7aeae" }}>
+                {totalLessons} Video
+              </span>
             </p>
             <p>
-              <strong>Mô tả:</strong> {course.description}
+              <strong>Mô tả:</strong>{" "}
+              <span className="course-detail-min" style={{ color: "#a7aeae" }}>
+                {course.description}
+              </span>
             </p>
             {!isEnrolled && (
               <Button
@@ -391,7 +425,7 @@ const CourseDetail = () => {
               </Button>
             )}
             {isEnrolled && (
-              <h6>
+              <h6 style={{ color: "#11bd23" }}>
                 Đã đăng ký
                 <span style={{ marginLeft: 10 }}>
                   <FaCheck />
