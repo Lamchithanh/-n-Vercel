@@ -19,11 +19,13 @@ import { deleteModuleAPI } from "../../Api/moduleApi";
 import { addLessonAPI } from "../../Api/lessonApi";
 import { updateLessonAPI } from "../../Api/lessonApi";
 import { deleteLessonAPI } from "../../Api/lessonApi";
+
 const Lessons = () => {
   const [lessons, setLessons] = useState([]);
   const [courses, setCourses] = useState([]);
   const [modules, setModules] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [moduleModalVisible, setModuleModalVisible] = useState(false);
   const [editingLesson, setEditingLesson] = useState(null);
@@ -46,20 +48,25 @@ const Lessons = () => {
       console.error("Error fetching courses:", error);
       message.error("Unable to load courses. Please try again later.");
       setCourses([]);
+    } finally {
+      setInitialLoading(false);
     }
   }, [selectedCourse]);
 
   // Fetch lessons
   const fetchLessons = useCallback(async () => {
-    if (!selectedCourse) return;
+    if (!selectedCourse) {
+      setLessons([]);
+      return;
+    }
 
     try {
       setLoading(true);
       const lessonsData = await fetchLessonsAPI(
         selectedModule || "all",
         selectedCourse
-      ); // Truyền thêm selectedCourse
-      setLessons(lessonsData);
+      );
+      setLessons(lessonsData || []);
     } catch (error) {
       console.error("Error fetching lessons:", error);
       message.error("Unable to load lessons. Please try again later.");
@@ -71,11 +78,15 @@ const Lessons = () => {
 
   // Fetch modules
   const fetchModules = useCallback(async () => {
-    if (!selectedCourse) return;
+    if (!selectedCourse) {
+      setModules([]);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       const modulesData = await fetchModulesAPI(selectedCourse, token);
-      setModules(modulesData);
+      setModules(modulesData || []);
     } catch (error) {
       console.error("Error fetching modules:", error);
       message.error("Unable to load modules. Please try again later.");
@@ -85,7 +96,7 @@ const Lessons = () => {
 
   useEffect(() => {
     fetchCourses();
-  }, []); // Chỉ chạy một lần khi component mount
+  }, []);
 
   useEffect(() => {
     if (selectedCourse) {
@@ -101,8 +112,8 @@ const Lessons = () => {
 
   const handleCourseChange = (courseId) => {
     setSelectedCourse(courseId);
-    setSelectedModule(null); // Reset selected module when course changes
-    setLessons([]); // Reset lessons when course changes
+    setSelectedModule(null);
+    setLessons([]);
   };
 
   const handleModuleChange = (moduleId) => {
@@ -264,7 +275,7 @@ const Lessons = () => {
   };
 
   return (
-    <Spin spinning={loading}>
+    <Spin spinning={initialLoading || loading}>
       <div
         style={{
           display: "flex",
@@ -330,7 +341,11 @@ const Lessons = () => {
       </div>
 
       <Row gutter={16}>
-        {lessons.length > 0 ? (
+        {!initialLoading && !loading && lessons.length === 0 ? (
+          <Col span={24}>
+            <Card>No lessons available</Card>
+          </Col>
+        ) : (
           lessons.map((lesson) => (
             <Col key={lesson.id} xs={24} sm={12} md={8} lg={6}>
               <Card
@@ -373,10 +388,6 @@ const Lessons = () => {
               </Card>
             </Col>
           ))
-        ) : (
-          <Col span={24}>
-            <Card>No lessons available</Card>
-          </Col>
         )}
       </Row>
 

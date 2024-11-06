@@ -119,7 +119,7 @@ const CourseReview = ({ courseId, isEnrolled }) => {
     return (
       <Card className="mb-4">
         <div className="flex items-center gap-4">
-          <Rate disabled allowHalf value={stats.averageRating} />
+          <Rate disabled allowHalf value={stats.averageRating} /> <span></span>
           <span>{averageRating.toFixed(1)} </span>
           <span className="text-gray-500">({stats.totalReviews} đánh giá)</span>
         </div>

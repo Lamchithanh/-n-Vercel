@@ -307,7 +307,7 @@ const CourseDetail = () => {
         onClick={() => navigate(-1)}
         style={{ marginBottom: 16 }}
       >
-        Quay lại
+        ← Quay lại
       </Button>
 
       <Row gutter={16}>
@@ -388,14 +388,18 @@ const CourseDetail = () => {
                   alt={course.title}
                   src={course.image || defaultImage}
                   style={{
-                    width: "300px",
-                    height: "auto",
+                    width: "100%",
+                    maxWidth: "600px",
+                    height: "500px",
                     borderRadius: "8px",
+                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                    display: "block",
+                    margin: "20px auto",
                   }}
                 />
               )}
             </div>
-            <Title level={4} style={{ margin: "20px 20px" }}>
+            <Title level={4} style={{ margin: "30px 20px" }}>
               Nội dung khóa học
             </Title>
             <Collapse items={moduleItems} />
@@ -408,15 +412,15 @@ const CourseDetail = () => {
 
         <Col span={6}>
           <Card title="Thông tin khóa học">
-            <p>
-              <strong>Giá:</strong>
-              <strong style={{ color: "orange" }}>
-                {" "}
-                {course.price === "0" || course.price === "0.00"
-                  ? "Miễn phí"
-                  : `${course.price} vnd`}
-              </strong>
-            </p>
+            {!isEnrolled && (
+              <div style={{ marginBottom: 10 }} className="course-price">
+                <strong>
+                  Giá:{" "}
+                  <span style={{ color: "orange" }}>{course.price} VND</span>{" "}
+                </strong>
+              </div>
+            )}
+
             {/* <p>
               <strong>Giảng viên:</strong> {course.instructor_name}
             </p> */}
@@ -478,10 +482,12 @@ const CourseDetail = () => {
               </>
             )}
             {isEnrolled && (
-              <h6 style={{ color: "#11bd23" }}>
-                Đã đăng ký
+              <h6 style={{ color: "#11bd23", textAlign: "center" }}>
                 <span style={{ marginLeft: 10 }}>
-                  <FaCheck />
+                  Đã đăng ký
+                  <span style={{ marginLeft: 5 }}>
+                    <FaCheck />
+                  </span>
                 </span>
               </h6>
             )}

@@ -3,16 +3,12 @@ const router = express.Router();
 const {
   getCertificates,
   createCertificate,
-  downloadCertificate,
+  deleteCertificate, // Đảm bảo hàm này được import
 } = require("../controllers/certificatesController");
 
-// Lấy danh sách chứng chỉ
+// Đảm bảo rằng tất cả các hàm handler này đều được khai báo
 router.get("/certificates", getCertificates);
-
-// Tạo chứng chỉ mới
 router.post("/certificates", createCertificate);
-
-// Tải xuống chứng chỉ
-router.get("/certificates/:id/download", downloadCertificate);
+router.delete("/certificates/:id", deleteCertificate); // Route để xóa chứng chỉ
 
 module.exports = router;

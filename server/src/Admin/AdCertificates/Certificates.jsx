@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, Form, Select, message, DatePicker } from "antd";
 import axios from "axios";
 import { format, parseISO, isValid } from "date-fns";
-import dayjs from "dayjs"; // Thêm import dayjs
+import dayjs from "dayjs";
 
-const Certificates = ({ fetchUsers, fetchCourses }) => {
+const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
   const [certificates, setCertificates] = useState([]);
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -61,7 +63,7 @@ const Certificates = ({ fetchUsers, fetchCourses }) => {
       const formData = {
         user_id: values.user_id,
         course_id: values.course_id,
-        issued_at: values.issued_at.format("YYYY-MM-DD HH:mm:ss"), // Format datetime
+        issued_at: values.issued_at.format("YYYY-MM-DD HH:mm:ss"),
       };
 
       const response = await axios.post(
@@ -88,51 +90,39 @@ const Certificates = ({ fetchUsers, fetchCourses }) => {
     }
   };
 
+  const handleDeleteCertificate = async () => {
+    try {
+      setSubmitLoading(true);
+      const token = localStorage.getItem("token");
+      console.log("Deleting certificate with ID:", selectedCertificate?.id);
+
+      await axios.delete(
+        `http://localhost:9000/api/certificates/${selectedCertificate.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      message.success("Certificate deleted successfully");
+
+      setIsDeleteModalVisible(false);
+      fetchData();
+    } catch (error) {
+      console.error("Delete certificate error:", error);
+      message.error(
+        error.response?.data?.message || "Failed to delete certificate"
+      );
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "Unknown";
     try {
       return dayjs(dateString).format("DD/MM/YYYY HH:mm:ss");
     } catch (error) {
       return "Invalid Date";
-    }
-  };
-
-  const handleDownloadCertificate = async (certificate) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `http://localhost:9000/api/certificates/${certificate.id}/download`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: "blob",
-        }
-      );
-
-      // Check if the response is valid
-      if (response.status !== 200) {
-        throw new Error("Failed to download certificate");
-      }
-
-      // Create blob URL and trigger download
-      const blob = new Blob([response.data], {
-        type: response.headers["content-type"],
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `certificate-${certificate.user_id}-${certificate.course_id}.pdf`
-      );
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error("Download error:", error);
-      message.error("Failed to download certificate");
     }
   };
 
@@ -179,12 +169,17 @@ const Certificates = ({ fetchUsers, fetchCourses }) => {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <Button
-          onClick={() => handleDownloadCertificate(record)}
-          className="bg-blue-500 hover:bg-blue-600 text-black"
-        >
-          Download
-        </Button>
+        <div className="space-x-2">
+          <Button
+            onClick={() => {
+              setSelectedCertificate(record);
+              setIsDeleteModalVisible(true);
+            }}
+            className="bg-red-500 hover:bg-red-600"
+          >
+            Delete
+          </Button>
+        </div>
       ),
     },
   ];
@@ -290,8 +285,38 @@ const Certificates = ({ fetchUsers, fetchCourses }) => {
           </div>
         </Form>
       </Modal>
+      <Modal
+        title="Delete Certificate"
+        open={isDeleteModalVisible}
+        onCancel={() => setIsDeleteModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="delete"
+            className="bg-red-500 hover:bg-red-600 "
+            onClick={handleDeleteCertificate}
+            loading={submitLoading}
+          >
+            Delete
+          </Button>,
+        ]}
+      >
+        <p>
+          Are you sure you want to delete the certificate for{" "}
+          {selectedCertificate?.user_id
+            ? users.find((u) => u.id === selectedCertificate.user_id)?.username
+            : "Unknown"}{" "}
+          in the{" "}
+          {selectedCertificate?.course_id
+            ? courses.find((c) => c.id === selectedCertificate.course_id)?.title
+            : "Unknown"}{" "}
+          course?
+        </p>
+      </Modal>
     </div>
   );
 };
 
-export default Certificates;
+export default CertificateManagement;

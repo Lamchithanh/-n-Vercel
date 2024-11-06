@@ -16,10 +16,11 @@ CREATE TABLE users (
   reset_token_expiry BIGINT,
   isLocked BOOLEAN DEFAULT FALSE,
   lockReason VARCHAR(255),
-  lockedAt DATETIME
+  lockedAt DATETIME,
+  lockedUntil DATETIME  -- Thêm cột cho thời gian khóa tài khoản
 );
 
--- Tạo bảng lưu lịch sử khóa (tùy chọn)
+-- Bảng lưu lịch sử khóa (tùy chọn)
 CREATE TABLE user_lock_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
     userId BIGINT UNSIGNED,
@@ -41,12 +42,13 @@ CREATE TABLE courses (
   total_lessons INT DEFAULT 0,
   image VARCHAR(255),
   intro_video_url VARCHAR(255),
+  duration INT,  -- Thêm cột cho thời gian của khóa học
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (instructor_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Bảng Modules
+-- Bảng Modules (Phân mục trong khóa học)
 CREATE TABLE modules (
   id SERIAL PRIMARY KEY,
   course_id BIGINT UNSIGNED,
@@ -57,7 +59,7 @@ CREATE TABLE modules (
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
 
--- Bảng Lessons
+-- Bảng Lessons (Bài học trong mỗi module)
 CREATE TABLE lessons (
   id SERIAL PRIMARY KEY,
   course_id BIGINT UNSIGNED,
@@ -74,7 +76,55 @@ CREATE TABLE lessons (
   FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 );
 
--- Bảng Payments
+-- Bảng Enrollments (Đăng ký khóa học)
+CREATE TABLE enrollments (
+  id SERIAL PRIMARY KEY,
+  user_id BIGINT UNSIGNED,
+  course_id BIGINT UNSIGNED,
+  enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+-- Bảng Progress Tracking (Theo dõi tiến độ học tập)
+CREATE TABLE progress (
+  id SERIAL PRIMARY KEY,
+  user_id BIGINT UNSIGNED,
+  lesson_id BIGINT UNSIGNED,
+  status ENUM('not_started', 'in_progress', 'completed') NOT NULL,
+  last_watched_position INTEGER,
+  total_time_watched INT DEFAULT 0,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
+);
+
+-- Bảng Certificates (Chứng chỉ khóa học)
+CREATE TABLE certificates (
+  id SERIAL PRIMARY KEY,
+  user_id BIGINT UNSIGNED,
+  course_id BIGINT UNSIGNED,
+  issued_at DATE,
+  certificate_url VARCHAR(255),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+-- Bảng Course Reviews (Đánh giá khóa học)
+CREATE TABLE course_reviews (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  course_id BIGINT UNSIGNED NOT NULL,
+  user_id BIGINT UNSIGNED NOT NULL,
+  rating TINYINT UNSIGNED CHECK (rating BETWEEN 1 AND 5),
+  review_text TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Bảng Payments (Lịch sử thanh toán)
 CREATE TABLE payments (
   id SERIAL PRIMARY KEY,
   user_id BIGINT UNSIGNED,
@@ -90,77 +140,37 @@ CREATE TABLE payments (
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
 
--- Bảng Enrollments
-CREATE TABLE enrollments (
-  id SERIAL PRIMARY KEY,
-  user_id BIGINT UNSIGNED,
-  course_id BIGINT UNSIGNED,
-  enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  completed_at TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
--- Bảng Progress Tracking
-CREATE TABLE progress (
-  id SERIAL PRIMARY KEY,
-  user_id BIGINT UNSIGNED,
-  lesson_id BIGINT UNSIGNED,
-  status ENUM('not_started', 'in_progress', 'completed') NOT NULL,
-  last_watched_position INTEGER,
-  total_time_watched INT DEFAULT 0,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
-);
-
--- Bảng Certificates
-CREATE TABLE certificates (
-  id SERIAL PRIMARY KEY,
-  user_id BIGINT UNSIGNED,
-  course_id BIGINT UNSIGNED,
-  issued_at DATE,
-  certificate_url VARCHAR(255),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
--- Bảng Course Reviews
-CREATE TABLE course_reviews (
+-- Bảng Lesson Progress (Tiến độ bài học của người dùng)
+CREATE TABLE lesson_progress (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  course_id BIGINT UNSIGNED NOT NULL,
   user_id BIGINT UNSIGNED NOT NULL,
-  rating TINYINT UNSIGNED CHECK (rating BETWEEN 1 AND 5),
-  review_text TEXT,
+  course_id BIGINT UNSIGNED NOT NULL,
+  lesson_id BIGINT UNSIGNED NOT NULL,
+  status ENUM('started', 'completed') DEFAULT 'started',
+  progress_percentage INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_progress (user_id, lesson_id)
 );
 
--- Thêm dữ liệu vào bảng courses
-INSERT INTO courses (title, description, price, level, category, total_lessons, image, intro_video_url)
-VALUES
-('Beginner JavaScript', 'Learn the basics of JavaScript from scratch.', 499000, 'beginner', 'Programming', 10, 'javascript.jpg', 'https://example.com/intro-js.mp4'),
-('Intermediate Python', 'Deepen your Python knowledge with this intermediate course.', 799000, 'intermediate', 'Programming', 8, 'python.jpg', 'https://example.com/intro-python.mp4'),
-('Advanced Data Science', 'Master advanced data science concepts and techniques.', 999000, 'advanced', 'Data Science', 12, 'data_science.jpg', 'https://example.com/intro-ds.mp4');
+SET FOREIGN_KEY_CHECKS = 0;
+SET SQL_SAFE_UPDATES = 0;
 
--- Thêm dữ liệu vào bảng modules
-INSERT INTO modules (course_id, title, order_index)
-VALUES
-(5, 'Introduction to JavaScript', 1),
-(5, 'JavaScript Variables and Data Types', 2),
-(2, 'Python Functions and Modules', 1),
-(2, 'Working with Files in Python', 2),
-(24, 'Data Processing in Data Science', 1),
-(24, 'Machine Learning Models', 2);
+SET SQL_SAFE_UPDATES = 1;
+SET FOREIGN_KEY_CHECKS = 1;
 
--- Thêm dữ liệu vào bảng lessons
-INSERT INTO lessons (course_id, module_id, title, content, description, video_url, order_index)
-VALUES
-(5, 1, 'JavaScript Introduction', 'Introduction to JavaScript content...', 'Learn the basics of JavaScript.', 'https://example.com/js-intro.mp4', 1),
-(5, 8, 'JavaScript Variables', 'Understanding JavaScript variables...', 'Learn about variables in JavaScript.', 'https://example.com/js-variables.mp4', 2),
-(2, 9, 'Python Functions', 'In-depth look at Python functions...', 'Learn how to use functions in Python.', 'https://example.com/python-functions.mp4', 1),
-(2, 10, 'Python File Handling', 'Handling files with Python...', 'Learn to work with files in Python.', 'https://example.com/python-files.mp4', 2),
-(24, 11, 'Data Processing Techniques', 'Techniques for data processing...', 'Advanced techniques in data processing.', 'https://example.com/data-processing.mp4', 1),
-(24, 12, 'Introduction to Machine Learning', 'Introductory content on ML...', 'Overview of machine learning models.', 'https://example.com/ml-intro.mp4', 2);
+DELETE FROM lesson_progress WHERE user_id = 1;
+DELETE FROM payments;
+DELETE FROM course_reviews;
+DELETE FROM certificates;
+DELETE FROM progress;
+DELETE FROM enrollments;
+DELETE FROM lessons;
+DELETE FROM modules;
+DELETE FROM courses;
+DELETE FROM user_lock_history;
+DELETE FROM users WHERE id != 1;
+

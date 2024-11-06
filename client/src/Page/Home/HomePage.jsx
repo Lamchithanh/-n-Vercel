@@ -16,6 +16,7 @@ import {
 import {
   LaptopOutlined,
   NotificationOutlined,
+  TrophyOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
@@ -177,6 +178,12 @@ const HomePage = () => {
         { label: "Thông báo khác", path: "/" },
       ],
     },
+    {
+      key: "4",
+      icon: <TrophyOutlined />, // Icon cho mục chứng chỉ
+      label: "Chứng chỉ",
+      children: [{ label: "Danh sách chứng chỉ", path: "certificates" }],
+    },
   ].map((menu) => ({
     ...menu,
     children: menu.children.map((item, index) => ({
@@ -203,17 +210,27 @@ const HomePage = () => {
                 alt={course.title}
                 src={course.image || defaultImage}
                 style={{
-                  width: "100%",
-                  height: "200px",
-                  objectFit: "contain",
+                  borderRadius: "8px",
+                  margin: "10px",
+                  width: "150px",
+                  height: "150px",
+                  objectFit: "cover",
                 }}
               />
             }
             style={{
+              border: "2px solid rgb(167, 174, 171)", // Viền xám ban đầu
               marginBottom: "16px",
               cursor: "pointer",
               borderRadius: "8px",
               boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+              transition: "border-color 0.3s ease", // Thêm hiệu ứng chuyển màu viền
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#41a5db"; // Đổi màu viền thành xanh khi hover
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgb(167, 174, 171)"; // Trả lại màu viền ban đầu khi không hover
             }}
           >
             <div className="relative">
@@ -285,7 +302,7 @@ const HomePage = () => {
       </Header>
 
       <Content style={{ padding: "0 24px 24px" }}>
-        <Breadcrumb className="breadcrumb" items={[{ title: "Trang chủ" }]} />
+        <Breadcrumb className="breadcrumb" items={[{ title: "" }]} />
         <div className="content">
           {location.pathname === "/" ? renderHomeContent() : <Outlet />}
           <Pagination

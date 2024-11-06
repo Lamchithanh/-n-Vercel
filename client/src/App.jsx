@@ -19,6 +19,7 @@ import AccountSettings from "./Page/AccountSettings/AccountSettings";
 import CourseDetail from "./Page/CourseDetail/CourseDetail"; // Nhập CourseDetail
 import PropTypes from "prop-types"; // Thêm import PropTypes
 import PaymentPage from "./Page/PaymentPage/PaymentPage ";
+import CertificatesPage from "./Page/CertificatesPage/CertificatesPage";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -45,6 +46,7 @@ const App = () => {
             <Route index element={<HomePage />} />
             <Route path="user-info" element={<UserInfo />} />
             <Route path="payment/:id" element={<PaymentPage />} />
+            <Route path="certificates" element={<CertificatesPage />} />
             <Route path="change-password" element={<ChangePassword />} />
             <Route path="my-courses" element={<MyCourses />} />
             <Route path="account-settings" element={<AccountSettings />} />
