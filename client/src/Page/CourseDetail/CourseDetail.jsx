@@ -277,6 +277,25 @@ const CourseDetail = () => {
   // Sử dụng hàm convert để hiển thị thời gian
   const formattedDuration = convertMinutesToHMS(totalDuration);
 
+  const checkPaymentStatus = () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) return false;
+
+    const paidCoursesData =
+      JSON.parse(localStorage.getItem("paidCourses")) || {};
+    const userPaidCourses = paidCoursesData[user.id] || [];
+
+    return userPaidCourses.includes(courseId);
+  };
+
+  // Add this state
+  const [hasPaid, setHasPaid] = useState(false);
+
+  // Add this to your useEffect
+  useEffect(() => {
+    setHasPaid(checkPaymentStatus());
+  }, [courseId]);
+
   if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
   if (!course) return <p>Không tìm thấy khóa học.</p>;
@@ -391,7 +410,12 @@ const CourseDetail = () => {
           <Card title="Thông tin khóa học">
             <p>
               <strong>Giá:</strong>
-              <strong style={{ color: "orange" }}> {course.price} VND</strong>
+              <strong style={{ color: "orange" }}>
+                {" "}
+                {course.price === "0" || course.price === "0.00"
+                  ? "Miễn phí"
+                  : `${course.price} vnd`}
+              </strong>
             </p>
             {/* <p>
               <strong>Giảng viên:</strong> {course.instructor_name}
@@ -416,13 +440,42 @@ const CourseDetail = () => {
               </span>
             </p>
             {!isEnrolled && (
-              <Button
-                style={{ backgroundColor: "#4caf50", borderColor: "#4caf50" }}
-                type="primary"
-                onClick={handleEnroll}
-              >
-                Đăng ký khóa học
-              </Button>
+              <>
+                {course.price === "0" || course.price === "0.00" ? (
+                  <Button
+                    style={{
+                      backgroundColor: "#4caf50",
+                      borderColor: "#4caf50",
+                    }}
+                    type="primary"
+                    onClick={handleEnroll}
+                  >
+                    Đăng ký khóa học
+                  </Button>
+                ) : hasPaid ? (
+                  <Button
+                    style={{
+                      backgroundColor: "#4caf50",
+                      borderColor: "#4caf50",
+                    }}
+                    type="primary"
+                    onClick={handleEnroll}
+                  >
+                    Đăng ký khóa học
+                  </Button>
+                ) : (
+                  <Button
+                    type="primary"
+                    onClick={() => navigate(`/payment/${courseId}`)}
+                    style={{
+                      backgroundColor: "#f5222d",
+                      borderColor: "#f5222d",
+                    }}
+                  >
+                    Thanh toán
+                  </Button>
+                )}
+              </>
             )}
             {isEnrolled && (
               <h6 style={{ color: "#11bd23" }}>

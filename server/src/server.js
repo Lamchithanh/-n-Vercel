@@ -14,7 +14,7 @@ const courseReviewsRoutes = require("./routes/courseReviewsRoutes");
 const searchRoutes = require("./routes/courseRoutes");
 const certificateRoutes = require("./routes/certificateRoutes");
 const { startCronJob } = require("./controllers/userController.js"); // Import cron job
-
+const paymentRoutes = require("./routes/paymentRoutes.js");
 const app = express();
 const port = process.env.PORT || 9000;
 
@@ -39,6 +39,7 @@ app.use("/api", enrollmentRoutes);
 app.use("/api", courseReviewsRoutes);
 app.use("/api/courses", searchRoutes);
 app.use("/api", certificateRoutes);
+app.use(paymentRoutes);
 
 // Middleware xử lý lỗi
 app.use((err, req, res, next) => {
