@@ -30,10 +30,12 @@ exports.startCronJob = () => {
     }
   });
 };
+
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Kiểm tra user tồn tại
     const [results] = await pool.query("SELECT * FROM users WHERE email = ?", [
       email,
     ]);
@@ -44,26 +46,31 @@ exports.login = async (req, res) => {
 
     const user = results[0];
 
-    // Kiểm tra xem tài khoản có bị khóa không (isLocked = 1 là bị khóa)
-    if (user.isLocked === 1) {
+    // Kiểm tra trạng thái khóa trước khi kiểm tra mật khẩu
+    if (user.isLocked) {
       const now = new Date();
       const lockedUntil = user.lockedUntil ? new Date(user.lockedUntil) : null;
 
-      // Nếu thời gian khóa đã qua, mở khóa tài khoản
       if (lockedUntil && now >= lockedUntil) {
-        // Mở khóa tài khoản
+        // Tự động mở khóa nếu đã hết thời gian
         await pool.query(
-          "UPDATE users SET isLocked = FALSE, lockReason = NULL, lockedAt = NULL, lockedUntil = NULL WHERE id = ?",
+          `UPDATE users 
+           SET isLocked = FALSE, 
+               lockReason = NULL, 
+               lockedAt = NULL, 
+               lockedUntil = NULL 
+           WHERE id = ?`,
           [user.id]
         );
-        user.isLocked = 0; // Cập nhật trạng thái trong bộ nhớ
-
-        console.log(`Tài khoản của ${user.email} đã được mở khóa tự động.`);
       } else {
-        // Tài khoản vẫn đang bị khóa
+        // Trả về thông tin khóa để frontend hiển thị
         return res.status(403).json({
-          error: "Tài khoản đã bị khóa.",
-          lockReason: user.lockReason || "Không có lý do cụ thể.",
+          error: "Tài khoản bị khóa",
+          lockInfo: {
+            reason: user.lockReason || "Không có lý do cụ thể",
+            lockedUntil: user.lockedUntil,
+            isLocked: true,
+          },
         });
       }
     }
@@ -74,10 +81,16 @@ exports.login = async (req, res) => {
     }
 
     // Tạo token JWT
-    const token = jwt.sign({ userId: user.id }, process.env.SECRET_KEY, {
-      expiresIn: "1d",
-    });
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role,
+      },
+      process.env.SECRET_KEY,
+      { expiresIn: "1d" }
+    );
 
+    // Trả về thông tin user (không bao gồm password)
     res.status(200).json({
       token,
       user: {
@@ -85,6 +98,7 @@ exports.login = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
+        isLocked: false,
       },
       message: "Đăng nhập thành công!",
     });
@@ -93,7 +107,6 @@ exports.login = async (req, res) => {
     return res.status(500).json({ error: "Đã xảy ra lỗi. Vui lòng thử lại." });
   }
 };
-
 // truy xuất và đăng ký
 exports.register = async (req, res) => {
   const { username, email, password, role } = req.body;
