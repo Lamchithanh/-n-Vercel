@@ -218,41 +218,59 @@ const CourseDetail = () => {
     ),
     children: (
       <ul className="lesson-list">
-        {lessons[module.id]?.map((lesson) => (
+        {lessons[module.id] && lessons[module.id].length > 0 ? (
+          lessons[module.id].map((lesson) => (
+            <li
+              key={lesson.id}
+              className={`lesson-item ${
+                selectedLesson?.id === lesson.id ? "active" : ""
+              }`}
+              onClick={() => handleLessonClick(lesson)}
+              style={{
+                cursor: "pointer",
+                padding: "10px",
+                backgroundColor:
+                  selectedLesson?.id === lesson.id ? "#f0f0f0" : "#d0ebf1",
+                borderRadius: "4px",
+                marginBottom: "8px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                transition: "background-color 0.3s ease",
+                boxShadow:
+                  selectedLesson?.id === lesson.id
+                    ? "0 0 8px rgba(0, 123, 255, 0.3)"
+                    : "none",
+              }}
+            >
+              <span className="lesson-title">
+                <strong>{`Bài ${lessonCounter++}: `}</strong>
+                {lesson.title}
+              </span>
+              {lesson.duration && (
+                <span className="lesson-duration">{lesson.duration}</span>
+              )}
+            </li>
+          ))
+        ) : (
           <li
-            key={lesson.id}
-            className={`lesson-item ${
-              selectedLesson?.id === lesson.id ? "active" : ""
-            }`}
-            onClick={() => handleLessonClick(lesson)}
+            className="no-lesson-message"
             style={{
-              cursor: "pointer",
               padding: "10px",
-              backgroundColor:
-                selectedLesson?.id === lesson.id ? "#f0f0f0" : "#d0ebf1",
+              backgroundColor: "#ffd3d3",
               borderRadius: "4px",
-              marginBottom: "8px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              transition: "background-color 0.3s ease",
-              boxShadow:
-                selectedLesson?.id === lesson.id
-                  ? "0 0 8px rgba(0, 123, 255, 0.3)"
-                  : "none",
+              textAlign: "center",
+              color: "#b22222",
+              fontStyle: "italic",
+              boxShadow: "0 0 8px rgba(178, 34, 34, 0.3)",
             }}
           >
-            <span className="lesson-title">
-              <strong>{`Bài ${lessonCounter++}: `}</strong>
-              {lesson.title}
-            </span>
-            {lesson.duration && (
-              <span className="lesson-duration">{lesson.duration}</span>
-            )}
+            Bài học chưa có
           </li>
-        ))}
+        )}
       </ul>
     ),
+
     onExpand: () => loadLessons(module.id),
   }));
 
@@ -411,7 +429,14 @@ const CourseDetail = () => {
         </Col>
 
         <Col span={6}>
-          <Card title="Thông tin khóa học">
+          <Card
+            style={{
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              position: "sticky",
+              top: "20px",
+            }}
+            title="Thông tin khóa học"
+          >
             {!isEnrolled && (
               <div style={{ marginBottom: 10 }} className="course-price">
                 <strong>

@@ -3,209 +3,110 @@
 @import url("https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@600&family=Frank+Ruhl+Libre:wght@300..900&family=Playfair+Display&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@600&family=Exo:ital,wght@0,500;1,500&family=Frank+Ruhl+Libre:wght@300..900&family=Playfair+Display:wght@500&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@700&family=Exo:ital,wght@0,500;1,500&family=Playfair+Display:wght@500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=Great+Vibes&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=Great+Vibes&family=Quattrocento:wght@400;700&display=swap");
 
-.certificates-page {
-  padding: 20px;
-  background-color: #f9f9f9;
-}
+.certificates-scroll-view {
+  height: 100vh;
+  overflow-y: auto;
+  background: linear-gradient(
+    45deg,
+    #001f3f,
+    #0074d9,
+    #7fdbff,
+    #b0c4de,
+    #4682b4
+  );
+  background-size: 400% 400%;
+  animation: rainbow-animation 12s ease infinite;
 
-.certificates-header {
-  text-align: center;
-  margin-bottom: 30px;
-  h2 {
-    color: #004080;
+  @keyframes rainbow-animation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
   }
-  p {
-    color: #555;
+  /* Ẩn thanh cuộn cho các trình duyệt Webkit (Chrome, Safari) */
+  &::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
   }
-}
 
-.certificates-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 300px;
-  .ant-spin {
-    margin-right: 10px;
-  }
-}
+  /* Ẩn thanh cuộn cho Firefox */
+  scrollbar-width: none;
 
-.certificates-error {
-  text-align: center;
-  color: #ff4d4f;
-  font-size: 18px;
-}
+  /* Ẩn thanh cuộn cho IE và Edge */
+  -ms-overflow-style: none;
 
-.certificates-empty {
-  text-align: center;
-  color: #888;
-}
+  .certificates-content-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    gap: 20px; // Khoảng cách giữa các certificates
 
-.certificates {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-.certificate-card {
-  width: 1000px;
-  .certificate-content {
-    text-align: center;
-    padding: 15px;
-    .certificate-header {
+    .form-certificates {
       display: flex;
+      justify-content: center;
+      align-content: space-evenly;
       align-items: center;
-      margin-bottom: 10px;
-      .certificate-icon {
-        width: 60px;
-        height: 60px;
-        margin-right: 15px;
-      }
-      .certificate-title {
-        font-size: 18px;
-        font-weight: bold;
-        color: #0073e6;
-      }
-    }
-
-    .certificate-details {
-      .detail-item {
-        margin-bottom: 8px;
-        .label {
-          font-weight: bold;
-          color: #555;
-        }
-        .value {
-          color: #333;
-        }
-      }
-    }
-
-    .certificate-footer {
-      margin-top: 15px;
-      .issuer {
-        text-align: right;
-        span {
-          font-size: 14px;
-        }
-      }
-    }
-  }
-}
-
-.certificates-pagination {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.certificates-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 40px;
-
-  .form-certificates {
-    display: grid;
-    grid-template-columns: 3fr 1fr 1fr;
-    font-family: "Playfair Display", cursive;
-    justify-content: space-between;
-    align-content: space-evenly;
-    background-image: url("../../assets/img/bgchungchi.jpg");
-    background-size: cover;
-    background-position: center;
-    width: 1000px;
-    height: 700px;
-    background-color: #f9f5e9;
-    text-align: center;
-    position: relative;
-    z-index: 100;
-
-    // &::before {
-    //   content: "";
-    //   position: absolute;
-    //   top: 50px;
-    //   left: 60px;
-    //   width: 300px;
-    //   height: 300px;
-    //   background-image: url("../../assets/img/logomac.png");
-    //   background-size: contain;
-    //   background-repeat: no-repeat;
-    //   z-index: 1;
-    // }
-
-    .border-form {
-      padding: 30px 60px;
-      min-height: 500px;
-      min-width: 900px;
+      background-image: url("../../assets/img/Certificate3.png");
+      background-size: cover;
+      background-position: center;
+      width: 1000px;
+      height: 700px;
+      background-color: #f9f5e9;
+      text-align: center;
       position: relative;
-
-      .certificates-title {
-        font-weight: bold; /* Đậm chữ */
-        background: linear-gradient(45deg, #d4af37, #f8e16c, #b58b2d);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-
-        p {
-          font-size: 35px;
-          font-family: "Dancing Script", cursive;
-        }
-        h2 {
-          font-size: 48px;
-          font-family: "Playfair Display", cursive;
-          color: #0073e6;
-          font-weight: bold;
-          color: white;
-          text-align: center;
-          background: linear-gradient(
-            45deg,
-            #1066bb,
-            #00bfff,
-            #87cefa
-          ); /* Xanh dương ánh kim */
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          text-transform: capitalize;
-          letter-spacing: 2px;
-        }
-      }
+      z-index: 100;
 
       .certificates-username {
-        font-size: 60px;
-        font-family: "Dancing Script", cursive;
+        font-size: 40px;
+        font-family: "Great Vibes", cursive;
         margin: 25px 0;
+        padding-top: 25px;
+        color: #1e90ff;
       }
-      .certificates-courses {
-        font-weight: bold;
-        display: grid;
-        justify-content: center;
-        text-align: center;
-        align-items: center;
-        color: #0073e6;
-        font-family: "Exo", cursive;
-      }
-      .certificates-describe {
-        line-height: 1.5;
-        margin-top: 10px;
-        font-size: 13px;
-        width: 600px;
-        text-align: center;
-        color: #333;
-        font-weight: bold;
-      }
+
       .certificates-footer {
         display: flex;
         justify-content: space-around;
-        margin-top: 90px;
-        font-family: "Exo", cursive;
+        font-family: "Quattrocento", cursive;
+        font-weight: bold;
+        position: absolute;
+        bottom: 18%;
+        width: 100%;
 
-        .certificates-footer-admin,
-        .certificates-footer-data {
-          display: grid;
-          margin-right: 70px;
+        .signature-section {
+          text-align: center;
+
+          .certificates-course .value,
+          .value {
+            display: block;
+            margin-bottom: 15px;
+            font-family: "Quattrocento", cursive;
+            color: #1e90ff;
+          }
+
+          .signature {
+            font-weight: bold;
+          }
         }
       }
     }
   }
+}
+
+.certificates-loading,
+.certificates-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
 }
