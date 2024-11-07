@@ -1,15 +1,27 @@
-// .main-container {
-//   flex: 1; /* This makes the main content fill up the remaining space */
-//   padding: 20px; /* Optional: add padding to your content */
-//   display: flex;
-//   justify-content: center;
-//   align-items: center;
-// }
+/* User Page Wrapper */
+.user-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-// .footer {
-//   flex-shrink: 0; /* Prevents the footer from shrinking */
-//   width: 100%;
-//   padding: 10px 0;
-//   text-align: center;
-//   background-color: #f1f1f1; /* Optional: add background color */
-// }
+/* Header */
+.user-header {
+  flex-shrink: 0;
+}
+
+/* Main Content */
+.user-main {
+  flex-grow: 1;
+}
+
+/* Footer */
+.user-footer {
+  flex-shrink: 0;
+  height: 50px;
+  background-color: rgba(121, 211, 231, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px;
+}

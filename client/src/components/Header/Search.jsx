@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { API_URL } from "../../../../server/src/config/config";
 import { Input, Card, List, Spin, Typography } from "antd";
@@ -14,6 +14,7 @@ const CourseSearch = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const searchRef = useRef(null); // Reference for search container
 
   // Debounced search function to limit API calls
   const debouncedSearch = useCallback(
@@ -49,11 +50,8 @@ const CourseSearch = () => {
     [category, level]
   );
 
-  // Call search every time searchQuery changes
   useEffect(() => {
     debouncedSearch(searchQuery);
-
-    // Cleanup function
     return () => {
       debouncedSearch.cancel();
     };
@@ -71,14 +69,29 @@ const CourseSearch = () => {
     }
   };
 
+  // Clear search results when clicking outside the search container
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setResults([]);
+        setSearchQuery("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4" ref={searchRef}>
       <div className="mb-6" style={{ padding: 0 }}>
         <Input
           value={searchQuery}
           onChange={handleSearchInputChange}
           placeholder="Tìm kiếm khóa học..."
-          className="w-full mb-4"
+          className="w-full"
           allowClear
         />
       </div>
@@ -89,9 +102,17 @@ const CourseSearch = () => {
         </div>
       )}
 
-      {/* Only display the list if there are results */}
       {results.length > 0 && (
         <List
+          style={{
+            position: "absolute",
+            zIndex: 100,
+            marginTop: 20,
+            background: "#ffd3d3",
+            padding: 20,
+            borderRadius: 8,
+            left: 0,
+          }}
           grid={{
             gutter: 16,
             xs: 1,
@@ -103,42 +124,39 @@ const CourseSearch = () => {
           }}
           dataSource={results}
           pagination={{
-            onChange: (page) => {
-              console.log(page);
-            },
-            pageSize: 12,
+            pageSize: 6,
           }}
           renderItem={(course) => (
-            <List.Item key={course.id}>
+            <List.Item
+              style={{ display: "flex", justifyContent: "center" }}
+              key={course.id}
+            >
               <Card
+                style={{ width: "80%" }}
                 hoverable
-                className="h-full cursor-pointer transition-transform duration-200 hover:scale-105"
                 onClick={() => handleCardClick(course.id)}
-                cover={
-                  course.image && (
-                    <img
-                      alt={course.title}
-                      src={course.image}
-                      className="h-48 object-cover w-full"
-                    />
-                  )
-                }
               >
                 <Title level={4} className="mb-2 line-clamp-2">
                   {course.title}
                 </Title>
-                <Text className="text-gray-600 block mb-4 line-clamp-3">
+                <Text
+                  style={{ color: "gray" }}
+                  className="text-gray-600 block mb-4 line-clamp-3"
+                >
                   {course.description}
                 </Text>
                 <div className="flex justify-between items-center mt-auto">
-                  <Text strong className="text-blue-600">
-                    {course.price?.toLocaleString("vi-VN")} đ
+                  <Text style={{ color: "orange" }} strong>
+                    {course.price === "0" || course.price === "0.00"
+                      ? "Miễn phí"
+                      : `${course.price} vnd`}
                   </Text>
                   <div className="flex items-center gap-4">
                     <Text className="flex items-center gap-1">
                       <span>⭐</span>
                       {Number(course.average_rating || 0).toFixed(1)}
                     </Text>
+                    <span> - </span>
                     <Text>{course.total_students || 0} học viên</Text>
                   </div>
                 </div>

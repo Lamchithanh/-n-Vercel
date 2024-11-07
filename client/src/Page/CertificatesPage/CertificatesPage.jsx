@@ -1,16 +1,22 @@
 import { useEffect, useState } from "react";
-import { Typography, Spin, message } from "antd";
+import { Typography, Spin, message, Button } from "antd";
 import axios from "axios";
 import "./CertificatesPage.scss";
 import Loader from "../../context/Loader";
+import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 
 const CertificatesPage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
+
+  const handleJoinClick = () => {
+    navigate("/login"); // Điều hướng đến trang đăng nhập
+  };
 
   useEffect(() => {
     const fetchUserCertificates = async () => {
@@ -28,9 +34,11 @@ const CertificatesPage = () => {
         );
         setCertificates(userCertificates);
       } catch (err) {
-        setError("Không thể tải chứng chỉ. Vui lòng thử lại sau.");
+        // Thay đổi lỗi thành cảnh báo, dẫn đến đăng nhập khi người dùng nhấp vào
+        message.warning({
+          content: "Đăng nhập để sở hữu các chứng chỉ xuất sắc nhé!",
+        });
         console.error(err);
-        message.error("Không thể tải chứng chỉ. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
@@ -91,7 +99,18 @@ const CertificatesPage = () => {
           ))
         ) : (
           <div className="no-certificates">
-            Không có chứng chỉ nào được tìm thấy.
+            <p>Bạn chưa ghi danh hoàn thành khóa học nào! </p>
+            <p>
+              Hãy tham gia khóa học năng tầm cuộc sống cũng cố kiến thức, kinh
+              nghiệm và trãi nghiệm ngay nào.
+            </p>
+            <Button
+              onClick={handleJoinClick}
+              style={{ border: "1px #11bd23 solid" }}
+            >
+              {" "}
+              Tham gia{" "}
+            </Button>
           </div>
         )}
       </div>

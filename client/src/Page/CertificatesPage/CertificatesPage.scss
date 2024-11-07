@@ -7,16 +7,16 @@
 @import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=Great+Vibes&family=Quattrocento:wght@400;700&display=swap");
 
 .certificates-scroll-view {
-  height: 100vh;
+  height: auto;
   overflow-y: auto;
-  background: linear-gradient(
-    45deg,
-    #001f3f,
-    #0074d9,
-    #7fdbff,
-    #b0c4de,
-    #4682b4
-  );
+  // background: linear-gradient(
+  //   45deg,
+  //   #001f3f,
+  //   #0074d9,
+  //   #7fdbff,
+  //   #b0c4de,
+  //   #4682b4
+  // );
   background-size: 400% 400%;
   animation: rainbow-animation 12s ease infinite;
 
@@ -98,6 +98,13 @@
           }
         }
       }
+    }
+    .no-certificates {
+      text-align: center;
+      background-color: rgb(249, 249, 249);
+      padding: 20px 40px;
+      border-radius: 8px;
+      box-shadow: #ffb1b1 0 5px 10px 2px;
     }
   }
 }

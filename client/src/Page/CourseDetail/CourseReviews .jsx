@@ -114,13 +114,18 @@ const CourseReview = ({ courseId, isEnrolled }) => {
   const renderStats = () => {
     if (!stats) return null;
 
-    const averageRating =
-      typeof stats.averageRating === "number" ? stats.averageRating : 0;
+    const averageRating = Number(stats.averageRating || 0).toFixed(1);
+
     return (
       <Card className="mb-4">
         <div className="flex items-center gap-4">
-          <Rate disabled allowHalf value={stats.averageRating} /> <span></span>
-          <span>{averageRating.toFixed(1)} </span>
+          <Rate
+            style={{ fontSize: 15 }}
+            disabled
+            allowHalf
+            value={stats.averageRating}
+          />
+          <span> {averageRating} </span>
           <span className="text-gray-500">({stats.totalReviews} đánh giá)</span>
         </div>
       </Card>
@@ -177,7 +182,12 @@ const CourseReview = ({ courseId, isEnrolled }) => {
               title={review.user_name}
               description={
                 <div>
-                  <Rate disabled value={review.rating} />
+                  <Rate
+                    style={{ fontSize: 15 }}
+                    disabled
+                    value={review.rating}
+                  />
+                  <span> </span>
                   <span className="ml-2 text-gray-500">
                     {new Date(review.created_at).toLocaleDateString()}
                   </span>
