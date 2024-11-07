@@ -40,7 +40,6 @@ const App = () => {
   return (
     <Router>
       <div className="app">
-        <ToastContainer />
         <Routes>
           <Route path="/" element={<User />}>
             <Route index element={<HomePage />} />
@@ -66,6 +65,7 @@ const App = () => {
             }
           />
         </Routes>
+        <ToastContainer />
       </div>
     </Router>
   );

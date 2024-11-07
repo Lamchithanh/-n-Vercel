@@ -15,7 +15,7 @@ const CourseSearch = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Tạo hàm debounced search để tránh gọi API quá nhiều
+  // Debounced search function to limit API calls
   const debouncedSearch = useCallback(
     debounce(async (query) => {
       if (!query.trim()) {
@@ -49,7 +49,7 @@ const CourseSearch = () => {
     [category, level]
   );
 
-  // Gọi search mỗi khi searchQuery thay đổi
+  // Call search every time searchQuery changes
   useEffect(() => {
     debouncedSearch(searchQuery);
 
@@ -65,7 +65,6 @@ const CourseSearch = () => {
 
   const handleCardClick = (courseId) => {
     if (courseId) {
-      // Xóa kết quả tìm kiếm và reset searchQuery
       setResults([]);
       setSearchQuery("");
       navigate(`/courses/${courseId}`);
@@ -74,13 +73,13 @@ const CourseSearch = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-6 " style={{ padding: 0 }}>
+      <div className="mb-6" style={{ padding: 0 }}>
         <Input
           value={searchQuery}
           onChange={handleSearchInputChange}
           placeholder="Tìm kiếm khóa học..."
           className="w-full mb-4"
-          allowClear // Thêm nút xóa text
+          allowClear
         />
       </div>
 
@@ -90,7 +89,7 @@ const CourseSearch = () => {
         </div>
       )}
 
-      {/* Chỉ hiển thị danh sách khi có kết quả */}
+      {/* Only display the list if there are results */}
       {results.length > 0 && (
         <List
           grid={{

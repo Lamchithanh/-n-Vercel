@@ -3,26 +3,30 @@ import { Typography, Spin, message } from "antd";
 import axios from "axios";
 import "./CertificatesPage.scss";
 import Loader from "../../context/Loader";
+
 const { Text } = Typography;
 
 const CertificatesPage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    const fetchCertificates = async () => {
+    const fetchUserCertificates = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:9000/api/certificates`
+        // Lấy thông tin người dùng hiện tại từ localStorage
+        const loggedInUser = JSON.parse(localStorage.getItem("user"));
+        setCurrentUser(loggedInUser);
+
+        // Lấy chứng chỉ của người dùng hiện tại
+        const certificatesResponse = await axios.get(
+          `http://localhost:9000/api/certificates?userId=${loggedInUser.id}`
         );
-        let data = response.data;
-
-        if (!Array.isArray(data)) {
-          data = [data];
-        }
-
-        setCertificates(data);
+        const userCertificates = certificatesResponse.data.filter(
+          (cert) => cert.user_id === loggedInUser.id
+        );
+        setCertificates(userCertificates);
       } catch (err) {
         setError("Không thể tải chứng chỉ. Vui lòng thử lại sau.");
         console.error(err);
@@ -32,7 +36,7 @@ const CertificatesPage = () => {
       }
     };
 
-    fetchCertificates();
+    fetchUserCertificates();
   }, []);
 
   if (loading) {
@@ -57,31 +61,39 @@ const CertificatesPage = () => {
   return (
     <div className="certificates-scroll-view">
       <div className="certificates-content-container">
-        {certificates.map((cert) => (
-          <form key={cert.id} className="form-certificates">
-            <div className="certificates-header">
-              <div className="certificates-course"></div>
-              <div className="certificates-time"></div>
-            </div>
-            <div className="certificates-content">
-              <div className="certificates-username">{cert.user_name}</div>
-            </div>
-            <div className="certificates-footer">
-              <div className="signature-section">
-                <div className="certificates-course">
-                  <span className="value">{cert.course_title}</span>
+        {certificates.length > 0 ? (
+          certificates.map((cert) => (
+            <form key={cert.id} className="form-certificates">
+              <div className="certificates-header">
+                <div className="certificates-course"></div>
+                <div className="certificates-time"></div>
+              </div>
+              <div className="certificates-content">
+                <div className="certificates-username">
+                  {currentUser.username}
                 </div>
-                <div className="signature">Đặng Lâm Chi Thành</div>
               </div>
-              <div className="signature-section">
-                <span className="value">
-                  {new Date(cert.issued_at).toLocaleDateString("vi-VN")}
-                </span>
-                <div className="signature">Võ Ngọc Quỳnh</div>
+              <div className="certificates-footer">
+                <div className="signature-section">
+                  <div className="certificates-course">
+                    <span className="value">{cert.course_title}</span>
+                  </div>
+                  <div className="signature">Đặng Lâm Chi Thành</div>
+                </div>
+                <div className="signature-section">
+                  <span className="value">
+                    {new Date(cert.issued_at).toLocaleDateString("vi-VN")}
+                  </span>
+                  <div className="signature">Võ Ngọc Quỳnh</div>
+                </div>
               </div>
-            </div>
-          </form>
-        ))}
+            </form>
+          ))
+        ) : (
+          <div className="no-certificates">
+            Không có chứng chỉ nào được tìm thấy.
+          </div>
+        )}
       </div>
     </div>
   );

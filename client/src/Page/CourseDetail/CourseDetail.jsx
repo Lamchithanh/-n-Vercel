@@ -441,7 +441,12 @@ const CourseDetail = () => {
               <div style={{ marginBottom: 10 }} className="course-price">
                 <strong>
                   Giá:{" "}
-                  <span style={{ color: "orange" }}>{course.price} VND</span>{" "}
+                  <span style={{ color: "orange" }}>
+                    {" "}
+                    {course.price === "0" || course.price === "0.00"
+                      ? "Miễn phí"
+                      : `${course.price} vnd`}
+                  </span>{" "}
                 </strong>
               </div>
             )}
