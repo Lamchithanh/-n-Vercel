@@ -1,7 +1,17 @@
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
-import { Form, Input, Button } from "antd";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  ArrowLeftOutlined,
+  LockOutlined,
+  LoginOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { Form, Input, Button, Card, Space, Typography } from "antd";
 import { login } from "../../../../server/src/Api/authAPI.js";
+import Title from "antd/es/skeleton/Title.js";
+
+const { Text } = Typography;
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,9 +22,10 @@ const Login = () => {
 
       // Xử lý đăng nhập thành công
       toast.success("Đăng nhập thành công!");
+      localStorage.setItem("showSuccessToast", "true"); // Đặt biến trạng thái thông báo
+      toast.success("Đăng nhập thành công!");
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("token", response.token);
-
       // Chuyển hướng dựa vào role
       switch (response.user.role) {
         case "admin":
@@ -89,54 +100,125 @@ const Login = () => {
     }
   };
   return (
-    <div className="container">
-      <Button
-        className="btn-back"
-        onClick={() => navigate(-1)}
-        style={{ marginBottom: 16 }}
+    <>
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#f0f2f5",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
+        }}
       >
-        Quay lại
-      </Button>
-
-      <Form className="form-signin" onFinish={handleSubmit}>
-        <h2 className="title-signin">Đăng nhập vào tài khoản của bạn</h2>
-
-        <Form.Item
-          name="email"
-          rules={[
-            { required: true, message: "Vui lòng nhập email!" },
-            { type: "email", message: "Email không hợp lệ!" },
-          ]}
+        {/* Nút Quay lại */}
+        <Button
+          icon={<ArrowLeftOutlined />}
+          type="link"
+          onClick={() => navigate(-1)}
+          style={{
+            position: "absolute",
+            top: "24px",
+            left: "24px",
+            fontSize: "16px",
+          }}
         >
-          <Input placeholder="Nhập email" />
-        </Form.Item>
+          Quay lại
+        </Button>
 
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+        {/* Card chứa form đăng nhập */}
+        <Card
+          style={{
+            width: "100%",
+            maxWidth: "400px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            borderRadius: "8px",
+          }}
         >
-          <Input.Password placeholder="Nhập mật khẩu" />
-        </Form.Item>
+          <Space direction="vertical" size={24} style={{ width: "100%" }}>
+            <div style={{ textAlign: "center" }}>
+              <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
+                <LoginOutlined style={{ marginRight: "8px" }} />
+                Đăng nhập
+              </Title>
+              <Text type="secondary" style={{ fontSize: "16px" }}>
+                Đăng nhập vào tài khoản của bạn để tiếp tục
+              </Text>
+            </div>
 
-        <Form.Item>
-          <Button
-            style={{ backgroundColor: "#4caf50", borderColor: "#4caf50" }}
-            className="btn-signin"
-            type="primary"
-            htmlType="submit"
-          >
-            Đăng nhập
-          </Button>
-        </Form.Item>
+            {/* Form Đăng nhập */}
+            <Form
+              name="login"
+              onFinish={handleSubmit}
+              size="large"
+              layout="vertical"
+            >
+              {/* Trường email */}
+              <Form.Item
+                name="email"
+                rules={[
+                  { required: true, message: "Vui lòng nhập email!" },
+                  { type: "email", message: "Email không hợp lệ!" },
+                ]}
+              >
+                <Input
+                  prefix={<UserOutlined style={{ color: "#bfbfbf" }} />}
+                  placeholder="Nhập email"
+                />
+              </Form.Item>
 
-        <p>
-          <Link to="/register">Tạo tài khoản mới</Link> |{" "}
-          <Link to="/forgot-password">Quên mật khẩu?</Link>
-        </p>
-      </Form>
-      <ToastContainer />
-    </div>
+              {/* Trường mật khẩu */}
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+              >
+                <Input.Password
+                  prefix={<LockOutlined style={{ color: "#bfbfbf" }} />}
+                  placeholder="Nhập mật khẩu"
+                />
+              </Form.Item>
+
+              {/* Nút Đăng nhập */}
+              <Form.Item>
+                <Button
+                  htmlType="submit"
+                  block
+                  style={{
+                    height: "40px",
+                    backgroundColor: "rgb(76, 175, 80)",
+                    color: "white",
+                  }}
+                >
+                  <LoginOutlined /> Đăng nhập
+                </Button>
+              </Form.Item>
+
+              {/* Các liên kết khác */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: "16px",
+                }}
+              >
+                <Button type="link" onClick={() => navigate("/register")}>
+                  Tạo tài khoản mới
+                </Button>
+                <Button
+                  type="link"
+                  onClick={() => navigate("/forgot-password")}
+                >
+                  Quên mật khẩu?
+                </Button>
+              </div>
+            </Form>
+          </Space>
+        </Card>
+      </div>
+
+      <ToastContainer style={{ zIndex: 10000 }} />
+    </>
   );
 };
-
 export default Login;

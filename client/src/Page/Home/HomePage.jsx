@@ -24,7 +24,12 @@ import "./HomePage.scss";
 import Loader from "../../context/Loader";
 import { fetchCoursesAPI } from "../../../../server/src/Api/courseApi";
 import defaultImage from "../../assets/img/sach.png";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+// import HeroSection from "./HeroSection/HeroSection";
+import FeaturedCourses from "./FeaturedCourses/FeaturedCourses";
+import Testimonials from "./Testimonials/Testimonials";
+import LatestBlog from "./LatestBlog/LatestBlog";
 const { Header, Content } = Layout;
 
 const HomePage = () => {
@@ -50,6 +55,14 @@ const HomePage = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const shouldShowToast = localStorage.getItem("showSuccessToast");
+    if (shouldShowToast) {
+      toast.success("Đăng nhập thành công!");
+      localStorage.removeItem("showSuccessToast"); // Xóa trạng thái sau khi hiển thị để tránh hiển thị lại khi tải lại trang
+    }
+  }, []);
 
   // Cập nhật unreadCount khi component mount
   useEffect(() => {
@@ -200,92 +213,127 @@ const HomePage = () => {
     const currentCourses = courses.slice(startIndex, endIndex);
 
     return (
-      <div className="course-list">
-        {currentCourses.map((course) => (
-          <Card
-            key={course.id}
-            onClick={() => navigate(`/courses/${course.id}`)}
-            cover={
-              <img
-                alt={course.title}
-                src={course.image || defaultImage}
-                style={{
-                  borderRadius: "8px",
-                  margin: "10px",
-                  width: "150px",
-                  height: "150px",
-                  objectFit: "cover",
-                }}
-              />
-            }
-            style={{
-              border: "2px solid rgb(167, 174, 171)", // Viền xám ban đầu
-              marginBottom: "16px",
-              cursor: "pointer",
-              borderRadius: "8px",
-              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-              transition: "border-color 0.3s ease", // Thêm hiệu ứng chuyển màu viền
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "#41a5db"; // Đổi màu viền thành xanh khi hover
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgb(167, 174, 171)"; // Trả lại màu viền ban đầu khi không hover
-            }}
-          >
-            <div className="relative">
-              <h5
-                className="text-lg font-medium"
-                style={{ display: "flex", alignItems: "center" }}
-              >
-                <div style={{ marginRight: "8px" }}>
-                  {course.price &&
-                    course.price !== "0" &&
-                    course.price !== "0.00" && (
-                      <img
-                        width="40"
-                        height="40"
-                        src="https://img.icons8.com/external-basicons-color-edtgraphics/50/external-Crown-crowns-basicons-color-edtgraphics-6.png"
-                        alt="external-Crown-crowns-basicons-color-edtgraphics-6"
-                      />
-                    )}
-                </div>
-                <div
+      <div>
+        <p style={{ fontSize: 15 }}>Tất cả khóa học</p>
+        <div className="course-list">
+          {currentCourses.map((course) => (
+            <Card
+              key={course.id}
+              onClick={() => navigate(`/courses/${course.id}`)}
+              cover={
+                <img
+                  alt={course.title}
+                  src={course.image || defaultImage}
                   style={{
-                    color: newlyAddedCourses.includes(course.id)
-                      ? "red"
-                      : "inherit",
+                    borderRadius: "8px",
+                    margin: "10px",
+                    width: "150px",
+                    height: "150px",
+                    objectFit: "cover",
+                  }}
+                />
+              }
+              style={{
+                border: "2px solid rgb(167, 174, 171)", // Viền xám ban đầu
+                marginBottom: "16px",
+                cursor: "pointer",
+                borderRadius: "8px",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                transition: "border-color 0.3s ease", // Thêm hiệu ứng chuyển màu viền
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#41a5db"; // Đổi màu viền thành xanh khi hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgb(167, 174, 171)"; // Trả lại màu viền ban đầu khi không hover
+              }}
+            >
+              <div className="relative">
+                <h5
+                  className="text-lg font-medium"
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  <div style={{ marginRight: "8px" }}>
+                    {course.price &&
+                      course.price !== "0" &&
+                      course.price !== "0.00" && (
+                        <img
+                          width="40"
+                          height="40"
+                          src="https://img.icons8.com/external-basicons-color-edtgraphics/50/external-Crown-crowns-basicons-color-edtgraphics-6.png"
+                          alt="external-Crown-crowns-basicons-color-edtgraphics-6"
+                        />
+                      )}
+                  </div>
+                  <div
+                    style={{
+                      color: newlyAddedCourses.includes(course.id)
+                        ? "red"
+                        : "inherit",
+                    }}
+                  >
+                    {course.title}
+                  </div>
+                </h5>
+
+                <div
+                  className="mt-2"
+                  style={{
+                    marginBottom: "8px",
+                    fontWeight: "bold",
+                    color: "#f47425",
                   }}
                 >
-                  {course.title}
+                  {course.price === "0" || course.price === "0.00"
+                    ? "Miễn phí"
+                    : `${course.price} vnd`}
                 </div>
-              </h5>
 
-              <div
-                className="mt-2"
-                style={{
-                  marginBottom: "8px",
-                  fontWeight: "bold",
-                  color: "#f47425",
-                }}
-              >
-                {course.price === "0" || course.price === "0.00"
-                  ? "Miễn phí"
-                  : `${course.price} vnd`}
+                <div
+                  className="mt-1"
+                  style={{ color: "#a7aeae", marginBottom: 15 }}
+                >
+                  Level: {course.level}
+                </div>
               </div>
-
-              <div
-                className="mt-1"
-                style={{ color: "#a7aeae", marginBottom: 15 }}
-              >
-                Level: {course.level}
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
+        </div>
       </div>
     );
   };
+
+  // const renderHomeContent = () => {
+  //   return (
+  //     <div className="home-content">
+  //       {/* Hero Section ở đầu trang */}
+  //       <HeroSection />
+
+  //       {/* Featured Courses - hiển thị 8 khóa học nổi bật */}
+  //       <FeaturedCourses
+  //         courses={courses
+  //           .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
+  //           .slice(0, 8)
+  //           .map((course) => ({
+  //             ...course,
+  //             image: course.image || defaultImage,
+  //             rating: course.rating || 4.5,
+  //             reviewCount: course.reviewCount || 0,
+  //             instructor: course.instructor || "Giảng viên",
+  //           }))}
+  //       />
+
+  //       {/* Danh sách tất cả khóa học */}
+  //       {renderAllCourses()}
+
+  //       {/* Testimonials section */}
+  //       <Testimonials />
+
+  //       {/* Latest Blog section */}
+  //       <LatestBlog />
+  //     </div>
+  //   );
+  // };
 
   if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
@@ -300,7 +348,19 @@ const HomePage = () => {
           className="header-menu"
         />
       </Header>
-
+      <FeaturedCourses
+        courses={courses
+          .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
+          .slice(0, 8)
+          .map((course) => ({
+            ...course,
+            image: course.image || defaultImage,
+            rating: course.rating || 4.5,
+            reviewCount: course.reviewCount || 0,
+            instructor: course.instructor || "Giảng viên",
+          }))}
+      />
+      <Testimonials />
       <Content style={{ padding: "0 24px 24px" }}>
         <Breadcrumb className="breadcrumb" items={[{ title: "" }]} />
         <div className="content">
@@ -314,7 +374,7 @@ const HomePage = () => {
           />
         </div>
       </Content>
-
+      <LatestBlog />
       <Drawer
         title="Thông báo mới"
         placement="right"
@@ -364,6 +424,10 @@ const HomePage = () => {
           locale={{ emptyText: "Không có thông báo mới" }}
         />
       </Drawer>
+      <ToastContainer
+        position="top-center" // Đặt vị trí thông báo ở phía trên, giữa màn hình
+        autoClose={2000}
+      />
     </Layout>
   );
 };

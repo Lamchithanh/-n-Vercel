@@ -158,21 +158,12 @@ CREATE TABLE lesson_progress (
   UNIQUE KEY unique_progress (user_id, lesson_id)
 );
 
-SET FOREIGN_KEY_CHECKS = 0;
-SET SQL_SAFE_UPDATES = 0;
+CREATE TABLE BlogSection (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  excerpt TEXT,
+  date DATE,
+  image VARCHAR(255)
+);
 
-SET SQL_SAFE_UPDATES = 1;
-SET FOREIGN_KEY_CHECKS = 1;
-
-DELETE FROM lesson_progress WHERE user_id = 1;
-DELETE FROM payments;
-DELETE FROM course_reviews;
-DELETE FROM certificates;
-DELETE FROM progress;
-DELETE FROM enrollments;
-DELETE FROM lessons;
-DELETE FROM modules;
-DELETE FROM courses;
-DELETE FROM user_lock_history;
-DELETE FROM users WHERE id != 1;
 

@@ -1,0 +1,81 @@
+.testimonials {
+  &__container {
+    padding: 48px 0;
+    background-color: white;
+    overflow: hidden;
+    position: relative;
+  }
+
+  &__title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #333;
+  }
+
+  &__track {
+    display: flex;
+    width: fit-content;
+    animation: scroll 20s linear infinite;
+
+    &:hover {
+      animation-play-state: paused;
+    }
+  }
+
+  &__slider {
+    display: flex;
+    gap: 24px;
+    padding: 20px 12px;
+  }
+
+  &__card {
+    min-width: 300px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  &__avatar {
+    margin: 0 auto 16px;
+  }
+
+  &__name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    text-align: center;
+  }
+
+  &__role {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  &__content {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.6;
+    text-align: center;
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

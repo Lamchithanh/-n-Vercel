@@ -6,12 +6,14 @@ import {
   PlayCircleOutlined,
   AppstoreOutlined,
   TrophyOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import Courses from "./AdCourses/Courses.jsx";
 import Users from "./AdUsers/Users.jsx";
 import Lessons from "./Adlessons/lessons.jsx";
 import Certificates from "./AdCertificates/Certificates.jsx";
+import BlogManagement from "./BlogManagement/BlogManagement.jsx";
 
 const { Header, Content, Sider } = Layout;
 
@@ -71,6 +73,8 @@ const AdminDashboard = () => {
         );
       case "users":
         return <Users fetchUsers={fetchUsers} />;
+      case "blog":
+        return <BlogManagement />;
       default:
         return null;
     }
@@ -102,6 +106,9 @@ const AdminDashboard = () => {
           </Menu.Item>
           <Menu.Item key="certificates" icon={<TrophyOutlined />}>
             Certificates
+          </Menu.Item>
+          <Menu.Item key="blog" icon={<FileTextOutlined />}>
+            Blog
           </Menu.Item>
         </Menu>
       </Sider>
