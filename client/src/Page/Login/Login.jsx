@@ -10,25 +10,40 @@ const Login = () => {
     try {
       const response = await login(values.email, values.password);
 
-      if (response.error === "Tài khoản bị khóa" && response.lockInfo) {
-        // Hiển thị thông tin khóa tài khoản
-        const lockUntilDate = response.lockInfo.lockedUntil
-          ? new Date(response.lockInfo.lockedUntil).toLocaleString()
-          : "vĩnh viễn";
+      // Kiểm tra nếu response là lỗi
+      if (response.error) {
+        // Kiểm tra nếu tài khoản bị khóa
+        if (response.error === "Tài khoản bị khóa" && response.lockInfo) {
+          const lockUntilDate = response.lockInfo.lockedUntil
+            ? new Date(response.lockInfo.lockedUntil).toLocaleString()
+            : "vĩnh viễn";
 
-        toast.error(
-          <div>
-            <strong>Tài khoản đã bị khóa</strong>
-            <p>Lý do: {response.lockInfo.reason}</p>
-            <p>Thời gian mở khóa: {lockUntilDate}</p>
-          </div>,
-          { autoClose: false }
-        );
+          toast.error(
+            <div>
+              <strong>Tài khoản đã bị khóa</strong>
+              <p>Lý do: {response.lockInfo.reason}</p>
+              <p>Thời gian mở khóa: {lockUntilDate}</p>
+            </div>,
+            { autoClose: false }
+          );
+          return;
+        }
+
+        // Hiển thị lỗi khác
+        toast.error(response.error);
         return;
       }
 
       // Xử lý đăng nhập thành công
       toast.success("Đăng nhập thành công!");
+
+      // Kiểm tra lại một lần nữa trạng thái khóa trước khi lưu và chuyển hướng
+      if (response.user.isLocked) {
+        toast.error("Tài khoản đang bị khóa!");
+        return;
+      }
+
+      // Lưu thông tin user
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("token", response.token);
 
@@ -47,12 +62,9 @@ const Login = () => {
       console.error("Login error:", error);
       const errorMessage =
         error.response?.data?.error || "Đã xảy ra lỗi. Vui lòng thử lại.";
-
-      // Hiển thị thông báo lỗi
       toast.error(errorMessage);
     }
   };
-
   return (
     <div className="container">
       <Button

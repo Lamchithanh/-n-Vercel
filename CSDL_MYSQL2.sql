@@ -1,5 +1,6 @@
 -- Tạo cơ sở dữ liệu
 CREATE DATABASE mydatabase;
+
 USE mydatabase;
 
 -- Bảng Users
@@ -13,11 +14,12 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   reset_token VARCHAR(64),
-  reset_token_expiry BIGINT,
-  isLocked BOOLEAN DEFAULT FALSE,
-  lockReason VARCHAR(255),
-  lockedAt DATETIME,
-  lockedUntil DATETIME  -- Thêm cột cho thời gian khóa tài khoản
+  reset_token_expiry TIMESTAMP,  -- Thay đổi từ BIGINT sang TIMESTAMP
+  isLocked TINYINT(1) DEFAULT 0,  -- Thay đổi từ BOOLEAN sang TINYINT(1)
+  lockReason VARCHAR(255) DEFAULT NULL,
+  lockedAt TIMESTAMP DEFAULT NULL,  -- Thay đổi từ DATETIME sang TIMESTAMP
+  lockedUntil TIMESTAMP DEFAULT NULL,  -- Thay đổi từ DATETIME sang TIMESTAMP
+  CONSTRAINT chk_locked CHECK (isLocked IN (0,1))  -- Thêm ràng buộc cho isLocked
 );
 
 -- Bảng lưu lịch sử khóa (tùy chọn)

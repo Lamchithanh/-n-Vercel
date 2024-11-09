@@ -35,10 +35,10 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Kiểm tra user tồn tại
-    const [results] = await pool.query("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]);
+    const [results] = await pool.query(
+      "SELECT id, username, email, role, password_hash, isLocked, lockReason, lockedAt, lockedUntil FROM users WHERE email = ?",
+      [email]
+    );
 
     if (results.length === 0) {
       return res.status(401).json({ error: "Người dùng không tồn tại" });
@@ -46,31 +46,30 @@ exports.login = async (req, res) => {
 
     const user = results[0];
 
-    // Kiểm tra trạng thái khóa trước khi kiểm tra mật khẩu
-    if (user.isLocked) {
+    // Kiểm tra trạng thái khóa
+    if (user.isLocked === 1) {
       const now = new Date();
       const lockedUntil = user.lockedUntil ? new Date(user.lockedUntil) : null;
 
-      if (lockedUntil && now >= lockedUntil) {
-        // Tự động mở khóa nếu đã hết thời gian
-        await pool.query(
-          `UPDATE users 
-           SET isLocked = FALSE, 
-               lockReason = NULL, 
-               lockedAt = NULL, 
-               lockedUntil = NULL 
-           WHERE id = ?`,
-          [user.id]
-        );
-      } else {
-        // Trả về thông tin khóa để frontend hiển thị
+      // Kiểm tra nếu tài khoản đang bị khóa
+      if (!lockedUntil || now < lockedUntil) {
+        // Tài khoản vẫn đang bị khóa
         return res.status(403).json({
           error: "Tài khoản bị khóa",
           lockInfo: {
             reason: user.lockReason || "Không có lý do cụ thể",
-            lockedUntil: user.lockedUntil,
+            lockedUntil: lockedUntil ? lockedUntil.toISOString() : null,
             isLocked: true,
           },
+        });
+      }
+
+      // Nếu đã hết thời gian khóa, để cho cron job xử lý việc mở khóa
+      // KHÔNG tự động mở khóa tại đây
+      if (lockedUntil && now >= lockedUntil) {
+        return res.status(403).json({
+          error:
+            "Tài khoản đang trong quá trình được mở khóa. Vui lòng thử lại sau ít phút.",
         });
       }
     }
@@ -85,12 +84,12 @@ exports.login = async (req, res) => {
       {
         userId: user.id,
         role: user.role,
+        isLocked: user.isLocked === 1,
       },
       process.env.SECRET_KEY,
       { expiresIn: "1d" }
     );
 
-    // Trả về thông tin user (không bao gồm password)
     res.status(200).json({
       token,
       user: {
@@ -98,7 +97,14 @@ exports.login = async (req, res) => {
         username: user.username,
         email: user.email,
         role: user.role,
-        isLocked: false,
+        isLocked: user.isLocked === 1,
+        lockInfo:
+          user.isLocked === 1
+            ? {
+                reason: user.lockReason,
+                lockedUntil: user.lockedUntil,
+              }
+            : null,
       },
       message: "Đăng nhập thành công!",
     });
@@ -107,6 +113,7 @@ exports.login = async (req, res) => {
     return res.status(500).json({ error: "Đã xảy ra lỗi. Vui lòng thử lại." });
   }
 };
+
 // truy xuất và đăng ký
 exports.register = async (req, res) => {
   const { username, email, password, role } = req.body;
@@ -285,14 +292,16 @@ exports.logout = (req, res) => {
 // Tạo hàm getUserProfile để lấy thông tin người dùng
 exports.getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // Lấy từ middleware xác thực
+    const userId = req.user.id;
     const [results] = await pool.query(
-      "SELECT id, username, email, role, islocker, created_at as createdAt, updated_at as updatedAt FROM users WHERE id = ?",
+      "SELECT id, username, email, role, isLocked, created_at as createdAt, updated_at as updatedAt FROM users WHERE id = ?",
       [userId]
     );
+
     if (results.length === 0) {
       return res.status(404).json({ error: "Người dùng không tồn tại" });
     }
+
     const user = results[0];
     res.status(200).json({ user });
   } catch (err) {

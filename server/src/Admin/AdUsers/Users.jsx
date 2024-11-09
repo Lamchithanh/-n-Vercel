@@ -49,10 +49,10 @@ const Users = () => {
       prevUsers.map((user) => {
         if (!user.isLocked || !user.lockedUntil) return user;
 
-        const lockEndTime = new Date(user.lockedUntil);
-        const now = new Date();
+        const lockEndTime = new Date(user.lockedUntil).getTime();
+        const now = new Date().getTime();
 
-        if (lockEndTime <= now) {
+        if (now >= lockEndTime) {
           return {
             ...user,
             isLocked: false,
@@ -69,6 +69,7 @@ const Users = () => {
     if (duration === "permanent") return null;
 
     const now = new Date();
+
     // Xử lý thời gian tùy chọn
     if (/^\d+[phd]$/.test(duration)) {
       const value = parseInt(duration);
@@ -78,7 +79,8 @@ const Users = () => {
         h: 60 * 60 * 1000, // giờ
         d: 24 * 60 * 60 * 1000, // ngày
       };
-      return new Date(now.getTime() + value * multipliers[unit]).toISOString();
+      const futureTime = new Date(now.getTime() + value * multipliers[unit]);
+      return futureTime.toISOString();
     }
 
     // Xử lý các trường hợp định sẵn
@@ -93,7 +95,8 @@ const Users = () => {
     const milliseconds = durationMap[duration];
     if (!milliseconds) return null;
 
-    return new Date(now.getTime() + milliseconds).toISOString();
+    const futureTime = new Date(now.getTime() + milliseconds);
+    return futureTime.toISOString();
   };
 
   const formatDateTime = (dateString) => {
@@ -112,19 +115,37 @@ const Users = () => {
   };
 
   const isAccountLocked = (user) => {
-    if (user.isLocked) {
-      if (!user.lockedUntil) return true; // Khóa vĩnh viễn
-      const lockEndTime = new Date(user.lockedUntil);
-      const now = new Date();
-      return lockEndTime > now; // Còn trong thời gian khóa
-    }
-    return false; // Không bị khóa
+    if (!user.isLocked) return false;
+
+    // Nếu không có lockedUntil -> khóa vĩnh viễn
+    if (!user.lockedUntil) return true;
+
+    const lockEndTime = new Date(user.lockedUntil).getTime();
+    const now = new Date().getTime();
+
+    return now < lockEndTime;
   };
 
   useEffect(() => {
-    const intervalId = setInterval(updateLockedStatus, 60000);
+    const intervalId = setInterval(() => {
+      setUsers((prevUsers) =>
+        prevUsers.map((user) => {
+          const lockStatus = getLockStatus(user);
+          if (!lockStatus.isLocked && user.isLocked) {
+            return {
+              ...user,
+              isLocked: false,
+              lockedUntil: null,
+              lockReason: null,
+            };
+          }
+          return user;
+        })
+      );
+    }, 5000);
+
     return () => clearInterval(intervalId);
-  }, [updateLockedStatus]);
+  }, []);
 
   const handleAddOrUpdateUser = async (values) => {
     try {
@@ -177,48 +198,50 @@ const Users = () => {
         duration = `${lockData.customDurationValue}${lockData.customDurationUnit}`;
       }
 
-      const lockedUntil =
-        duration === "permanent" ? null : calculateLockUntil(duration);
+      const lockedUntil = calculateLockUntil(duration);
+
+      const lockPayload = {
+        isLocked: true,
+        lockReason: lockData.lockReason,
+        duration: duration,
+        lockedUntil: lockedUntil,
+      };
 
       const response = await axios.put(
         `http://localhost:9000/api/users/${lockingUser.id}/lock`,
-        {
-          isLocked: true,
-          lockReason: lockData.reason,
-          duration: duration,
-          lockedUntil: lockedUntil,
-        }
+        lockPayload
       );
 
-      if (response.data?.data) {
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => {
-            if (user.id === lockingUser.id) {
-              return {
-                ...user,
-                ...response.data.data,
-              };
-            }
-            return user;
-          })
-        );
-      }
+      // Cập nhật state với dữ liệu mới
+      setUsers((prevUsers) =>
+        prevUsers.map((user) => {
+          if (user.id === lockingUser.id) {
+            return {
+              ...user,
+              isLocked: true,
+              lockedUntil: lockedUntil,
+              lockReason: lockData.lockReason,
+            };
+          }
+          return user;
+        })
+      );
 
       setLockModalVisible(false);
-      message.success("Account locked successfully");
+      message.success("Đã khóa tài khoản thành công");
     } catch (error) {
-      console.error("Error locking account:", error);
-      message.error("Unable to lock account. Please try again.");
+      console.error("Lỗi khi khóa tài khoản:", error);
+      message.error("Không thể khóa tài khoản. Vui lòng thử lại.");
     }
   };
 
   const handleToggleLock = async (user, checked) => {
     if (checked) {
-      // If turning on the lock
+      // Khi bật khóa
       setLockingUser(user);
       setLockModalVisible(true);
     } else {
-      // If turning off the lock (unlocking)
+      // Khi mở khóa
       try {
         const response = await axios.put(
           `http://localhost:9000/api/users/${user.id}/lock`,
@@ -230,13 +253,12 @@ const Users = () => {
           }
         );
 
-        // Update local state immediately
-        setUsers(
-          users.map((u) => {
+        // Cập nhật state ngay lập tức
+        setUsers((prevUsers) =>
+          prevUsers.map((u) => {
             if (u.id === user.id) {
               return {
                 ...u,
-                ...response.data, // Use server response data if available
                 isLocked: false,
                 lockReason: null,
                 lockedUntil: null,
@@ -246,12 +268,47 @@ const Users = () => {
           })
         );
 
-        message.success("Account unlocked successfully");
+        message.success("Đã mở khóa tài khoản thành công");
       } catch (error) {
-        console.error("Error unlocking account:", error);
-        message.error("Unable to unlock account. Please try again.");
+        console.error("Lỗi khi mở khóa tài khoản:", error);
+        message.error("Không thể mở khóa tài khoản. Vui lòng thử lại.");
       }
     }
+  };
+
+  const getLockStatus = (user) => {
+    // Nếu không bị khóa
+    if (!user.isLocked) {
+      return {
+        isLocked: false,
+        status: "Hoạt động",
+      };
+    }
+
+    // Khóa vĩnh viễn
+    if (!user.lockedUntil) {
+      return {
+        isLocked: true,
+        status: "Khóa vĩnh viễn",
+      };
+    }
+
+    // Kiểm tra thời gian khóa tạm thời
+    const lockEndTime = new Date(user.lockedUntil).getTime();
+    const now = new Date().getTime();
+
+    if (now < lockEndTime) {
+      return {
+        isLocked: true,
+        status: `Tạm khóa đến: ${formatDateTime(user.lockedUntil)}`,
+      };
+    }
+
+    // Đã hết thời gian khóa
+    return {
+      isLocked: false,
+      status: "Hoạt động",
+    };
   };
 
   const columns = [
@@ -264,10 +321,10 @@ const Users = () => {
       dataIndex: "isLocked",
       key: "isLocked",
       render: (_, record) => {
-        const isLocked = isAccountLocked(record);
+        const lockStatus = getLockStatus(record);
         return (
           <Switch
-            checked={record.isLocked || isLocked}
+            checked={lockStatus.isLocked}
             onChange={(checked) => handleToggleLock(record, checked)}
           />
         );
@@ -277,14 +334,8 @@ const Users = () => {
       title: "Lock Status",
       key: "lockStatus",
       render: (_, record) => {
-        if (!record.isLocked) return "Hoạt động";
-        if (!record.lockedUntil) return "Khóa vĩnh viễn";
-        const lockEnd = new Date(record.lockedUntil);
-        const now = new Date();
-        if (lockEnd <= now) {
-          return `Tạm khóa đến: ${formatDateTime(record.lockedUntil)}`;
-        }
-        return "Hoạt động";
+        const lockStatus = getLockStatus(record);
+        return <span>{lockStatus.status}</span>;
       },
     },
     {
