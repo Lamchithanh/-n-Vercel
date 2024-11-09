@@ -1,81 +1,112 @@
 .testimonials {
   &__container {
-    padding: 48px 0;
-    background-color: white;
-    overflow: hidden;
-    position: relative;
+    padding: 2rem 0;
+    background-color: #f8f9fa;
   }
 
   &__title {
+    font-size: 2rem;
+    font-weight: 600;
     text-align: center;
-    font-size: 1.5rem;
-    font-weight: 700;
     margin-bottom: 2rem;
-    color: #333;
+    color: #2c3e50;
   }
 
   &__track {
-    display: flex;
-    width: fit-content;
-    animation: scroll 20s linear infinite;
-
-    &:hover {
-      animation-play-state: paused;
-    }
+    padding: 1rem;
+    overflow: hidden;
+    position: relative;
+    white-space: nowrap;
   }
 
   &__slider {
     display: flex;
-    gap: 24px;
-    padding: 20px 12px;
+    gap: 2rem;
+    padding: 0.5rem;
+    animation: scroll-horizontal 20s linear infinite;
   }
 
   &__card {
-    min-width: 300px;
-    padding: 24px;
+    flex: 0 0 auto;
+    width: 350px;
+    height: 100px;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    border-radius: 50px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    // display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transform: translateY(0);
+
+    &:nth-child(2n) {
+      transform: translateY(
+        20px
+      ); // Tạo hiệu ứng so le cho các card ở hàng thứ hai
+    }
 
     &:hover {
       transform: translateY(-5px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
   }
 
+  &_header {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
   &__avatar {
-    margin: 0 auto 16px;
+    align-self: center;
+    border: 3px solid #e1e8ff;
   }
 
   &__name {
-    font-size: 1.125rem;
+    margin: 0;
+    font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 8px;
-    color: #333;
     text-align: center;
+    color: #2c3e50;
   }
 
-  &__role {
-    font-size: 0.875rem;
-    color: #666;
-    margin-bottom: 16px;
+  &__rating {
     text-align: center;
+
+    :global(.ant-rate) {
+      font-size: 1rem;
+      color: #ffd700;
+    }
   }
 
   &__content {
-    font-size: 1rem;
-    color: #444;
-    line-height: 1.6;
-    text-align: center;
+    margin-left: 30px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #5f6368;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-}
 
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
+  &__date {
+    margin-top: auto;
+    margin-right: 10px;
+    font-size: 0.85rem;
+    color: #9ca3af;
+    text-align: right;
   }
-  100% {
-    transform: translateX(-50%);
+
+  // Animation keyframes cho chuyển động ngang
+  @keyframes scroll-horizontal {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-100%); // Di chuyển hết chiều dài track
+    }
   }
 }

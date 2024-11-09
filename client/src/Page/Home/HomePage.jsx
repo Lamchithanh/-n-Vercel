@@ -163,12 +163,6 @@ const HomePage = () => {
   const items2 = [
     {
       key: "1",
-      icon: <UserOutlined />,
-      label: "Tài khoản",
-      children: [{ label: "Thông tin cá nhân", path: "user-info" }],
-    },
-    {
-      key: "2",
       icon: <LaptopOutlined />,
       label: "Khóa học",
       children: [
@@ -176,6 +170,12 @@ const HomePage = () => {
         { label: "Khóa học mới", path: "/" },
         { label: "Khóa học yêu thích", path: "/" },
       ],
+    },
+    {
+      key: "2",
+      icon: <UserOutlined />,
+      label: "Tài khoản",
+      children: [{ label: "Thông tin cá nhân", path: "user-info" }],
     },
     {
       key: "3",
@@ -302,38 +302,6 @@ const HomePage = () => {
       </div>
     );
   };
-
-  // const renderHomeContent = () => {
-  //   return (
-  //     <div className="home-content">
-  //       {/* Hero Section ở đầu trang */}
-  //       <HeroSection />
-
-  //       {/* Featured Courses - hiển thị 8 khóa học nổi bật */}
-  //       <FeaturedCourses
-  //         courses={courses
-  //           .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
-  //           .slice(0, 8)
-  //           .map((course) => ({
-  //             ...course,
-  //             image: course.image || defaultImage,
-  //             rating: course.rating || 4.5,
-  //             reviewCount: course.reviewCount || 0,
-  //             instructor: course.instructor || "Giảng viên",
-  //           }))}
-  //       />
-
-  //       {/* Danh sách tất cả khóa học */}
-  //       {renderAllCourses()}
-
-  //       {/* Testimonials section */}
-  //       <Testimonials />
-
-  //       {/* Latest Blog section */}
-  //       <LatestBlog />
-  //     </div>
-  //   );
-  // };
 
   if (loading) return <Loader />;
   if (error) return <p>{error}</p>;

@@ -1,6 +1,103 @@
 // courseReviewsController.js
 const pool = require("../config/pool");
 
+exports.getAllReviews = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const offset = (page - 1) * limit;
+
+  try {
+    // Get total count for pagination
+    const [countResult] = await pool.query(
+      "SELECT COUNT(*) as total FROM course_reviews"
+    );
+    const total = countResult[0].total;
+
+    const [reviews] = await pool.query(
+      `
+      SELECT 
+        cr.id,
+        cr.rating,
+        cr.review_text,
+        cr.created_at,
+        u.full_name,
+        u.avatar
+      FROM course_reviews cr
+      LEFT JOIN users u ON cr.user_id = u.id
+      ORDER BY cr.created_at DESC
+      LIMIT ? OFFSET ?
+    `,
+      [parseInt(limit), offset]
+    );
+
+    res.json({
+      success: true,
+      data: reviews,
+      pagination: {
+        total,
+        current: parseInt(page),
+        pageSize: parseInt(limit),
+      },
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching reviews",
+      error: error.message,
+    });
+  }
+};
+
+exports.getReviewsByCourse = async (req, res) => {
+  const courseId = req.params.courseId;
+  const { page = 1, limit = 10 } = req.query;
+  const offset = (page - 1) * limit;
+
+  try {
+    // Get total count for pagination
+    const [countResult] = await pool.query(
+      "SELECT COUNT(*) as total FROM course_reviews WHERE course_id = ?",
+      [courseId]
+    );
+    const total = countResult[0].total;
+
+    const [reviews] = await pool.query(
+      `
+      SELECT 
+        cr.id,
+        cr.rating,
+        cr.review_text,
+        cr.created_at,
+        u.full_name,
+        u.avatar
+      FROM course_reviews cr
+      LEFT JOIN users u ON cr.user_id = u.id
+      WHERE cr.course_id = ?
+      ORDER BY cr.created_at DESC
+      LIMIT ? OFFSET ?
+    `,
+      [courseId, parseInt(limit), offset]
+    );
+
+    res.json({
+      success: true,
+      data: reviews,
+      pagination: {
+        total,
+        current: parseInt(page),
+        pageSize: parseInt(limit),
+      },
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching course reviews",
+      error: error.message,
+    });
+  }
+};
+
 exports.getCourseReviews = async (req, res) => {
   const { courseId } = req.params;
   const { page = 1, limit = 10, rating } = req.query;

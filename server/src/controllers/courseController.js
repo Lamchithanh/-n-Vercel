@@ -32,22 +32,23 @@ exports.getCourseById = async (req, res) => {
   }
 };
 
-// exports.getMyCourses = async (req, res) => {
-//   try {
-//     const userId = req.query.user_id || req.body.user_id || 1; // Có thể truyền trực tiếp user_id
-//     const query = `
-//       SELECT courses.*
-//       FROM courses
-//       JOIN enrollments ON courses.id = enrollments.course_id
-//       WHERE enrollments.user_id = ?;
-//     `;
-//     const [courses] = await pool.query(query, [userId]);
-//     res.json(courses);
-//   } catch (error) {
-//     console.error("Error fetching my courses:", error);
-//     res.status(500).json({ message: "Không thể tải khóa học cá nhân." });
-//   }
-// };
+exports.getMyCourses = async (req, res) => {
+  const { userId } = req.params; // Lấy userId từ params
+
+  try {
+    const query = `
+      SELECT courses.*
+      FROM courses
+      JOIN enrollments ON courses.id = enrollments.course_id
+      WHERE enrollments.user_id = ?;
+    `;
+    const [courses] = await pool.query(query, [userId]);
+    res.json(courses);
+  } catch (error) {
+    console.error("Error fetching my courses:", error);
+    res.status(500).json({ message: "Không thể tải khóa học cá nhân." });
+  }
+};
 
 // Thêm khóa học mới
 exports.addCourse = (req, res) => {
@@ -231,3 +232,38 @@ exports.searchCourses = async (req, res) => {
     });
   }
 };
+
+// exports.getTopEnrolledCourses = async (req, res) => {
+//   try {
+//     const [topCourses] = await pool.query(
+//       `
+//       SELECT
+//         c.id AS course_id,
+//         c.title,
+//         c.image,
+//         c.price,
+//         c.level,
+//         COUNT(e.id) AS enrollment_count
+//       FROM courses c
+//       LEFT JOIN enrollments e ON c.id = e.course_id
+//       GROUP BY c.id
+//       ORDER BY enrollment_count DESC
+//       LIMIT 4
+//       `
+//     );
+
+//     const formattedCourses = topCourses.map((course) => ({
+//       id: course.course_id,
+//       title: course.title,
+//       image: course.image,
+//       price: course.price,
+//       level: course.level,
+//       enrollmentCount: course.enrollment_count,
+//     }));
+
+//     res.json({ topCourses: formattedCourses });
+//   } catch (error) {
+//     console.error("Error fetching top enrolled courses:", error);
+//     res.status(500).json({ error: "Lỗi khi lấy danh sách khóa học" });
+//   }
+// };

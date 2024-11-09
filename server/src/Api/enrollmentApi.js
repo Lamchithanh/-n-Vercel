@@ -26,16 +26,16 @@ export const getEnrollmentsAPI = async (userId) => {
 };
 
 export const getEnrolledCoursesAPI = async (userId) => {
-  try {
-    const response = await axios.get(
-      `${API_URL}/enrollments?userId=${userId}&_expand=course`
-    );
-    return response.data;
-  } catch (error) {
-    throw new Error(
-      "Lỗi khi lấy danh sách khóa học đã đăng ký: " + error.message
-    );
-  }
+  const token = localStorage.getItem("token");
+  const response = await axios.get(
+    `${API_URL}/enrollments/my-courses/${userId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
 };
 
 export const completeCourseAPI = async (enrollmentId) => {

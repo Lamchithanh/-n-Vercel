@@ -142,7 +142,7 @@ const Users = () => {
           return user;
         })
       );
-    }, 5000);
+    }, 50000);
 
     return () => clearInterval(intervalId);
   }, []);
