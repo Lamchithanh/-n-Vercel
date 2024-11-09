@@ -10,40 +10,8 @@ const Login = () => {
     try {
       const response = await login(values.email, values.password);
 
-      // Kiểm tra nếu response là lỗi
-      if (response.error) {
-        // Kiểm tra nếu tài khoản bị khóa
-        if (response.error === "Tài khoản bị khóa" && response.lockInfo) {
-          const lockUntilDate = response.lockInfo.lockedUntil
-            ? new Date(response.lockInfo.lockedUntil).toLocaleString()
-            : "vĩnh viễn";
-
-          toast.error(
-            <div>
-              <strong>Tài khoản đã bị khóa</strong>
-              <p>Lý do: {response.lockInfo.reason}</p>
-              <p>Thời gian mở khóa: {lockUntilDate}</p>
-            </div>,
-            { autoClose: false }
-          );
-          return;
-        }
-
-        // Hiển thị lỗi khác
-        toast.error(response.error);
-        return;
-      }
-
       // Xử lý đăng nhập thành công
       toast.success("Đăng nhập thành công!");
-
-      // Kiểm tra lại một lần nữa trạng thái khóa trước khi lưu và chuyển hướng
-      if (response.user.isLocked) {
-        toast.error("Tài khoản đang bị khóa!");
-        return;
-      }
-
-      // Lưu thông tin user
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("token", response.token);
 
@@ -60,6 +28,61 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
+
+      // Kiểm tra nếu là lỗi tài khoản bị khóa
+      // Kiểm tra nếu là lỗi tài khoản bị khóa
+      if (error.response?.status === 403 && error.response?.data?.lockInfo) {
+        const { lockInfo } = error.response.data;
+
+        // Format thời gian sang định dạng Việt Nam
+        const formatDateTime = (dateString) => {
+          if (!dateString) return "Vĩnh viễn";
+          return new Date(dateString).toLocaleString("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+        };
+
+        toast.error(
+          <div className="lock-notification">
+            <h4 style={{ margin: "0 0 10px 0", color: "#e74c3c" }}>
+              Tài khoản đã bị khóa
+            </h4>
+            <div style={{ fontSize: "14px", lineHeight: "1.5" }}>
+              <p style={{ margin: "5px 0" }}>
+                <strong>Lý do:</strong> {lockInfo.reason}
+              </p>
+              <p style={{ margin: "5px 0" }}>
+                <strong>Thời gian khóa:</strong>{" "}
+                {formatDateTime(lockInfo.lockedAt)}
+              </p>
+              <p style={{ margin: "5px 0" }}>
+                <strong>Thời gian mở khóa:</strong>{" "}
+                {formatDateTime(lockInfo.lockedUntil)}
+              </p>
+            </div>
+          </div>,
+          {
+            autoClose: false,
+            closeButton: true,
+            closeOnClick: false,
+            draggable: false,
+            style: {
+              minWidth: "320px",
+              backgroundColor: "#fff",
+              color: "#2c3e50",
+            },
+          }
+        );
+        return;
+      }
+
+      // Xử lý các lỗi khác
       const errorMessage =
         error.response?.data?.error || "Đã xảy ra lỗi. Vui lòng thử lại.";
       toast.error(errorMessage);

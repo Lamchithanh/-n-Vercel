@@ -47,19 +47,54 @@ exports.login = async (req, res) => {
     const user = results[0];
 
     // Kiểm tra trạng thái khóa
+    // Kiểm tra trạng thái khóa
     if (user.isLocked === 1) {
       const now = new Date();
       const lockedUntil = user.lockedUntil ? new Date(user.lockedUntil) : null;
 
       // Kiểm tra nếu tài khoản đang bị khóa
       if (!lockedUntil || now < lockedUntil) {
-        // Tài khoản vẫn đang bị khóa
+        // Định dạng thời gian mở khóa
+        const lockUntilFormatted = lockedUntil
+          ? new Date(lockedUntil.getTime() + 7 * 60 * 60 * 1000).toLocaleString(
+              "vi-VN",
+              {
+                timeZone: "Asia/Ho_Chi_Minh",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false, // Sử dụng định dạng 24 giờ
+              }
+            )
+          : "vĩnh viễn";
+
+        // Format thời gian bị khóa
+        const lockedAtFormatted = user.lockedAt
+          ? new Date(
+              new Date(user.lockedAt).getTime() + 7 * 60 * 60 * 1000
+            ).toLocaleString("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })
+          : null;
+
         return res.status(403).json({
           error: "Tài khoản bị khóa",
           lockInfo: {
-            reason: user.lockReason || "Không có lý do cụ thể",
-            lockedUntil: lockedUntil ? lockedUntil.toISOString() : null,
             isLocked: true,
+            reason: user.lockReason || "Không có lý do cụ thể",
+            lockedAt: lockedAtFormatted
+              ? new Date(user.lockedAt).toISOString()
+              : null,
+            lockedUntil: lockedUntil ? lockedUntil.toISOString() : null,
+            formattedLockedUntil: lockUntilFormatted,
           },
         });
       }
