@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
   ArrowLeftOutlined,
@@ -23,7 +23,6 @@ const Login = () => {
       // Xử lý đăng nhập thành công
       toast.success("Đăng nhập thành công!");
       localStorage.setItem("showSuccessToast", "true"); // Đặt biến trạng thái thông báo
-      toast.success("Đăng nhập thành công!");
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("token", response.token);
       // Chuyển hướng dựa vào role
@@ -216,8 +215,6 @@ const Login = () => {
           </Space>
         </Card>
       </div>
-
-      <ToastContainer style={{ zIndex: 10000 }} />
     </>
   );
 };

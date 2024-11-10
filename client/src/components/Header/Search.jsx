@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { API_URL } from "../../../../server/src/config/config";
-import { Input, Card, List, Spin, Typography } from "antd";
+import { Input, Card, List, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash/debounce";
+import Loader from "../../context/Loader";
 
 const { Title, Text } = Typography;
 
@@ -98,7 +99,7 @@ const CourseSearch = () => {
 
       {loading && (
         <div className="flex justify-center">
-          <Spin size="large" />
+          <Loader />
         </div>
       )}
 

@@ -15,7 +15,7 @@ const CertificatesPage = () => {
   const navigate = useNavigate();
 
   const handleJoinClick = () => {
-    navigate("/login"); // Điều hướng đến trang đăng nhập
+    navigate("/"); // Điều hướng đến trang đăng nhập
   };
 
   useEffect(() => {

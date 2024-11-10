@@ -8,7 +8,6 @@ import {
   Space,
   Popconfirm,
   message,
-  Upload,
   DatePicker,
 } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
@@ -120,8 +119,7 @@ const BlogManagement = () => {
         title: values.title.trim(),
         excerpt: values.excerpt.trim(),
         date: values.date.format("YYYY-MM-DD"),
-        image:
-          values.image?.[0]?.response?.url || values.image?.[0]?.url || null,
+        image: values.image || editingPost?.image || null, // Giữ lại URL cũ nếu không có thay đổi
       };
 
       // Validate form data
@@ -384,20 +382,16 @@ const BlogManagement = () => {
 
           <Form.Item
             name="image"
-            label="Cover Image"
-            rules={[{ required: false }]}
+            label="Cover Image URL"
+            rules={[
+              {
+                type: "url",
+                message: "Please enter a valid URL!",
+                validateTrigger: "onChange",
+              },
+            ]}
           >
-            <Upload
-              name="image"
-              listType="picture-card"
-              maxCount={1}
-              beforeUpload={() => false}
-            >
-              <div>
-                <PlusOutlined />
-                <div style={{ marginTop: 8 }}>Upload</div>
-              </div>
-            </Upload>
+            <Input placeholder="Enter image URL" />
           </Form.Item>
 
           <Form.Item className={styles.formActions}>

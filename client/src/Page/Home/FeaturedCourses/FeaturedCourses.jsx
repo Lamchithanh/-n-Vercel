@@ -37,7 +37,7 @@ const FeaturedCourses = () => {
 
   return (
     <div>
-      <h2>Khóa Học Nổi Bật</h2>
+      <h4 style={{ margin: 20 }}>Khóa Học Nổi Bật</h4>
       <FeaturedCoursesContainer courses={courses} isLoading={isLoading} />
     </div>
   );

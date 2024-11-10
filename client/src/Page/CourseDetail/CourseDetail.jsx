@@ -6,7 +6,7 @@ import { enrollCourseAPI } from "../../../../server/src/Api/enrollmentApi";
 import { fetchLessonsAPI } from "../../../../server/src/Api/lessonApi";
 import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { useEffect, useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CourseReviews from "./CourseReviews ";
 import defaultImage from "../../assets/img/sach.png";
@@ -525,7 +525,7 @@ const CourseDetail = () => {
         </Col>
       </Row>
 
-      <ToastContainer />
+      {/* <ToastContainer /> */}
     </div>
   );
 };

@@ -24,12 +24,13 @@ import "./HomePage.scss";
 import Loader from "../../context/Loader";
 import { fetchCoursesAPI } from "../../../../server/src/Api/courseApi";
 import defaultImage from "../../assets/img/sach.png";
-import { toast, ToastContainer } from "react-toastify";
+
 import "react-toastify/dist/ReactToastify.css";
 // import HeroSection from "./HeroSection/HeroSection";
 import FeaturedCourses from "./FeaturedCourses/FeaturedCourses";
 import Testimonials from "./Testimonials/Testimonials";
 import LatestBlog from "./LatestBlog/LatestBlog";
+
 const { Header, Content } = Layout;
 
 const HomePage = () => {
@@ -59,7 +60,6 @@ const HomePage = () => {
   useEffect(() => {
     const shouldShowToast = localStorage.getItem("showSuccessToast");
     if (shouldShowToast) {
-      toast.success("Đăng nhập thành công!");
       localStorage.removeItem("showSuccessToast"); // Xóa trạng thái sau khi hiển thị để tránh hiển thị lại khi tải lại trang
     }
   }, []);
@@ -214,7 +214,7 @@ const HomePage = () => {
 
     return (
       <div>
-        <p style={{ fontSize: 15 }}>Tất cả khóa học</p>
+        <h4 style={{ fontSize: 18, margin: 20 }}>Tất cả khóa học</h4>
         <div className="course-list">
           {currentCourses.map((course) => (
             <Card
@@ -392,10 +392,6 @@ const HomePage = () => {
           locale={{ emptyText: "Không có thông báo mới" }}
         />
       </Drawer>
-      <ToastContainer
-        position="top-center" // Đặt vị trí thông báo ở phía trên, giữa màn hình
-        autoClose={2000}
-      />
     </Layout>
   );
 };

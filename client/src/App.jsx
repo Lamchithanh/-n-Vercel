@@ -20,6 +20,8 @@ import CourseDetail from "./Page/CourseDetail/CourseDetail"; // Nhập CourseDet
 import PropTypes from "prop-types"; // Thêm import PropTypes
 import PaymentPage from "./Page/PaymentPage/PaymentPage ";
 import CertificatesPage from "./Page/CertificatesPage/CertificatesPage";
+import BlogPage from "./Page/BlogPage/BlogPage";
+import BackToTop from "./Page/Home/BacktoTop";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -50,6 +52,7 @@ const App = () => {
             <Route path="my-courses" element={<MyCourses />} />
             <Route path="account-settings" element={<AccountSettings />} />
             <Route path="courses/:id" element={<CourseDetail />} />{" "}
+            <Route path="/blogpage" element={<BlogPage />} />
           </Route>
 
           <Route path="/login" element={<Login />} />
@@ -65,7 +68,8 @@ const App = () => {
             }
           />
         </Routes>
-        <ToastContainer />
+        <BackToTop />
+        <ToastContainer position="top-center" autoClose={2000} />
       </div>
     </Router>
   );

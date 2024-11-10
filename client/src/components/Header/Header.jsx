@@ -3,6 +3,8 @@ import "./Header.scss";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import avatar from "../../assets/img/avarta.png";
 import CourseSearch from "./Search.jsx";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Header = () => {
   const location = useLocation();
@@ -20,17 +22,31 @@ const Header = () => {
     // Xóa thông tin người dùng khỏi localStorage
     localStorage.removeItem("user");
     setUser(null);
-    navigate("/");
+
+    // Hiển thị thông báo thành công
+    toast.success("Tạm biệt! Hẹn gặp lại ");
+
+    // Chờ khoảng 1-1.5 giây trước khi điều hướng
+    setTimeout(() => {
+      navigate("/");
+    }, 1500); // Thời gian chờ có thể thay đổi tuỳ theo tốc độ của bạn
   };
 
   const handleLogoClick = () => {
-    console.log("Navigating to home");
-    navigate("/");
+    if (user) {
+      // Nếu người dùng đã đăng nhập và là admin, điều hướng đến trang điều khiển admin
+      if (user.role === "admin") {
+        navigate("/admin"); // Đảm bảo đường dẫn đúng với trang admin của bạn
+      } else {
+        // Nếu không phải admin, điều hướng đến trang thông tin cá nhân
+        navigate("/user-info");
+      }
+    }
   };
 
   return (
     <header className="header">
-      <div className="header__logo" onClick={handleLogoClick}>
+      <NavLink className="header__logo" to="/">
         <span className="logo-icon">
           <img
             width="50"
@@ -40,16 +56,14 @@ const Header = () => {
           />
         </span>
         <span className="logo-text">Làm để qua đồ án</span>
-      </div>
-
+      </NavLink>
       <div className="header__search">
         <CourseSearch />
       </div>
-
       <div className="header__actions">
         {user ? (
           <div className="user-menu">
-            <button className="user-avatar">
+            <button className="user-avatar" onClick={handleLogoClick}>
               <img
                 src={user.avatarUrl || avatar}
                 alt="User Avatar"
@@ -91,7 +105,7 @@ const Header = () => {
             </NavLink>
           </>
         )}
-      </div>
+      </div>{" "}
     </header>
   );
 };

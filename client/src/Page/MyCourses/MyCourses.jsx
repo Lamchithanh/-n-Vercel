@@ -1,100 +1,204 @@
-import { useState, useEffect } from "react";
-import { Row, Button, Spin, Empty, Tag } from "antd";
-import {
-  BookOutlined,
-  LoadingOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-} from "@ant-design/icons";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import PropTypes from "prop-types";
+import styles from "./MyCourses.module.scss";
+import defaultImage from "../../assets/img/sach.png";
+
+const CourseCard = ({ course }) => {
+  const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      className={`${styles.featuredCourses__card} ${
+        isHovered ? styles.cardHovered : ""
+      }`}
+      onClick={() => navigate(`/courses/${course.id}`)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className={styles.featuredCourses__imageWrapper}>
+        <img
+          src={course.image || defaultImage}
+          alt={course.title}
+          className={`${styles.featuredCourses__image} ${
+            isHovered ? styles.imageHovered : ""
+          }`}
+        />
+      </div>
+      <div className={styles.featuredCourses__content}>
+        <div className={styles.featuredCourses__header}>
+          <h3 className={styles.featuredCourses__title}>{course.title}</h3>
+        </div>
+        <p className={styles.featuredCourses_description}>
+          {course.description}
+        </p>
+        <div className={styles.featuredCourses__footer}>
+          <span className={styles.featuredCourses__level}>{course.level}</span>
+          <div className={styles.featuredCourses__progress}>
+            <div className={styles["featuredCourses__progress-container"]}>
+              <div
+                className={styles["featuredCourses__progress-bar"]}
+                style={{ width: `${course.progress?.percentage || 0}%` }}
+              />
+            </div>
+            <div className={styles["featuredCourses__progress-text"]}>
+              <span>Tiến độ</span>
+              <span>{course.progress?.percentage || 0}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+CourseCard.propTypes = {
+  course: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string,
+    image: PropTypes.string,
+    level: PropTypes.string.isRequired,
+    progress: PropTypes.shape({
+      percentage: PropTypes.number.isRequired,
+    }).isRequired,
+  }).isRequired,
+};
 
 const MyCourses = () => {
-  const [enrollments, setEnrollments] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const courseGridRef = useRef(null);
+  const scrollTimeout = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchEnrolledCourses = async () => {
+    const fetchCourses = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        const userString = localStorage.getItem("user");
 
-        // Lấy userId từ localStorage
-        const userId = localStorage.getItem("userId");
-
-        if (!userId) {
-          setError("Vui lòng đăng nhập để xem khóa học của bạn");
+        if (!userString) {
+          console.log("Không tìm thấy thông tin user trong localStorage");
+          navigate("/login", { replace: true, state: { from: "/my-courses" } });
           return;
         }
 
-        const response = await fetch(
-          `http://localhost:9000/api/enrollments/my-courses`
-        );
+        const user = JSON.parse(userString);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || "Không thể tải danh sách khóa học"
-          );
+        if (!user.id) {
+          console.log("Không tìm thấy id trong thông tin user");
+          navigate("/login", { replace: true, state: { from: "/my-courses" } });
+          return;
         }
 
-        const data = await response.json();
+        const response = await axios.get(
+          `http://localhost:9000/api/my-courses/${user.id}`
+        );
 
-        // Lọc khóa học dựa trên userId
-        const userCourses = data.filter((course) => course.userId === userId);
-        setEnrollments(userCourses);
+        setCourses(response.data);
+        setLoading(false);
       } catch (err) {
-        console.error("Error fetching courses:", err);
-        setError(err.message);
-      } finally {
+        console.error("Error:", err);
+
+        if (err.response?.status === 403) {
+          setError("Bạn không có quyền truy cập khóa học này");
+        } else if (err.name === "SyntaxError") {
+          setError("Dữ liệu người dùng không hợp lệ. Vui lòng đăng nhập lại.");
+        } else {
+          setError("Có lỗi xảy ra khi tải khóa học. Vui lòng thử lại sau.");
+        }
         setLoading(false);
       }
     };
 
-    fetchEnrolledCourses();
+    fetchCourses();
   }, [navigate]);
 
-  const getCourseProgress = (enrollment) => {
-    const progress = enrollment.progress?.percentage || 0;
+  // Xử lý cuộn mượt bằng chuột
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (courseGridRef.current) {
+        e.preventDefault();
+        const scrollSpeed = 80; // Giảm tốc độ cuộn
+        const delta = (e.deltaY * scrollSpeed) / 100;
 
-    if (enrollment.completed_at) {
-      return (
-        <Tag color="success" icon={<CheckCircleOutlined />}>
-          Đã hoàn thành
-        </Tag>
-      );
+        courseGridRef.current.scrollLeft += delta;
+        setIsScrolling(true);
+
+        // Reset scrolling state after scrolling ends
+        if (scrollTimeout.current) {
+          clearTimeout(scrollTimeout.current);
+        }
+        scrollTimeout.current = setTimeout(() => {
+          setIsScrolling(false);
+        }, 150);
+      }
+    };
+
+    const currentRef = courseGridRef.current;
+    if (currentRef) {
+      currentRef.addEventListener("wheel", handleWheel, { passive: false });
     }
 
-    if (progress === 100) {
-      return (
-        <Tag color="success" icon={<CheckCircleOutlined />}>
-          Hoàn thành
-        </Tag>
-      );
-    }
+    return () => {
+      if (currentRef) {
+        currentRef.removeEventListener("wheel", handleWheel);
+      }
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+    };
+  }, []);
 
-    return (
-      <Tag color="processing" icon={<ClockCircleOutlined />}>
-        {progress}% hoàn thành
-      </Tag>
-    );
+  // Xử lý kéo thả bằng chuột với độ nhạy được điều chỉnh
+  const handleMouseDown = (e) => {
+    if (courseGridRef.current) {
+      setIsDragging(true);
+      setStartX(e.pageX - courseGridRef.current.offsetLeft);
+      setScrollLeft(courseGridRef.current.scrollLeft);
+      courseGridRef.current.style.cursor = "grabbing";
+    }
   };
 
-  const renderCourseCard = (enrollment) => (
-    <div key={enrollment.id} className="course-card">
-      <h3>{enrollment.title}</h3>
-      <p>{enrollment.description}</p>
-      {getCourseProgress(enrollment)}
-    </div>
-  );
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    if (courseGridRef.current) {
+      const x = e.pageX - courseGridRef.current.offsetLeft;
+      const sensitivity = 1.5; // Tăng độ nhạy khi kéo
+      const walk = (x - startX) * sensitivity;
+      courseGridRef.current.scrollLeft = scrollLeft - walk;
+      setIsScrolling(true);
+    }
+  };
 
-  // Rest of your component code remains the same...
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    if (courseGridRef.current) {
+      courseGridRef.current.style.cursor = "grab";
+    }
+    setTimeout(() => setIsScrolling(false), 150);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+    if (courseGridRef.current) {
+      courseGridRef.current.style.cursor = "grab";
+    }
+    setTimeout(() => setIsScrolling(false), 150);
+  };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
+        <div className={styles.loadingSpinner}></div>
       </div>
     );
   }
@@ -102,43 +206,74 @@ const MyCourses = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <Empty description={error} image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        <Button
-          type="primary"
-          onClick={() => navigate("/login", { state: { from: "/my-courses" } })}
-          className="mt-4"
+        <p className="text-red-500 mb-4">{error}</p>
+        <button
+          onClick={() => navigate("/login")}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
-          Đăng nhập
-        </Button>
+          Đăng nhập lại
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <h2 className="text-2xl font-bold flex items-center">
-          <BookOutlined className="mr-2" /> Khóa học của tôi
-          <span className="ml-2 text-gray-500 text-base">
-            ({enrollments.length} khóa học)
-          </span>
-        </h2>
-        <Button type="primary" onClick={() => navigate("/courses")}>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className="text-2xl font-bold">
+          Khóa học của tôi ({courses.length})
+        </h1>
+        <button
+          onClick={() => navigate("/")}
+          className="px-4 py-2 bg-blue-500  rounded hover:bg-blue-600 transition-colors duration-200"
+        >
           Khám phá thêm khóa học
-        </Button>
+        </button>
       </div>
 
-      {enrollments.length === 0 ? (
-        <Empty
-          description="Bạn chưa đăng ký khóa học nào"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        >
-          <Button type="primary" onClick={() => navigate("/courses")}>
-            Khám phá khóa học
-          </Button>
-        </Empty>
+      {courses.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-600 mb-4">Bạn chưa đăng ký khóa học nào.</p>
+          <button
+            onClick={() => navigate("/courses")}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+          >
+            Xem danh sách khóa học
+          </button>
+        </div>
       ) : (
-        <Row gutter={[16, 16]}>{enrollments.map(renderCourseCard)}</Row>
+        <div className="relative overflow-hidden">
+          <div
+            className={`pointer-events-none absolute left-0 top-0 z-10 h-full w-48 transition-opacity duration-300 ${
+              isScrolling ? "opacity-90" : "opacity-70"
+            }`}
+            style={{
+              background:
+                "linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+          <div
+            ref={courseGridRef}
+            className={`${styles.courseGrid} cursor-grab active:cursor-grabbing`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+          >
+            {courses.map((course) => (
+              <CourseCard key={course.id} course={course} />
+            ))}
+          </div>
+          <div
+            className={`pointer-events-none absolute right-0 top-0 z-10 h-full w-48 transition-opacity duration-300 ${
+              isScrolling ? "opacity-90" : "opacity-70"
+            }`}
+            style={{
+              background:
+                "linear-gradient(to left, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+        </div>
       )}
     </div>
   );
