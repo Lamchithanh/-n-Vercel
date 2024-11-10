@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Form, Input, Button, Select } from "antd";
 import { register } from "../../../../server/src/Api/authAPI";
+import AOS from "aos"; // Import AOS
+import "aos/dist/aos.css"; // Import AOS styles
 
 const { Option } = Select;
 
@@ -13,6 +15,10 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState(""); // Xác nhận mật khẩu
   const [role, setRole] = useState("student"); // Giá trị mặc định cho vai trò
   const navigate = useNavigate(); // Để chuyển hướng
+
+  useEffect(() => {
+    AOS.init(); // Initialize AOS
+  }, []);
 
   const handleSubmit = async (values) => {
     const { username, email, password, role } = values;
@@ -50,8 +56,15 @@ const Register = () => {
     <div
       className="register-container container"
       style={{ display: "flex", alignItems: "center" }}
+      data-aos="fade-up" // Add AOS animation to the container
+      data-aos-duration="1000"
     >
-      <div className="form-container" style={{ flex: "1", padding: "20px" }}>
+      <div
+        className="form-container"
+        style={{ flex: "1", padding: "20px" }}
+        data-aos="fade-left" // Add AOS animation to the form container
+        data-aos-duration="1200"
+      >
         <Button onClick={() => navigate(-1)} style={{ marginBottom: 16 }}>
           Quay lại
         </Button>
@@ -59,6 +72,8 @@ const Register = () => {
           className="form-Register"
           onFinish={handleSubmit}
           layout="vertical"
+          data-aos="fade-right" // Add AOS animation to the form
+          data-aos-duration="1400"
         >
           <h2 className="title-Register">Tạo tài khoản</h2>
           <Form.Item
@@ -128,8 +143,11 @@ const Register = () => {
               className="btn-Register"
               type="primary"
               htmlType="submit"
-             
-              style={{width: "100%", backgroundColor: '#4caf50', borderColor: '#4caf50' }}
+              style={{
+                width: "100%",
+                backgroundColor: "#4caf50",
+                borderColor: "#4caf50",
+              }}
             >
               Đăng ký
             </Button>

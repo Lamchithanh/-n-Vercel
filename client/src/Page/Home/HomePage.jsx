@@ -174,8 +174,8 @@ const HomePage = () => {
     {
       key: "2",
       icon: <UserOutlined />,
-      label: "Tài khoản",
-      children: [{ label: "Thông tin cá nhân", path: "user-info" }],
+      label: "Giới thiệu",
+      children: [{ label: "Mở rộng", path: "introduce" }],
     },
     {
       key: "3",

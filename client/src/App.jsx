@@ -22,6 +22,7 @@ import PaymentPage from "./Page/PaymentPage/PaymentPage ";
 import CertificatesPage from "./Page/CertificatesPage/CertificatesPage";
 import BlogPage from "./Page/BlogPage/BlogPage";
 import BackToTop from "./Page/Home/BacktoTop";
+import Introduce from "./Page/Introduce/Introduce";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -46,6 +47,7 @@ const App = () => {
           <Route path="/" element={<User />}>
             <Route index element={<HomePage />} />
             <Route path="user-info" element={<UserInfo />} />
+            <Route path="introduce" element={<Introduce />} />
             <Route path="payment/:id" element={<PaymentPage />} />
             <Route path="certificates" element={<CertificatesPage />} />
             <Route path="change-password" element={<ChangePassword />} />
