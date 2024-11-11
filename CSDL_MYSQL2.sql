@@ -21,6 +21,9 @@ CREATE TABLE users (
   lockedUntil TIMESTAMP DEFAULT NULL,  -- Thay đổi từ DATETIME sang TIMESTAMP
   CONSTRAINT chk_locked CHECK (isLocked IN (0,1))  -- Thêm ràng buộc cho isLocked
 );
+  ALTER TABLE users
+ADD COLUMN bio TEXT NULL AFTER updated_at;
+
 
 -- Bảng lưu lịch sử khóa (tùy chọn)
 CREATE TABLE user_lock_history (

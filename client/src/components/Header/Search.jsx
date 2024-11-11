@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { API_URL } from "../../../../server/src/config/config";
-import { Input, Card, List, Typography } from "antd";
+import { Input, Card, List, Typography, Empty } from "antd";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash/debounce";
 import Loader from "../../context/Loader";
@@ -14,14 +14,15 @@ const CourseSearch = () => {
   const [level] = useState("all");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false); // Thêm state để theo dõi việc đã tìm kiếm hay chưa
   const navigate = useNavigate();
-  const searchRef = useRef(null); // Reference for search container
+  const searchRef = useRef(null);
 
-  // Debounced search function to limit API calls
   const debouncedSearch = useCallback(
     debounce(async (query) => {
       if (!query.trim()) {
         setResults([]);
+        setSearched(false);
         return;
       }
 
@@ -46,6 +47,7 @@ const CourseSearch = () => {
         setResults([]);
       } finally {
         setLoading(false);
+        setSearched(true); // Đánh dấu đã thực hiện tìm kiếm
       }
     }, 300),
     [category, level]
@@ -66,16 +68,17 @@ const CourseSearch = () => {
     if (courseId) {
       setResults([]);
       setSearchQuery("");
+      setSearched(false);
       navigate(`/courses/${courseId}`);
     }
   };
 
-  // Clear search results when clicking outside the search container
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setResults([]);
         setSearchQuery("");
+        setSearched(false);
       }
     };
 
@@ -100,6 +103,29 @@ const CourseSearch = () => {
       {loading && (
         <div className="flex justify-center">
           <Loader />
+        </div>
+      )}
+
+      {!loading && searched && results.length === 0 && searchQuery.trim() && (
+        <div
+          style={{
+            position: "absolute",
+            zIndex: 100,
+            marginTop: 20,
+            background: "#ffd3d3",
+            padding: 20,
+            borderRadius: 8,
+            left: 0,
+            width: "100%",
+          }}
+        >
+          <Empty
+            description={
+              <Text strong>
+                Không tìm thấy khóa học nào phù hợp với từ khóa "{searchQuery}"
+              </Text>
+            }
+          />
         </div>
       )}
 
