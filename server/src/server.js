@@ -16,6 +16,7 @@ const certificateRoutes = require("./routes/certificateRoutes");
 const { startCronJob } = require("./controllers/userController.js"); // Import cron job
 const paymentRoutes = require("./routes/paymentRoutes.js");
 const blogRoutes = require("./routes/blogRoutes");
+const ChangePassword = require("./routes/ChangePasswordRoute.js");
 
 const app = express();
 const port = process.env.PORT || 9000;
@@ -43,6 +44,7 @@ app.use("/api/courses", searchRoutes);
 app.use("/api", certificateRoutes);
 app.use(paymentRoutes);
 app.use("/api", blogRoutes);
+app.use("/api", ChangePassword);
 
 // Middleware xử lý lỗi
 app.use((err, req, res, next) => {

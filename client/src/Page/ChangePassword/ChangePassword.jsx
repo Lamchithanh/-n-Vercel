@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Card, Form, Input, Button, Alert, message } from "antd";
-import axios from "axios";
 
 const ChangePassword = () => {
+  const [user, setUser] = useState(null);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -20,53 +22,68 @@ const ChangePassword = () => {
     }
   }, []);
 
-  const onFinish = async (values) => {
-    const { oldPassword, newPassword } = values;
+  const handleChangePassword = async () => {
     setLoading(true);
     setError(null);
     setSuccess(false);
 
-    try {
-      if (!user || !user.id || !user.token) {
-        throw new Error(
-          "Không tìm thấy thông tin người dùng hoặc token. Vui lòng đăng nhập lại."
-        );
-      }
+    if (!user || !user.id || !user.token) {
+      setError(
+        "Không tìm thấy thông tin người dùng hoặc token. Vui lòng đăng nhập lại."
+      );
+      setLoading(false);
+      return;
+    }
 
-      const response = await axios.post(
+    if (newPassword !== confirmPassword) {
+      setError("Mật khẩu mới và mật khẩu xác nhận không khớp.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
         "http://localhost:9000/api/change-password",
         {
-          userId: user.id,
-          oldPassword,
-          newPassword,
-        },
-        {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${user.token}`,
           },
+          body: JSON.stringify({
+            userId: user.id,
+            oldPassword: user.password_hash, // Sử dụng mật khẩu lưu trong localStorage
+            newPassword,
+          }),
         }
       );
 
-      if (response.data.success) {
-        setSuccess(true);
-        message.success("Đổi mật khẩu thành công!");
+      const data = await response.json();
+      if (response.ok) {
+        if (data.success) {
+          setSuccess(true);
+          message.success("Đổi mật khẩu thành công!");
+
+          // Lưu mật khẩu mới vào localStorage
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...user,
+              password_hash: newPassword,
+            })
+          );
+        } else {
+          setError(data.message || "Không thể đổi mật khẩu. Vui lòng thử lại.");
+        }
       } else {
-        setError(
-          response.data.message || "Không thể đổi mật khẩu. Vui lòng thử lại."
-        );
+        setError(data.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
       }
     } catch (err) {
       console.error("Error in change password:", err);
       if (err.response && err.response.status === 401) {
-        setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-        // Có thể thêm logic để đăng xuất người dùng ở đây
+        setError("Mật khẩu cũ không chính xác. Vui lòng thử lại.");
       } else {
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            "Đã xảy ra lỗi. Vui lòng thử lại sau."
-        );
+        setError(err.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
       }
     } finally {
       setLoading(false);
@@ -96,48 +113,38 @@ const ChangePassword = () => {
           showIcon
         />
       )}
-      <Form layout="vertical" onFinish={onFinish}>
+      <Form layout="vertical" onFinish={handleChangePassword}>
         <Form.Item
           label="Mật khẩu cũ"
           name="oldPassword"
           rules={[{ required: true, message: "Vui lòng nhập mật khẩu cũ!" }]}
         >
-          <Input.Password />
+          <Input.Password
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+          />
         </Form.Item>
         <Form.Item
           label="Mật khẩu mới"
           name="newPassword"
-          rules={[
-            { required: true, message: "Vui lòng nhập mật khẩu mới!" },
-            { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự!" },
-            {
-              pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
-              message:
-                "Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường và một số!",
-            },
-          ]}
+          rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới!" }]}
         >
-          <Input.Password />
+          <Input.Password
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
         </Form.Item>
         <Form.Item
           label="Xác nhận mật khẩu mới"
           name="confirmPassword"
-          dependencies={["newPassword"]}
           rules={[
             { required: true, message: "Vui lòng xác nhận mật khẩu mới!" },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue("newPassword") === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(
-                  new Error("Mật khẩu xác nhận không khớp!")
-                );
-              },
-            }),
           ]}
         >
-          <Input.Password />
+          <Input.Password
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
         </Form.Item>
         <Form.Item>
           <Button

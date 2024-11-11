@@ -3,51 +3,43 @@ const pool = require("../config/pool");
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.params.id;
-    const { username, email } = req.body;
+    const { username, email, bio } = req.body;
 
-    // Đầu tiên lấy thông tin user hiện tại để lấy role
-    const currentUserQuery = "SELECT role FROM users WHERE id = ?";
-    const [currentUser] = await pool.query(currentUserQuery, [userId]);
+    console.log("ID người dùng:", userId); // Log ID người dùng
+    console.log("Dữ liệu nhận được:", { username, email, bio }); // Log dữ liệu nhận được từ client
 
-    if (!currentUser || currentUser.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy người dùng",
-      });
-    }
-
-    // Sử dụng role hiện tại của user
-    const currentRole = currentUser[0].role;
-
-    // Cập nhật user với role hiện tại
     const updateQuery = `
-        UPDATE users 
-        SET username = ?, 
-            email = ?, 
-            role = ?, 
-            updated_at = NOW() 
-        WHERE id = ?
-      `;
+      UPDATE users
+      SET username = ?,
+          email = ?,
+          bio = COALESCE(?, bio),
+          updated_at = NOW()
+      WHERE id = ?
+    `;
 
     const [result] = await pool.query(updateQuery, [
       username,
       email,
-      currentRole, // Sử dụng role hiện tại thay vì để null
+      bio,
       userId,
     ]);
 
+    console.log("Kết quả truy vấn cập nhật:", result); // Log kết quả truy vấn
+
     if (result.affectedRows === 0) {
+      console.log("Không tìm thấy người dùng để cập nhật");
       return res.status(404).json({
         success: false,
         message: "Không tìm thấy người dùng để cập nhật",
       });
     }
 
-    // Lấy thông tin user sau khi cập nhật
     const [updatedUser] = await pool.query(
-      "SELECT id, username, email, role FROM users WHERE id = ?",
+      "SELECT id, username, email, bio, role FROM users WHERE id = ?",
       [userId]
     );
+
+    console.log("Dữ liệu người dùng đã cập nhật:", updatedUser[0]); // Log dữ liệu người dùng sau khi cập nhật
 
     res.status(200).json({
       success: true,
@@ -55,7 +47,7 @@ exports.updateProfile = async (req, res) => {
       data: updatedUser[0],
     });
   } catch (error) {
-    console.error("Error in updateUser:", error);
+    console.error("Lỗi trong quá trình cập nhật người dùng:", error); // Log lỗi
     res.status(500).json({
       success: false,
       message: "Lỗi server khi cập nhật thông tin người dùng",

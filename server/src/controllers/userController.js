@@ -410,39 +410,3 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: "Lỗi server, không thể xóa người dùng" });
   }
 };
-
-// changePassword
-
-exports.changePassword = async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
-  const userId = req.user.id; // Lấy ID người dùng từ token đã xác thực
-
-  try {
-    const user = await User.findById(userId); // Tìm người dùng trong cơ sở dữ liệu
-
-    // Kiểm tra mật khẩu cũ
-    const isMatch = await bcrypt.compare(oldPassword, user.password_hash);
-    if (!isMatch) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Mật khẩu cũ không đúng." });
-    }
-
-    // Hash mật khẩu mới
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-    // Cập nhật mật khẩu mới vào cơ sở dữ liệu
-    user.password_hash = hashedNewPassword;
-    await user.save();
-
-    return res.json({
-      success: true,
-      message: "Mật khẩu đã được đổi thành công!",
-    });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Đã xảy ra lỗi. Vui lòng thử lại sau.",
-    });
-  }
-};

@@ -18,7 +18,6 @@ router.post("/forgot-password", forgotPassword);
 // Route to fetch current logged-in user's profile based on token
 router.get("/users/profile", authMiddleware, userController.getUserProfile);
 
-router.post("/change-password", authMiddleware, userController.changePassword);
 // Route để đăng xuất
 router.post("/logout", userController.logout);
 router.post("/users", userController.createUser);

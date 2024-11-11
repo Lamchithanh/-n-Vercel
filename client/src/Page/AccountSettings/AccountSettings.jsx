@@ -22,6 +22,7 @@ const AccountSettings = () => {
       form.setFieldsValue({
         fullName: parsedUser.username,
         email: parsedUser.email,
+        role: parsedUser.role,
         bio: parsedUser.bio || "",
       });
       if (parsedUser.avatar) {
@@ -37,25 +38,42 @@ const AccountSettings = () => {
     }
   }, [form, navigate]);
 
+  const onFinish = async (values) => {
+    try {
+      setLoading(true);
+      console.log("Dữ liệu gửi đi:", values); // Log giá trị gửi đi
+
+      const response = await updateUserInDatabase(values);
+      console.log("Phản hồi từ backend:", response.data); // Log phản hồi từ backend
+
+      if (response.data.success) {
+        message.success("✅ Cập nhật thông tin người dùng thành công");
+      } else {
+        message.error("❌ Cập nhật thông tin không thành công");
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      message.error("Có lỗi xảy ra khi cập nhật thông tin");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateUserInDatabase = async (values) => {
     try {
       const userData = JSON.parse(localStorage.getItem("user"));
       const userId = userData.id;
       const token = localStorage.getItem("token");
 
-      // Chỉ thêm các trường không phải là null vào dữ liệu cập nhật
       const updateData = {
         ...(values.fullName && { username: values.fullName }),
         ...(values.bio && { bio: values.bio }),
-        ...(useDefaultAvatar ? {} : { avatar: imageUrl }), // Chỉ gửi avatar nếu không phải ảnh mặc định
-        email: userData.email, // Giữ email cũ
+        ...(useDefaultAvatar ? {} : { avatar: imageUrl }),
+        email: userData.email,
+        role: userData.role,
       };
 
-      // Nếu updateData rỗng (không có thay đổi), thoát khỏi hàm
-      if (Object.keys(updateData).length === 0) {
-        message.info("Không có thông tin nào cần cập nhật");
-        return;
-      }
+      console.log("Dữ liệu sẽ cập nhật:", updateData); // Log dữ liệu sẽ gửi đi
 
       const response = await axios.put(
         `${API_URL}/api/users/${userId}`,
@@ -67,39 +85,10 @@ const AccountSettings = () => {
         }
       );
 
-      if (response.data.success) {
-        const updatedUser = {
-          ...userData,
-          ...response.data.data,
-        };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        message.success("Cập nhật thông tin thành công");
-        navigate("/account-settings");
-      }
+      return response;
     } catch (error) {
       console.error("Error updating user:", error);
-      if (error.response) {
-        if (error.response.status === 401) {
-          message.error("Phiên đăng nhập đã hết hạn");
-          navigate("/login");
-        } else {
-          message.error(
-            error.response.data.message ||
-              "Có lỗi xảy ra khi cập nhật thông tin"
-          );
-        }
-      } else {
-        message.error("Không thể kết nối đến server");
-      }
-    }
-  };
-
-  const onFinish = async (values) => {
-    try {
-      setLoading(true);
-      await updateUserInDatabase(values);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
 
