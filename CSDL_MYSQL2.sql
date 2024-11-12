@@ -11,28 +11,26 @@ CREATE TABLE users (
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('student', 'instructor', 'admin') NOT NULL,
   avatar VARCHAR(255),
+  bio TEXT NULL,  -- Thông tin cá nhân của người dùng
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   reset_token VARCHAR(64),
-  reset_token_expiry TIMESTAMP,  -- Thay đổi từ BIGINT sang TIMESTAMP
-  isLocked TINYINT(1) DEFAULT 0,  -- Thay đổi từ BOOLEAN sang TINYINT(1)
+  reset_token_expiry TIMESTAMP,
+  isLocked TINYINT(1) DEFAULT 0,
   lockReason VARCHAR(255) DEFAULT NULL,
-  lockedAt TIMESTAMP DEFAULT NULL,  -- Thay đổi từ DATETIME sang TIMESTAMP
-  lockedUntil TIMESTAMP DEFAULT NULL,  -- Thay đổi từ DATETIME sang TIMESTAMP
-  CONSTRAINT chk_locked CHECK (isLocked IN (0,1))  -- Thêm ràng buộc cho isLocked
+  lockedAt TIMESTAMP DEFAULT NULL,
+  lockedUntil TIMESTAMP DEFAULT NULL,
+  CONSTRAINT chk_locked CHECK (isLocked IN (0,1))
 );
-  ALTER TABLE users
-ADD COLUMN bio TEXT NULL AFTER updated_at;
 
-
--- Bảng lưu lịch sử khóa (tùy chọn)
+-- Bảng lưu lịch sử khóa tài khoản người dùng (tùy chọn)
 CREATE TABLE user_lock_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    userId BIGINT UNSIGNED,
-    actionType ENUM('LOCK', 'UNLOCK'),
+    user_id BIGINT UNSIGNED,
+    action_type ENUM('LOCK', 'UNLOCK'),
     reason VARCHAR(255),
-    createdAt DATETIME,
-    FOREIGN KEY (userId) REFERENCES users(id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- Bảng Courses
@@ -47,7 +45,7 @@ CREATE TABLE courses (
   total_lessons INT DEFAULT 0,
   image VARCHAR(255),
   intro_video_url VARCHAR(255),
-  duration INT,  -- Thêm cột cho thời gian của khóa học
+  duration INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (instructor_id) REFERENCES users(id) ON DELETE SET NULL
@@ -92,7 +90,7 @@ CREATE TABLE enrollments (
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
 
--- Bảng Progress Tracking (Theo dõi tiến độ học tập)
+-- Bảng Progress (Theo dõi tiến độ học tập)
 CREATE TABLE progress (
   id SERIAL PRIMARY KEY,
   user_id BIGINT UNSIGNED,
@@ -100,6 +98,8 @@ CREATE TABLE progress (
   status ENUM('not_started', 'in_progress', 'completed') NOT NULL,
   last_watched_position INTEGER,
   total_time_watched INT DEFAULT 0,
+  watched_percentage DECIMAL(5, 2) DEFAULT 0,
+  first_watch_completed BOOLEAN DEFAULT FALSE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
@@ -145,23 +145,8 @@ CREATE TABLE payments (
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
 
--- Bảng Lesson Progress (Tiến độ bài học của người dùng)
-CREATE TABLE lesson_progress (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id BIGINT UNSIGNED NOT NULL,
-  course_id BIGINT UNSIGNED NOT NULL,
-  lesson_id BIGINT UNSIGNED NOT NULL,
-  status ENUM('started', 'completed') DEFAULT 'started',
-  progress_percentage INT DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
-  FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
-  UNIQUE KEY unique_progress (user_id, lesson_id)
-);
-
-CREATE TABLE BlogSection (
+-- Bảng BlogSection (Khu vực blog hoặc bài viết)
+CREATE TABLE blog_section (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   excerpt TEXT,
@@ -169,4 +154,19 @@ CREATE TABLE BlogSection (
   image VARCHAR(255)
 );
 
+-- Bảng Video Progress (Theo dõi video trong các bài học)
+CREATE TABLE video_progress (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT UNSIGNED NOT NULL,
+  lesson_id BIGINT UNSIGNED NOT NULL,
+  course_id BIGINT UNSIGNED NOT NULL, -- Thêm khóa ngoại cho bảng courses
+  module_id BIGINT UNSIGNED NOT NULL, -- Thêm khóa ngoại cho bảng module
+  watched BOOLEAN DEFAULT false,
+  watched_duration INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (lesson_id) REFERENCES lessons(id),
+  FOREIGN KEY (course_id) REFERENCES courses(id), -- Khóa ngoại liên kết đến bảng courses
+  FOREIGN KEY (module_id) REFERENCES modules(id) -- Khóa ngoại liên kết đến bảng module
+);
 

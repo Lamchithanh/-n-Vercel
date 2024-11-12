@@ -8,9 +8,10 @@ router.get("/courses/:id", courseController.getCourseById); // Lấy khóa học
 router.post("/courses", courseController.addCourse); // Thêm khóa học mới
 router.put("/courses/:id", courseController.updateCourse); // Cập nhật khóa học theo ID
 router.delete("/courses/:id", courseController.deleteCourse); // Xóa khóa học theo ID
-
 router.get("/search", courseController.searchCourses); // Route tìm kiếm
 
+router.get("/progress/:userId/:courseId", courseController.getProgress);
+router.post("/progress/update", courseController.updateProgress);
 // API để lấy các khóa học có số lượng đăng ký nhiều nhất
 
 module.exports = router;

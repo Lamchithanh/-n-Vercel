@@ -1,0 +1,82 @@
+controller: 
+
+exports.getProgress = async (req, res) => {
+  const { userId, courseId } = req.params;
+  try {
+    const query = `
+      SELECT vp.lesson_id, vp.watched, vp.watched_duration, l.title
+      FROM video_progress vp
+      JOIN lessons l ON vp.lesson_id = l.id
+      JOIN modules m ON l.module_id = m.id
+      WHERE vp.user_id = ? AND m.course_id = ?
+    `;
+    const [progress] = await pool.query(query, [userId, courseId]);
+    res.json(progress);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi khi lấy tiến độ học tập" });
+  }
+};
+
+exports.updateProgress = async (req, res) => {
+  const { userId, lessonId, courseId, moduleId, watched, watchedDuration } =
+    req.body;
+
+  try {
+    // Kiểm tra xem tiến độ học đã tồn tại chưa
+    const checkQuery = `
+      SELECT * FROM video_progress WHERE user_id = ? AND lesson_id = ? AND course_id = ?
+    `;
+    const [existingProgress] = await pool.query(checkQuery, [
+      userId,
+      lessonId,
+      courseId,
+    ]);
+
+    // Nếu tiến độ đã tồn tại và không có thay đổi (watchedDuration không thay đổi), không cập nhật
+    if (existingProgress.length > 0) {
+      const existing = existingProgress[0];
+
+      // Kiểm tra nếu watched hoặc watchedDuration có thay đổi
+      if (
+        existing.watched !== watched ||
+        existing.watched_duration !== watchedDuration
+      ) {
+        // Cập nhật tiến độ nếu có sự thay đổi
+        const updateQuery = `
+          UPDATE video_progress
+          SET watched = ?, watched_duration = ?
+          WHERE user_id = ? AND lesson_id = ? AND course_id = ?
+        `;
+        await pool.query(updateQuery, [
+          watched,
+          watchedDuration,
+          userId,
+          lessonId,
+          courseId,
+        ]);
+        res.json({ message: "Cập nhật tiến độ thành công!" });
+      } else {
+        res.json({ message: "Tiến độ không thay đổi." });
+      }
+    } else {
+      // Tiến độ chưa có, thêm mới vào bảng
+      const insertQuery = `
+        INSERT INTO video_progress (user_id, lesson_id, course_id, module_id, watched, watched_duration)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      await pool.query(insertQuery, [
+        userId,
+        lessonId,
+        courseId,
+        moduleId,
+        watched,
+        watchedDuration,
+      ]);
+      res.json({ message: "Thêm tiến độ thành công!" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi khi cập nhật tiến độ" });
+  }
+};
+
+

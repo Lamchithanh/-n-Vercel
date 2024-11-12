@@ -44,3 +44,13 @@ export const deleteCourse = async (courseId) => {
   });
   return response.data;
 };
+
+export const getProgressAPI = async (userId, courseId) => {
+  const response = await axios.get(`${API_URL}/progress/${userId}/${courseId}`);
+  return response.data;
+};
+
+export const updateProgressAPI = async (data) => {
+  const response = await axios.post(`${API_URL}/progress/update`, data);
+  return response.data;
+};

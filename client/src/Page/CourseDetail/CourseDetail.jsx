@@ -1,16 +1,22 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, Col, Row, Typography, message, Collapse, Button } from "antd";
 import { FaCheck } from "react-icons/fa";
-import { fetchCourseById } from "../../../../server/src/Api/courseApi";
+import {
+  fetchCourseById,
+  getProgressAPI,
+  updateProgressAPI,
+} from "../../../../server/src/Api/courseApi";
 import { enrollCourseAPI } from "../../../../server/src/Api/enrollmentApi";
 import { fetchLessonsAPI } from "../../../../server/src/Api/lessonApi";
 import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { CheckOutlined } from "@ant-design/icons";
 import "react-toastify/dist/ReactToastify.css";
 import CourseReviews from "./CourseReviews ";
 import defaultImage from "../../assets/img/sach.png";
 import Loader from "../../context/Loader";
+import CourseProgress from "./CourseProgress";
+import VideoProgressTracker from "./VideoProgressTracker";
 // import CourseReviews from "./CourseReviews ";
 const { Title, Paragraph } = Typography;
 
@@ -24,6 +30,7 @@ const CourseDetail = () => {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [totalLessons, setTotalLessons] = useState(0);
+  const [watchedLessons, setWatchedLessons] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -89,6 +96,24 @@ const CourseDetail = () => {
 
     // Tải dữ liệu khóa học khi `courseId` thay đổi
     fetchCourseData();
+  }, [courseId]);
+
+  useEffect(() => {
+    const fetchWatchedLessons = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user && courseId) {
+          const progress = await getProgressAPI(user.id, courseId);
+          setWatchedLessons(
+            progress.filter((p) => p.watched).map((p) => p.lessonId)
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching watched lessons:", error);
+      }
+    };
+
+    fetchWatchedLessons();
   }, [courseId]);
 
   const handleEnroll = async () => {
@@ -165,16 +190,32 @@ const CourseDetail = () => {
       : null;
   };
 
-  const handleLessonClick = (lesson) => {
+  const handleLessonClick = async (lesson) => {
     if (isEnrolled) {
       setSelectedLesson(lesson);
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user) {
+        try {
+          await updateProgressAPI({
+            userId: user.id,
+            lessonId: lesson.id,
+            watched: true,
+          });
+          // Cập nhật danh sách bài học đã xem
+          setWatchedLessons((prev) => {
+            if (!prev.includes(lesson.id)) {
+              return [...prev, lesson.id];
+            }
+            return prev;
+          });
+        } catch (error) {
+          console.error("Error updating progress:", error);
+        }
+      }
     } else {
-      toast.warning("Bạn cần đăng ký khóa học để xem video của bài học này.", {
-        position: "top-center",
-      });
+      message.warning("Bạn cần đăng ký khóa học để xem video của bài học này.");
     }
   };
-
   // Hàm cập nhật thứ tự bài học từ các chương và bài học hiện có
   const updateLessonOrder = (modules) => {
     let orderIndex = 1;
@@ -201,7 +242,7 @@ const CourseDetail = () => {
             ({lessons[module.id].length} bài học)
           </span>
         )}
-        {!isEnrolled && ( // Chỉ hiển thị ổ khóa khi chưa đăng ký
+        {!isEnrolled && (
           <span
             role="img"
             aria-label="lock"
@@ -243,10 +284,23 @@ const CourseDetail = () => {
                     : "none",
               }}
             >
-              <span className="lesson-title">
-                <strong>{`Bài ${lessonCounter++}: `}</strong>
-                {lesson.title}
-              </span>
+              <div
+                style={{ display: "flex", alignItems: "center", flexGrow: 1 }}
+              >
+                <span className="lesson-title">
+                  <strong>{`Bài ${lessonCounter++}: `}</strong>
+                  {lesson.title}
+                </span>
+                {watchedLessons.includes(lesson.id) && (
+                  <CheckOutlined
+                    style={{
+                      color: "#52c41a",
+                      marginLeft: "8px",
+                      fontSize: "16px",
+                    }}
+                  />
+                )}
+              </div>
               {lesson.duration && (
                 <span className="lesson-duration">{lesson.duration}</span>
               )}
@@ -270,8 +324,6 @@ const CourseDetail = () => {
         )}
       </ul>
     ),
-
-    onExpand: () => loadLessons(module.id),
   }));
 
   // Hàm chuyển đổi phút sang giờ, phút, giây
@@ -334,36 +386,27 @@ const CourseDetail = () => {
             title={course.title}
             style={{ marginBottom: "20px", borderRadius: "8px" }}
           >
-            <div className="video-section">
+            <div style={{ borderRadius: 8 }} className="video-section">
               {selectedLesson ? (
                 isEnrolled ? (
                   <>
                     <Title level={4} style={{ fontSize: 25 }}>
                       {selectedLesson.title}
                     </Title>
-                    <div
-                      style={{
-                        position: "relative",
-                        paddingBottom: "56.25%",
-                        height: 0,
-                        overflow: "hidden",
+                    <VideoProgressTracker
+                      lessonId={selectedLesson.id}
+                      videoUrl={selectedLesson.video_url}
+                      duration={selectedLesson.duration}
+                      courseId={courseId}
+                      onProgressUpdate={(lessonId) => {
+                        setWatchedLessons((prev) => {
+                          if (!prev.includes(lessonId)) {
+                            return [...prev, lessonId];
+                          }
+                          return prev;
+                        });
                       }}
-                    >
-                      <iframe
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          border: "none",
-                          borderRadius: "8px",
-                        }}
-                        src={getYoutubeEmbedUrl(selectedLesson.video_url)}
-                        allowFullScreen
-                        title={selectedLesson.title}
-                      />
-                    </div>
+                    />
                     <Paragraph style={{ marginTop: "16px" }}>
                       {selectedLesson.description ||
                         "Chưa có mô tả cho bài học này."}
@@ -451,9 +494,14 @@ const CourseDetail = () => {
               </div>
             )}
 
-            {/* <p>
-              <strong>Giảng viên:</strong> {course.instructor_name}
-            </p> */}
+            {isEnrolled && (
+              <CourseProgress
+                modules={modules}
+                lessons={lessons}
+                userId={JSON.parse(localStorage.getItem("user"))?.id}
+                courseId={courseId}
+              />
+            )}
             <p>
               <strong>Thời gian tổng:</strong>
               <span className="course-detail-min" style={{ color: "#a7aeae" }}>
