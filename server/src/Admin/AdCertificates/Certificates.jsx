@@ -3,6 +3,7 @@ import { Table, Button, Modal, Form, Select, message, DatePicker } from "antd";
 import axios from "axios";
 import { format, parseISO, isValid } from "date-fns";
 import dayjs from "dayjs";
+import CertificateRequired from "./CertificateRequired";
 
 const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
   const [certificates, setCertificates] = useState([]);
@@ -14,6 +15,7 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [isRequestModalVisible, setIsRequestModalVisible] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -117,6 +119,10 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
     }
   };
 
+  const handleViewRequests = () => {
+    setIsRequestModalVisible(true);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "Unknown";
     try {
@@ -194,6 +200,9 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
           style={{ marginBottom: 15 }}
         >
           Issue New Certificate
+        </Button>
+        <Button onClick={handleViewRequests} style={{ marginLeft: 5 }}>
+          Xem yêu cầu
         </Button>
       </div>
 
@@ -314,6 +323,14 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
             : "Unknown"}{" "}
           course?
         </p>
+      </Modal>
+      <Modal
+        title="Certificate Requests"
+        open={isRequestModalVisible}
+        onCancel={() => setIsRequestModalVisible(false)}
+        footer={null}
+      >
+        <CertificateRequired />
       </Modal>
     </div>
   );

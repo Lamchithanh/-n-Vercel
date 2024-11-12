@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import YouTube from "react-youtube";
 import { message } from "antd";
-import { updateProgressAPI } from "../../../../server/src/Api/courseApi";
-import "./VideoProgressTracker.scss"; // Đảm bảo tạo file CSS này
+import {
+  updateProgressAPI,
+  getProgressAPI,
+} from "../../../../server/src/Api/courseApi";
+import "./VideoProgressTracker.scss";
 
 const VideoProgressTracker = ({
   lessonId,
   videoUrl,
   duration,
+  modules,
   onProgressUpdate,
 }) => {
   const [player, setPlayer] = useState(null);
@@ -24,7 +28,7 @@ const VideoProgressTracker = ({
 
   const opts = {
     width: "100%",
-    height: "600px",
+    height: "100%",
     playerVars: {
       autoplay: 0,
     },
@@ -82,13 +86,49 @@ const VideoProgressTracker = ({
   };
 
   useEffect(() => {
+    const checkPreviousLessons = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) {
+          // Lấy tiến độ của các bài học trước đó
+          const progressData = await getProgressAPI(
+            user.id,
+            modules.find((m) => m.id === lessonId).course_id
+          );
+
+          // Kiểm tra xem các bài học trước có được hoàn thành chưa
+          const completedLessons = progressData.filter((p) => p.watched);
+          const currentLessonIndex = modules.findIndex(
+            (m) => m.id === lessonId
+          );
+
+          if (
+            currentLessonIndex > 0 &&
+            completedLessons.length < currentLessonIndex
+          ) {
+            message.error(
+              "Bạn cần hoàn thành các bài học trước đó trước khi xem bài này."
+            );
+            return;
+          }
+        }
+
+        // Nếu kiểm tra thành công, cho phép xem video
+        setPlayer(event.target);
+      } catch (error) {
+        console.error("Lỗi khi kiểm tra tiến độ:", error);
+      }
+    };
+
+    checkPreviousLessons();
+
     return () => {
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
         progressInterval.current = null;
       }
     };
-  }, []);
+  }, [lessonId, modules]);
 
   return (
     <div className="video-container">

@@ -1,21 +1,30 @@
 import { useEffect, useState } from "react";
-import { Card, message } from "antd";
+import { Card, message, Spin, Button } from "antd";
 import PropTypes from "prop-types";
 import Progress from "../../components/ui/Progress";
 import { getProgressAPI } from "../../../../server/src/Api/courseApi";
+import {
+  getCertificateStatusAPI,
+  requestCertificateAPI,
+} from "../../../../server/src/Api/CertificateRequestAPI";
 
 const CourseProgress = ({ modules, userId, courseId }) => {
   const [progress, setProgress] = useState(0);
   const [watchedLessons, setWatchedLessons] = useState([]);
   const [lastMilestoneReached, setLastMilestoneReached] = useState(0);
+  const [canRequestCertificate, setCanRequestCertificate] = useState(false);
+  const [certificateStatus, setCertificateStatus] = useState(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [
+    hasDoneFirstCompletionNotification,
+    setHasDoneFirstCompletionNotification,
+  ] = useState(false);
 
-  // Tính tổng số bài học từ các module
   const totalLessons = modules.reduce(
     (total, module) => total + module.lessons.length,
     0
   );
 
-  // Kiểm tra và hiển thị thông báo khi đạt các mốc tiến độ
   const checkProgressMilestones = (currentProgress) => {
     const milestones = [50, 75, 100];
     let highestMilestoneReached = lastMilestoneReached;
@@ -33,17 +42,23 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             messageText = "Tuyệt vời! Bạn đã hoàn thành 75% khóa học! 🎯";
             break;
           case 100:
-            messageText = "Chúc mừng! Bạn đã hoàn thành toàn bộ khóa học! 🎉";
+            if (!hasDoneFirstCompletionNotification) {
+              messageText = "Chúc mừng! Bạn đã hoàn thành toàn bộ khóa học! 🎉";
+              setCanRequestCertificate(true);
+              setHasDoneFirstCompletionNotification(true);
+            }
             break;
           default:
             break;
         }
 
-        message.success({
-          content: messageText,
-          duration: 5,
-          className: "custom-milestone-message",
-        });
+        if (messageText) {
+          message.success({
+            content: messageText,
+            duration: 5,
+            className: "custom-milestone-message",
+          });
+        }
       }
     });
 
@@ -54,19 +69,16 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     const fetchProgress = async () => {
       try {
         const response = await getProgressAPI(userId, courseId);
-        // Chỉ lấy những bài học đã được xem hoàn toàn
         const watched = response.filter((p) => p.watched);
         const uniqueWatchedLessons = [
           ...new Set(watched.map((p) => p.lessonId)),
         ];
         setWatchedLessons(uniqueWatchedLessons);
 
-        // Tính phần trăm tiến độ dựa trên số bài học unique đã xem
         const progressPercentage =
           (uniqueWatchedLessons.length / totalLessons) * 100;
         setProgress(progressPercentage);
 
-        // Kiểm tra mốc tiến độ
         checkProgressMilestones(progressPercentage);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu tiến độ:", error);
@@ -74,22 +86,44 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       }
     };
 
+    const fetchCertificateStatus = async () => {
+      try {
+        const response = await getCertificateStatusAPI(userId, courseId);
+        setCertificateStatus(response.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy trạng thái cấp chứng chỉ:", error);
+      } finally {
+        setLoadingStatus(false);
+      }
+    };
+
     if (userId && courseId) {
       fetchProgress();
+      fetchCertificateStatus();
     }
   }, [userId, courseId, totalLessons]);
 
   const getProgressColor = (percent) => {
-    if (percent >= 100) return "#52c41a"; // Xanh lá khi hoàn thành
-    if (percent >= 75) return "#1890ff"; // Xanh dương khi > 75%
-    if (percent >= 50) return "#722ed1"; // Tím khi > 50%
-    return "#108ee9"; // Màu mặc định
+    if (percent >= 100) return "#52c41a";
+    if (percent >= 75) return "#1890ff";
+    if (percent >= 50) return "#722ed1";
+    return "#108ee9";
   };
 
   const getProgressStatus = (percent) => {
     if (percent >= 100) return "success";
     if (percent > 0) return "active";
     return "normal";
+  };
+
+  const handleRequestCertificate = async () => {
+    try {
+      await requestCertificateAPI(userId, courseId);
+      message.success("Yêu cầu cấp chứng chỉ thành công! 🎓");
+      setCanRequestCertificate(false);
+    } catch (error) {
+      console.error("Lỗi khi gửi yêu cầu cấp chứng chỉ:", error);
+    }
   };
 
   return (
@@ -117,11 +151,11 @@ const CourseProgress = ({ modules, userId, courseId }) => {
           {progress === 100
             ? "Chúc mừng bạn đã hoàn thành khóa học! 🎉"
             : progress >= 75
-            ? "Bạn sắp thoát kíp con gà  rồi! 🎯"
+            ? "Bạn sắp hoàn thành khóa học! 🎯"
             : progress >= 50
             ? "Đã hoàn thành một nửa chặng đường! 💪"
             : progress > 0
-            ? "Còn gà lắm! 🌟"
+            ? "Còn chặng đường dài! 🌟"
             : "Bắt đầu học nào! 📚"}
         </div>
         <span>{progress.toFixed(1)}% hoàn thành</span>
@@ -129,6 +163,35 @@ const CourseProgress = ({ modules, userId, courseId }) => {
         <span>
           {watchedLessons.length}/{totalLessons} bài học
         </span>
+
+        {canRequestCertificate && certificateStatus === null && (
+          <Button
+            type="primary"
+            onClick={handleRequestCertificate}
+            className="mt-4"
+          >
+            Yêu cầu cấp chứng chỉ
+          </Button>
+        )}
+
+        {certificateStatus !== null && (
+          <div className="certificate-status">
+            {certificateStatus.status === "Đã cấp chứng chỉ" ? (
+              <span style={{ color: "green" }}>
+                Bạn đã nhận được chứng chỉ! 🎓
+              </span>
+            ) : certificateStatus.status ===
+              "Yêu cầu chứng chỉ đã được chấp nhận, nhưng chứng chỉ chưa được cấp" ? (
+              <span style={{ color: "orange" }}>
+                Yêu cầu chứng chỉ đã được chấp nhận, nhưng chứng chỉ chưa được
+                cấp.
+              </span>
+            ) : (
+              <span>Yêu cầu chứng chỉ đang chờ duyệt...</span>
+            )}
+          </div>
+        )}
+        {loadingStatus && <Spin />}
       </div>
     </Card>
   );

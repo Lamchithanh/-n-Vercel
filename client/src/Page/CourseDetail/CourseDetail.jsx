@@ -358,6 +358,11 @@ const CourseDetail = () => {
     return userPaidCourses.includes(courseId);
   };
 
+  const handleRequestCertificate = (userId, courseId) => {
+    // Logic xử lý yêu cầu chứng chỉ, ví dụ: gọi API
+    console.log("Yêu cầu chứng chỉ cho user:", userId, "khóa học:", courseId);
+  };
+
   // Add this state
   const [hasPaid, setHasPaid] = useState(false);
 
@@ -500,8 +505,10 @@ const CourseDetail = () => {
                 lessons={lessons}
                 userId={JSON.parse(localStorage.getItem("user"))?.id}
                 courseId={courseId}
+                onRequestCertificate={handleRequestCertificate} // Truyền hàm vào đây
               />
             )}
+
             <p>
               <strong>Thời gian tổng:</strong>
               <span className="course-detail-min" style={{ color: "#a7aeae" }}>
