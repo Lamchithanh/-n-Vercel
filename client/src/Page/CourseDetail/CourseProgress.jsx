@@ -175,14 +175,14 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       >
         <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
           {progress === 100
-            ? "Chúc mừng bạn đã hoàn thành khóa học! 🎉🏆"
+            ? "Chúc mừng bạn đã hoàn thành khóa học! 🎉"
             : progress >= 75
-            ? "Bạn sắp hoàn thành khóa học! 🎯✨"
+            ? "Đã hơn một nửa, sắp hoàn thành khóa học! 🎯"
             : progress >= 50
-            ? "Đã hoàn thành một nửa chặng đường! 💪🚀"
+            ? "Đã hoàn thành một nửa chặng đường! 🚀"
             : progress > 0
-            ? "Còn chặng đường dài! 🌟📝"
-            : "Bắt đầu học nào! 📚✨"}
+            ? "Còn chặng đường dài! 💪"
+            : "Bắt đầu học nào! 📝"}
         </div>
         <span>{progress.toFixed(1)}% hoàn thành</span>
         <span style={{ margin: "0 10px" }}>•</span>
@@ -204,7 +204,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
           <div className="certificate-status">
             {certificateStatus.status === "Đã cấp chứng chỉ" ? (
               <span style={{ color: "green" }}>
-                Bạn đã nhận được chứng chỉ! 🎓
+                Bạn đã nhận được chứng chỉ!🏆
               </span>
             ) : certificateStatus.status ===
               "Yêu cầu chứng chỉ đã được chấp nhận, nhưng chứng chỉ chưa được cấp" ? (

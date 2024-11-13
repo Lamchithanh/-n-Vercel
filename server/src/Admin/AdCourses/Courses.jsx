@@ -1,22 +1,42 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Table, Button, Spin, Modal, Form, Input, Select, message } from "antd";
+import {
+  Table,
+  Button,
+  Spin,
+  Modal,
+  Form,
+  Input,
+  Select,
+  message,
+  Radio,
+  Upload,
+  Progress,
+  Image,
+} from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import axios from "axios";
-
+import { uploadCourseImage } from "../../Api/courseApi";
+import { API_URL } from "../../config/config";
+import defaultimage from "../../../.././client/src/assets/img/sach.png";
 const { Option } = Select;
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [priceRequired, setPriceRequired] = useState(true);
+  const [uploadMethod, setUploadMethod] = useState("url");
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [form] = Form.useForm();
 
   const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:9000/api/courses", {
+      const response = await axios.get(`${API_URL}/courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCourses(response.data);
@@ -32,172 +52,225 @@ const Courses = () => {
     fetchCourses();
   }, [fetchCourses]);
 
-  const handleAddOrUpdateCourse = async (values) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      const apiUrl = editingCourse
-        ? `http://localhost:9000/api/courses/${editingCourse.id}`
-        : "http://localhost:9000/api/courses";
+  const handleAddOrUpdateCourse = useCallback(
+    async (values) => {
+      try {
+        if (isUploading) {
+          message.warning("Vui lòng đợi quá trình upload ảnh hoàn tất");
+          return;
+        }
 
-      const method = editingCourse ? "put" : "post";
+        setLoading(true);
+        let imageUrl = values.imageUrl;
 
-      // Xử lý dữ liệu trước khi gửi
-      const courseData = {
-        ...values,
-        price: values.priceOption === "free" ? "0" : values.price.toString(),
-        // Chỉ cập nhật image nếu có giá trị mới được nhập vào
-        image: values.imageUrl || (editingCourse ? editingCourse.image : ""),
-        intro_video_url: values.videoUrl,
-      };
+        if (uploadMethod === "file" && uploadedFile) {
+          try {
+            setIsUploading(true);
+            // Truyền courseId nếu đang chỉnh sửa khóa học
+            const courseId = editingCourse ? editingCourse.id : null;
+            imageUrl = await uploadCourseImage(uploadedFile, courseId);
+          } catch (uploadError) {
+            message.error("Lỗi khi tải ảnh lên: " + uploadError.message);
+            setIsUploading(false);
+            setLoading(false);
+            return;
+          }
+        }
 
-      // Gửi yêu cầu Axios
-      await axios[method](apiUrl, courseData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        const courseData = {
+          ...values,
+          price: values.priceOption === "free" ? "0" : values.price.toString(),
+          image: imageUrl || (editingCourse ? editingCourse.image : ""),
+          intro_video_url: values.videoUrl,
+        };
 
-      message.success(
-        `Khóa học ${
-          editingCourse ? "đã được cập nhật" : "đã được thêm"
-        } thành công`
-      );
+        const token = localStorage.getItem("token");
+        const apiUrl = editingCourse
+          ? `${API_URL}/courses/${editingCourse.id}`
+          : `${API_URL}/courses`;
+        const method = editingCourse ? "put" : "post";
 
-      setModalVisible(false);
-      form.resetFields();
-      await fetchCourses();
-    } catch (error) {
-      console.error("Error adding/updating course:", error);
-      message.error(
-        error.response?.data?.message ||
-          "Không thể thêm/cập nhật khóa học. Vui lòng thử lại."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+        await axios[method](apiUrl, courseData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-  const confirmDelete = (courseId) => {
+        message.success(
+          `Khóa học ${
+            editingCourse ? "đã được cập nhật" : "đã được thêm"
+          } thành công`
+        );
+
+        setModalVisible(false);
+        form.resetFields();
+        setUploadedFile(null);
+        setUploadProgress(0);
+        setIsUploading(false);
+        await fetchCourses();
+      } catch (error) {
+        console.error("Error adding/updating course:", error);
+        message.error(
+          error.response?.data?.message ||
+            "Không thể thêm/cập nhật khóa học. Vui lòng thử lại."
+        );
+      } finally {
+        setLoading(false);
+        setIsUploading(false);
+      }
+    },
+    [fetchCourses, uploadMethod, uploadedFile, editingCourse, isUploading]
+  );
+
+  const confirmDelete = useCallback((courseId) => {
     Modal.confirm({
       title: "Bạn có chắc chắn muốn xóa khóa học này?",
       onOk: () => handleDeleteCourse(courseId),
     });
+  }, []);
+
+  const editCourse = (record) => {
+    setEditingCourse(record);
+    form.setFieldsValue({
+      title: record.title,
+      description: record.description,
+      price: record.price,
+      level: record.level,
+      category: record.category,
+      videoUrl: record.intro_video_url,
+      imageUrl: record.image, // Hiển thị URL ảnh hiện tại nếu có
+    });
+    setModalVisible(true);
   };
 
-  const handleDeleteCourse = async (courseId) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:9000/api/courses/${courseId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      message.success("Khóa học đã được xóa thành công");
-      await fetchCourses();
-    } catch (error) {
-      console.error("Error deleting course:", error);
-      message.error("Không thể xóa khóa học. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleDeleteCourse = useCallback(
+    async (courseId) => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        await axios.delete(`${API_URL}/courses/${courseId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        message.success("Khóa học đã được xóa thành công");
+        await fetchCourses();
+      } catch (error) {
+        console.error("Error deleting course:", error);
+        message.error("Không thể xóa khóa học. Vui lòng thử lại.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchCourses]
+  );
 
   const columns = [
-    { title: "ID", dataIndex: "id", key: "id" },
-    {
-      title: "Tiêu Đề",
-      dataIndex: "title",
-      key: "title",
-      render: (text, record) => (
-        <>
-          {text}
-          {record.price && record.price !== "0" && record.price !== "0.00" && (
-            <span> (PRO)</span>
-          )}
-        </>
-      ),
-    },
-    { title: "Mô Tả", dataIndex: "description", key: "description" },
-    {
-      title: "Giá",
-      dataIndex: "price",
-      key: "price",
-      render: (text, record) =>
-        record.price === "0" || record.price === "0.00"
-          ? "Miễn phí"
-          : `${record.price} vnd`,
-    },
-    { title: "Cấp Độ", dataIndex: "level", key: "level" },
-    { title: "Danh Mục", dataIndex: "category", key: "category" },
-    {
-      title: "Tổng Số Bài Học",
-      dataIndex: "total_lessons",
-      key: "total_lessons",
-    },
     {
       title: "Ảnh",
       dataIndex: "image",
       key: "image",
-      render: (image) => {
-        if (!image) {
-          return <span>Không có ảnh</span>;
-        }
-        return (
-          <img
-            src={image}
-            alt="Khóa học"
+      render: (imagePath) =>
+        imagePath ? (
+          <Image
+            src={imagePath}
+            width={100}
+            height={100}
             style={{
-              width: 100,
-              height: 100,
               objectFit: "cover",
               border: "1px solid #ddd",
               borderRadius: "4px",
             }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = "/placeholder-image.png";
-            }}
+            fallback={defaultimage} // Ảnh thay thế khi lỗi tải ảnh
           />
-        );
-      },
+        ) : (
+          <span>Không có ảnh</span>
+        ),
+    },
+    {
+      title: "Tiêu Đề",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Mô Tả",
+      dataIndex: "description",
+      key: "description",
+      render: (text) => (
+        <span>{text.length > 50 ? `${text.substring(0, 50)}...` : text}</span>
+      ),
+    },
+    {
+      title: "Giá",
+      dataIndex: "price",
+      key: "price",
+      render: (text) => (text === "0" ? "Miễn Phí" : `${text} VND`),
+    },
+    {
+      title: "Cấp Độ",
+      dataIndex: "level",
+      key: "level",
     },
     {
       title: "Hành Động",
-      key: "action",
-      render: (_, record) => (
-        <>
-          <Button
-            onClick={() => {
-              setEditingCourse(record);
-              // Thiết lập giá trị ban đầu cho form khi chỉnh sửa
-              form.setFieldsValue({
-                title: record.title,
-                description: record.description,
-                priceOption:
-                  record.price === "0" || record.price === "0.00"
-                    ? "free"
-                    : "paid",
-                price: record.price === "0" ? "" : record.price,
-                level: record.level,
-                category: record.category,
-                videoUrl: record.intro_video_url,
-                imageUrl: record.image, // Thiết lập giá trị ảnh hiện tại
-              });
-              setPriceRequired(record.price !== "0");
-              setModalVisible(true);
-            }}
-          >
-            Chỉnh Sửa
-          </Button>
-
-          <Button
-            onClick={() => confirmDelete(record.id)}
-            style={{ marginLeft: 8 }}
-          >
+      key: "actions",
+      render: (record) => (
+        <span>
+          <Button onClick={() => editCourse(record)}>Chỉnh Sửa</Button>
+          <Button onClick={() => confirmDelete(record.id)} danger>
             Xóa
           </Button>
-        </>
+        </span>
       ),
     },
   ];
+
+  const renderImageUploadField = () => {
+    if (uploadMethod === "url") {
+      return (
+        <Form.Item
+          name="imageUrl"
+          label="URL Ảnh"
+          extra={editingCourse ? "Để trống nếu muốn giữ ảnh hiện tại" : ""}
+        >
+          <Input placeholder="Nhập URL ảnh mới" />
+        </Form.Item>
+      );
+    }
+
+    return (
+      <Form.Item
+        name="imageFile"
+        label="Tải Ảnh Lên"
+        extra="Hỗ trợ: JPG, PNG, GIF (Max: 2MB)"
+      >
+        <Upload
+          beforeUpload={(file) => {
+            const isImage = file.type.startsWith("image/");
+            if (!isImage) {
+              message.error("Chỉ có thể tải lên file ảnh!");
+              return false;
+            }
+
+            const isLt2M = file.size / 1024 / 1024 < 2;
+            if (!isLt2M) {
+              message.error("File ảnh không được vượt quá 2MB!");
+              return false;
+            }
+
+            setUploadedFile(file);
+            return false;
+          }}
+          onRemove={() => {
+            setUploadedFile(null);
+            setUploadProgress(0);
+          }}
+          fileList={uploadedFile ? [uploadedFile] : []}
+        >
+          <Button icon={<UploadOutlined />} disabled={isUploading}>
+            {isUploading ? "Đang tải lên..." : "Chọn Ảnh"}
+          </Button>
+        </Upload>
+        {uploadProgress > 0 && <Progress percent={uploadProgress} />}
+      </Form.Item>
+    );
+  };
 
   return (
     <Spin spinning={loading}>
@@ -222,7 +295,11 @@ const Courses = () => {
         onCancel={() => {
           setModalVisible(false);
           form.resetFields();
+          setUploadedFile(null);
+          setUploadProgress(0);
+          setIsUploading(false);
         }}
+        confirmLoading={loading || isUploading}
       >
         <Form
           form={form}
@@ -230,6 +307,7 @@ const Courses = () => {
           onFinish={handleAddOrUpdateCourse}
           initialValues={{
             priceOption: "paid",
+            uploadMethod: "url",
           }}
         >
           <Form.Item
@@ -304,33 +382,22 @@ const Courses = () => {
               },
             ]}
           >
-            <Select
-              mode="tags"
-              placeholder="Nhập hoặc chọn danh mục"
-              allowClear
-              showSearch
-            >
-              <Option value="theory">Lý Thuyết</Option>
-              <Option value="practice">Thực Hành</Option>
-              <Option value="review">Ôn Tập</Option>
-              <Option value="exam_preparation">Luyện Thi</Option>
-              <Option value="other">Khác</Option>
+            <Select>
+              <Option value="frontend">Frontend</Option>
+              <Option value="backend">Backend</Option>
+              <Option value="fullstack">Fullstack</Option>
             </Select>
           </Form.Item>
-          <Form.Item
-            name="videoUrl"
-            label="URL Video"
-            rules={[{ required: true, message: "Vui lòng nhập URL video!" }]}
-          >
-            <Input placeholder="Nhập URL video" />
+          <Form.Item name="videoUrl" label="URL Giới Thiệu Video">
+            <Input />
           </Form.Item>
-          <Form.Item
-            name="imageUrl"
-            label="URL Ảnh"
-            extra={editingCourse ? "Để trống nếu muốn giữ ảnh hiện tại" : ""}
-          >
-            <Input placeholder="Nhập URL ảnh mới" />
+          <Form.Item name="uploadMethod" label="Phương Thức Tải Ảnh">
+            <Radio.Group onChange={(e) => setUploadMethod(e.target.value)}>
+              <Radio value="url">URL</Radio>
+              <Radio value="file">File</Radio>
+            </Radio.Group>
           </Form.Item>
+          {renderImageUploadField()}
         </Form>
       </Modal>
     </Spin>

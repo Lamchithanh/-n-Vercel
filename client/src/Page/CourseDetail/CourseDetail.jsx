@@ -611,7 +611,7 @@ const CourseDetail = () => {
             <p>
               <strong>Số bài học:</strong>{" "}
               <span className="course-detail-min" style={{ color: "#a7aeae" }}>
-                {totalLessons} Video
+                {totalLessons} Bài
               </span>
             </p>
             {/* {modules.map((module) => (

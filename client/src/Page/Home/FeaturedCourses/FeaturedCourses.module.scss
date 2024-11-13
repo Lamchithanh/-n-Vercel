@@ -1,114 +1,28 @@
-.featuredCourses {
+.featuredCourses__container {
+  display: grid;
+  justify-items: center;
+  margin: 10xp;
+  padding: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  grid-gap: 26px; // Khoảng cách giữa các card
+
+  &__cardWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
   &__container {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 24px;
     padding: 16px;
-
-    @media (max-width: 1200px) {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    @media (max-width: 992px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (max-width: 576px) {
-      grid-template-columns: 1fr;
-    }
   }
 
-  &__card {
-    border: 1px solid #e6e6e6;
-    border-radius: 12px;
-    background-color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-
-    &:hover {
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      transform: translateY(-2px);
-    }
-  }
-
-  &__imageWrapper {
-    padding: 16px;
-    display: flex;
-    justify-content: center;
-  }
-
-  &__image {
-    width: 128px;
-    height: 128px;
-    object-fit: cover;
-    border-radius: 8px;
-  }
-
-  &__content {
-    padding: 16px;
-  }
-
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  &__crown {
-    width: 30px;
-    height: 30px;
-    flex-shrink: 0;
-  }
-
-  &__title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    margin: 0;
-  }
-
-  &__footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  &__level {
-    color: #6e6d6d;
-    font-size: 0.875rem;
-    background-color: #8ee6f4;
-    padding: 3px 8px;
-    border-radius: 10px;
-  }
-
-  &__price {
-    color: #f47425;
-    font-weight: 600;
-  }
-
-  &__loading,
-  &__error,
-  &__empty {
-    width: 100%;
-    min-height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  &__rating {
-    margin: 8px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  &__reviewCount {
+  &featuredCourses__enrollmentCount {
+    text-align: center;
     color: #666;
     font-size: 14px;
+    background-color: #f0f8ff;
   }
 }

@@ -3,7 +3,6 @@ import {
   Layout,
   Menu,
   Breadcrumb,
-  Card,
   message,
   Pagination,
   Badge,
@@ -30,6 +29,7 @@ import "react-toastify/dist/ReactToastify.css";
 import FeaturedCourses from "./FeaturedCourses/FeaturedCourses";
 import Testimonials from "./Testimonials/Testimonials";
 import LatestBlog from "./LatestBlog/LatestBlog";
+import CourseCard from "../../components/Card/Card";
 
 const { Header, Content } = Layout;
 
@@ -63,6 +63,11 @@ const HomePage = () => {
       localStorage.removeItem("showSuccessToast"); // Xóa trạng thái sau khi hiển thị để tránh hiển thị lại khi tải lại trang
     }
   }, []);
+
+  useEffect(() => {
+    // Cuộn lên đầu trang mỗi khi URL thay đổi
+    window.scrollTo(0, 0);
+  }, [location]);
 
   // Cập nhật unreadCount khi component mount
   useEffect(() => {
@@ -217,79 +222,11 @@ const HomePage = () => {
         <h4 style={{ fontSize: 18, margin: 20 }}>Tất cả khóa học</h4>
         <div className="course-list">
           {currentCourses.map((course) => (
-            <Card
+            <CourseCard
               key={course.id}
-              onClick={() => navigate(`/courses/${course.id}`)}
-              cover={
-                <img
-                  alt={course.title}
-                  src={course.image || defaultImage}
-                  style={{
-                    borderRadius: "8px",
-                    margin: "10px",
-                    width: "150px",
-                    height: "150px",
-                    objectFit: "cover",
-                  }}
-                />
-              }
-              style={{
-                border: "2px solid rgb(167, 174, 171)", // Viền xám ban đầu
-                marginBottom: "16px",
-                cursor: "pointer",
-                borderRadius: "8px",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                transition: "border-color 0.3s ease", // Thêm hiệu ứng chuyển màu viền
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#41a5db"; // Đổi màu viền thành xanh khi hover
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "rgb(167, 174, 171)"; // Trả lại màu viền ban đầu khi không hover
-              }}
-            >
-              <div className="relative">
-                <h5
-                  className="text-lg font-medium"
-                  style={{ display: "flex", alignItems: "center" }}
-                >
-                  <div style={{ marginRight: "8px" }}>
-                    {course.price &&
-                      course.price !== "0" &&
-                      course.price !== "0.00" && <span>🔥</span>}
-                  </div>
-                  <div
-                    style={{
-                      color: newlyAddedCourses.includes(course.id)
-                        ? "red"
-                        : "inherit",
-                    }}
-                  >
-                    {course.title}
-                  </div>
-                </h5>
-
-                <div
-                  className="mt-2"
-                  style={{
-                    marginBottom: "8px",
-                    fontWeight: "bold",
-                    color: "#f47425",
-                  }}
-                >
-                  {course.price === "0" || course.price === "0.00"
-                    ? "Miễn phí"
-                    : `${course.price} vnd`}
-                </div>
-
-                <div
-                  className="mt-1"
-                  style={{ color: "#a7aeae", marginBottom: 15 }}
-                >
-                  Level: {course.level}
-                </div>
-              </div>
-            </Card>
+              course={course}
+              newlyAddedCourses={newlyAddedCourses}
+            />
           ))}
         </div>
       </div>

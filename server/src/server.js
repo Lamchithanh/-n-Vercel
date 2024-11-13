@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 const bodyParser = require("body-parser");
+const path = require("path");
 require("dotenv").config();
 
 // Import routes
@@ -18,11 +20,28 @@ const paymentRoutes = require("./routes/paymentRoutes.js");
 const blogRoutes = require("./routes/blogRoutes");
 const ChangePassword = require("./routes/ChangePasswordRoute.js");
 const CertificateRequestRoutes = require("./routes/CertificateRequestRoutes.js");
+
 const app = express();
 const port = process.env.PORT || 9000;
 
 // Cấu hình CORS
 app.use(cors());
+
+const handleMulterError = (error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: "File ảnh không được vượt quá 2MB!",
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: "Lỗi khi tải file lên: " + error.message,
+    });
+  }
+  next(error);
+};
 
 // Middleware để log requests
 app.use((req, res, next) => {
@@ -31,8 +50,16 @@ app.use((req, res, next) => {
 });
 
 app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(
+  "/assets/uploads/courses",
+  express.static(
+    path.join(__dirname, "../../client/src/assets/uploads/courses")
+  )
+);
 
 // Routes
+
 app.use("/api", userRoutes);
 app.use("/api", courseRoutes);
 app.use("/api", uploadRoutes);
@@ -46,10 +73,16 @@ app.use(paymentRoutes);
 app.use("/api", blogRoutes);
 app.use("/api", ChangePassword);
 app.use("/api", CertificateRequestRoutes);
+
 // Middleware xử lý lỗi
+app.use(handleMulterError);
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: "Something broke!", error: err.message });
+  res.status(500).json({
+    success: false,
+    message: "Có lỗi xảy ra, vui lòng thử lại sau!",
+  });
 });
 
 // Khởi động cron job
