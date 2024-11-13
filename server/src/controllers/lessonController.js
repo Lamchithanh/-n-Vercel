@@ -1,8 +1,88 @@
+const { google } = require("googleapis");
 const pool = require("../config/pool");
 const { getVideoDuration } = require("../utils/youtubeUtils");
+const { convertTimeToMinutes } = require("../utils/durationUtils");
 
-// Hàm lấy tất cả bài học
-// Trong hàm getAllLessons
+const youtube = google.youtube({
+  version: "v3",
+  auth: process.env.YOUTUBE_API_KEY,
+});
+
+const convertDurationToMinutes = (duration) => {
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const hours = parseInt(match[1]) || 0;
+  const minutes = parseInt(match[2]) || 0;
+  const seconds = parseInt(match[3]) || 0;
+
+  return Math.round(hours * 60 + minutes + seconds / 60);
+};
+
+// Controller để lấy thời lượng video
+exports.getVideoDuration = async (req, res) => {
+  const { videoUrl } = req.query;
+
+  try {
+    const videoId = getVideoId(videoUrl);
+    if (!videoId) {
+      return res.status(400).json({ error: "Invalid YouTube URL" });
+    }
+
+    const response = await youtube.videos.list({
+      part: "contentDetails",
+      id: videoId,
+    });
+
+    if (!response.data.items || !response.data.items[0]) {
+      return res.status(404).json({ error: "Video not found" });
+    }
+
+    const duration = response.data.items[0].contentDetails.duration;
+    const durationInMinutes = convertDurationToMinutes(duration);
+
+    res.json({ duration: durationInMinutes });
+  } catch (error) {
+    console.error("Error fetching video duration:", error);
+    res.status(500).json({ error: "Failed to fetch video duration" });
+  }
+};
+
+// Controller để lấy tổng thời lượng của module
+exports.getModuleDuration = async (req, res) => {
+  const { moduleId } = req.params;
+
+  try {
+    const [result] = await pool.execute(
+      "SELECT SUM(duration) as total_duration FROM lessons WHERE module_id = ?",
+      [moduleId]
+    );
+
+    res.json({ totalDuration: result[0].total_duration || 0 });
+  } catch (error) {
+    console.error("Error calculating module duration:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Controller để lấy tổng thời lượng của khóa học
+exports.getCourseDuration = async (req, res) => {
+  const { courseId } = req.params;
+
+  try {
+    const [result] = await pool.execute(
+      `SELECT SUM(l.duration) as total_duration 
+       FROM lessons l 
+       JOIN modules m ON l.module_id = m.id 
+       WHERE m.course_id = ?`,
+      [courseId]
+    );
+
+    res.json({ totalDuration: result[0].total_duration || 0 });
+  } catch (error) {
+    console.error("Error calculating course duration:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 exports.getAllLessons = async (req, res) => {
   try {
     const { courseId } = req.query;
@@ -50,7 +130,7 @@ exports.addLesson = async (req, res) => {
     // Lấy thời lượng video nếu có URL
     let duration = null;
     if (video_url) {
-      duration = await getVideoDuration(video_url);
+      duration = await getVideoDuration(video_url, youtube);
     }
 
     // Chèn bài học với duration
@@ -87,10 +167,10 @@ exports.updateLesson = async (req, res) => {
     const { module_id, title, content, description, video_url, order_index } =
       req.body;
 
-    // Lấy thời lượng video mới nếu URL thay đổi
+    // Get new video duration if URL changed
     let duration = null;
     if (video_url) {
-      duration = await getVideoDuration(video_url);
+      duration = await getVideoDuration(video_url, youtube);
     }
 
     const [updatedLesson] = await pool.query(

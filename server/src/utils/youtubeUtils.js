@@ -1,65 +1,56 @@
-// src/utils/youtubeUtils.js
+// utils/youtubeUtils.js
 
-const { google } = require("googleapis");
-
-const youtube = google.youtube({
-  version: "v3",
-  auth: process.env.YOUTUBE_API_KEY,
-});
-
-// Hàm lấy video ID từ URL YouTube
 const getVideoId = (url) => {
+  if (!url) return null;
+
+  // Handle different YouTube URL formats
   const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu.be\/|youtube.com\/embed\/)([^&\n?#]+)/,
-    /^([^&\n?#]+)$/, // Nếu chỉ có video ID
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i,
+    /^[a-zA-Z0-9_-]{11}$/,
   ];
 
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match) return match[1];
   }
+
   return null;
 };
 
-// Hàm lấy thời lượng video từ YouTube API
-const getVideoDuration = async (videoUrl) => {
+const getVideoDuration = async (url, youtube) => {
   try {
-    const videoId = getVideoId(videoUrl);
+    const videoId = getVideoId(url);
     if (!videoId) return null;
 
     const response = await youtube.videos.list({
-      part: ["contentDetails"],
-      id: [videoId],
+      part: "contentDetails",
+      id: videoId,
     });
 
-    if (!response.data.items || response.data.items.length === 0) {
+    if (!response.data.items || !response.data.items[0]) {
       return null;
     }
 
-    // Chuyển đổi duration từ ISO 8601 sang định dạng MM:SS hoặc HH:MM:SS
     const duration = response.data.items[0].contentDetails.duration;
-    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-
-    const hours = parseInt(match[1] || 0);
-    const minutes = parseInt(match[2] || 0);
-    const seconds = parseInt(match[3] || 0);
-
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, "0")}:${minutes
-        .toString()
-        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-    }
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
+    return convertDurationToMinutes(duration);
   } catch (error) {
-    console.error("Error fetching video duration:", error);
+    console.error("Error getting video duration:", error);
     return null;
   }
 };
 
-// Xuất khẩu cả hai hàm
+const convertDurationToMinutes = (duration) => {
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const hours = parseInt(match[1]) || 0;
+  const minutes = parseInt(match[2]) || 0;
+  const seconds = parseInt(match[3]) || 0;
+
+  // Giữ nguyên phần lẻ của phút thay vì làm tròn
+  return hours * 60 + minutes + seconds / 60;
+};
+
 module.exports = {
-  getVideoId, // Thêm getVideoId vào xuất khẩu
+  getVideoId,
   getVideoDuration,
+  convertDurationToMinutes,
 };

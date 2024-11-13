@@ -71,13 +71,17 @@ CREATE TABLE lessons (
   content TEXT,
   description TEXT,
   video_url VARCHAR(255),
-  duration VARCHAR(10),
+  duration FLOAT,
   order_index INTEGER NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
   FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 );
+
+ALTER TABLE lessons
+MODIFY COLUMN duration FLOAT;
+
 
 -- Bảng Enrollments (Đăng ký khóa học)
 CREATE TABLE enrollments (

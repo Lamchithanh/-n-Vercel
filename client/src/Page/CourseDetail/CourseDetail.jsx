@@ -7,7 +7,11 @@ import {
   updateProgressAPI,
 } from "../../../../server/src/Api/courseApi";
 import { enrollCourseAPI } from "../../../../server/src/Api/enrollmentApi";
-import { fetchLessonsAPI } from "../../../../server/src/Api/lessonApi";
+import {
+  fetchLessonsAPI,
+  getCourseDurationAPI,
+  getModuleDurationAPI,
+} from "../../../../server/src/Api/lessonApi";
 import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { useEffect, useState } from "react";
 import { CheckOutlined } from "@ant-design/icons";
@@ -31,6 +35,8 @@ const CourseDetail = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [totalLessons, setTotalLessons] = useState(0);
   const [watchedLessons, setWatchedLessons] = useState([]);
+  const [totalCourseDuration, setTotalCourseDuration] = useState(0);
+  const [moduleDurations, setModuleDurations] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -84,6 +90,9 @@ const CourseDetail = () => {
         // Cập nhật danh sách chương với thứ tự bài học đã sắp xếp
         setModules(updatedModulesWithOrder);
 
+        await fetchModuleDurations(modulesData.map((module) => module.id));
+        await fetchCourseDuration();
+
         // Tính tổng số bài học
         setTotalLessons(
           updatedModulesWithOrder.reduce(
@@ -120,6 +129,30 @@ const CourseDetail = () => {
 
     fetchWatchedLessons();
   }, [courseId]);
+
+  // Hàm lấy thời lượng của từng module
+  const fetchModuleDurations = async (moduleIds) => {
+    try {
+      const durations = {};
+      for (const moduleId of moduleIds) {
+        const duration = await getModuleDurationAPI(moduleId);
+        durations[moduleId] = duration;
+      }
+      setModuleDurations(durations);
+    } catch (error) {
+      console.error("Error fetching module durations:", error);
+    }
+  };
+
+  // Hàm lấy tổng thời lượng khóa học
+  const fetchCourseDuration = async () => {
+    try {
+      const duration = await getCourseDurationAPI(courseId);
+      setTotalCourseDuration(duration);
+    } catch (error) {
+      console.error("Error fetching course duration:", error);
+    }
+  };
 
   const handleEnroll = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -233,6 +266,40 @@ const CourseDetail = () => {
   };
   let lessonCounter = 1;
 
+  const formatDuration = (duration) => {
+    if (!duration) return "";
+
+    // Nếu duration là số (float - đơn vị phút), chuyển đổi sang giây
+    if (typeof duration === "number") {
+      const totalSeconds = Math.round(duration * 60); // Chuyển phút sang giây
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      return `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+
+    // Nếu duration là string
+    if (typeof duration === "string") {
+      const numericDuration = parseFloat(duration);
+      if (!isNaN(numericDuration)) {
+        const totalSeconds = Math.round(numericDuration * 60);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${hours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      }
+      return duration;
+    }
+
+    return duration.toString();
+  };
+
   const moduleItems = modules.map((module, index) => ({
     key: module.id.toString(),
     label: (
@@ -307,7 +374,21 @@ const CourseDetail = () => {
                 )}
               </div>
               {lesson.duration && (
-                <span className="lesson-duration">{lesson.duration}</span>
+                <span
+                  className="lesson-duration"
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                    color: "#666",
+                    fontFamily: "monospace",
+                    minWidth: "60px",
+                    textAlign: "center",
+                    marginLeft: "8px",
+                  }}
+                >
+                  {formatDuration(lesson.duration)}
+                </span>
               )}
             </li>
           ))
@@ -333,11 +414,10 @@ const CourseDetail = () => {
 
   // Hàm chuyển đổi phút sang giờ, phút, giây
   const convertMinutesToHMS = (totalMinutes) => {
-    const totalSeconds = totalMinutes * 60; // Chuyển đổi phút sang giây
-    const hours = Math.floor(totalSeconds / 3600); // Tính số giờ
-    const minutes = Math.floor((totalSeconds % 3600) / 60); // Tính số phút
-
-    return `${hours}h ${minutes}p`;
+    if (!totalMinutes) return "0h 0p";
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = Math.floor(totalMinutes % 60);
+    return `${hours}h${minutes}P`;
   };
 
   // Tính tổng thời gian
@@ -514,11 +594,18 @@ const CourseDetail = () => {
               />
             )}
 
-            <p>
+            <p style={{ marginTop: 10 }}>
               <strong>Thời gian tổng:</strong>
-              <span className="course-detail-min" style={{ color: "#a7aeae" }}>
+              <span
+                className="course-detail-min"
+                style={{
+                  color: "#a7aeae",
+                  fontFamily: "monospace",
+                  fontSize: 15,
+                }}
+              >
                 {" "}
-                {formattedDuration}
+                {convertMinutesToHMS(totalCourseDuration)}
               </span>
             </p>
             <p>
@@ -527,6 +614,18 @@ const CourseDetail = () => {
                 {totalLessons} Video
               </span>
             </p>
+            {/* {modules.map((module) => (
+              <p key={module.id}>
+                <strong>Thời gian {module.title}:</strong>
+                <span
+                  className="course-detail-min"
+                  style={{ color: "#a7aeae" }}
+                >
+                  {" "}
+                  {convertMinutesToHMS(moduleDurations[module.id])}
+                </span>
+              </p>
+            ))} */}
             <p>
               <strong>Mô tả:</strong>{" "}
               <span className="course-detail-min" style={{ color: "#a7aeae" }}>
@@ -584,8 +683,6 @@ const CourseDetail = () => {
           </Card>
         </Col>
       </Row>
-
-      {/* <ToastContainer /> */}
     </div>
   );
 };

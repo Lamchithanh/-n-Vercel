@@ -16,5 +16,8 @@ router.delete(
   "/courses/:courseId/lessons/:lessonId",
   lessonController.deleteLesson
 );
+router.get("/lessons/duration", lessonController.getVideoDuration);
+router.get("/modules/:moduleId/duration", lessonController.getModuleDuration);
+router.get("/courses/:courseId/duration", lessonController.getCourseDuration);
 
 module.exports = router;
