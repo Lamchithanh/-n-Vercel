@@ -256,14 +256,7 @@ const HomePage = () => {
                   <div style={{ marginRight: "8px" }}>
                     {course.price &&
                       course.price !== "0" &&
-                      course.price !== "0.00" && (
-                        <img
-                          width="40"
-                          height="40"
-                          src="https://img.icons8.com/external-basicons-color-edtgraphics/50/external-Crown-crowns-basicons-color-edtgraphics-6.png"
-                          alt="external-Crown-crowns-basicons-color-edtgraphics-6"
-                        />
-                      )}
+                      course.price !== "0.00" && <span>🔥</span>}
                   </div>
                   <div
                     style={{

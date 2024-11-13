@@ -34,6 +34,11 @@ const CourseDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Cuộn lên đầu trang mỗi khi URL thay đổi
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  useEffect(() => {
     // Kiểm tra trạng thái đăng ký của người dùng hiện tại
     const checkEnrollmentStatus = () => {
       const user = JSON.parse(localStorage.getItem("user"));

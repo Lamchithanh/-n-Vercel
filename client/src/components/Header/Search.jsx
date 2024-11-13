@@ -97,6 +97,7 @@ const CourseSearch = () => {
           placeholder="Tìm kiếm khóa học..."
           className="w-full"
           allowClear
+          style={{ padding: 5 }}
         />
       </div>
 

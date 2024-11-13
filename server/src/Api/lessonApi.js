@@ -2,6 +2,14 @@ import axios from "axios";
 import { API_URL } from "../config/config";
 import { getAuthHeader } from "../utils/utils";
 
+const getVideoId = (url) => {
+  if (!url) return null;
+  const regex =
+    /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+};
+
 export const fetchLessonsAPI = async (moduleId, courseId) => {
   try {
     let url =

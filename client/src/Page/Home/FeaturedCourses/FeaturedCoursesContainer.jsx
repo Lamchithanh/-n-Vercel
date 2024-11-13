@@ -54,18 +54,14 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
       <div className={styles.featuredCourses__content}>
         <div className={styles.featuredCourses__header}>
           {course.price && parseFloat(course.price) > 0 && (
-            <img
-              src="https://img.icons8.com/external-basicons-color-edtgraphics/50/external-Crown-crowns-basicons-color-edtgraphics-6.png"
-              alt="premium course"
-              className={styles.featuredCourses__crown}
-            />
+            <span className={styles.featuredCourses__crown}>🔥</span>
           )}
           <h3 className={styles.featuredCourses__title}>{course.title}</h3>
         </div>
 
         <div className={styles.featuredCourses__footer}>
           <span className={styles.featuredCourses__level}>
-            Level: {course.level || "Cơ bản"}
+            {course.level || "Cơ bản"}
           </span>
           <span className={styles.featuredCourses__price}>
             {!course.price || parseFloat(course.price) === 0

@@ -159,14 +159,25 @@ CREATE TABLE video_progress (
   id INT PRIMARY KEY AUTO_INCREMENT,
   user_id BIGINT UNSIGNED NOT NULL,
   lesson_id BIGINT UNSIGNED NOT NULL,
-  course_id BIGINT UNSIGNED NOT NULL, -- Thêm khóa ngoại cho bảng courses
-  module_id BIGINT UNSIGNED NOT NULL, -- Thêm khóa ngoại cho bảng module
+  course_id BIGINT UNSIGNED NOT NULL,
+  module_id BIGINT UNSIGNED NOT NULL,
   watched BOOLEAN DEFAULT false,
-  watched_duration INT DEFAULT 0,
+  watched_duration INT DEFAULT 0,  -- Thêm cột watched_duration ở đây
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (lesson_id) REFERENCES lessons(id),
-  FOREIGN KEY (course_id) REFERENCES courses(id), -- Khóa ngoại liên kết đến bảng courses
-  FOREIGN KEY (module_id) REFERENCES modules(id) -- Khóa ngoại liên kết đến bảng module
+  FOREIGN KEY (course_id) REFERENCES courses(id),
+  FOREIGN KEY (module_id) REFERENCES modules(id)
 );
+
+CREATE TABLE certificate_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL,
+  course_id BIGINT UNSIGNED NOT NULL,
+  request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  accepted BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
 

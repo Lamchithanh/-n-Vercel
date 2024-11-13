@@ -56,8 +56,8 @@
   }
 
   &__crown {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     flex-shrink: 0;
   }
 
@@ -78,8 +78,11 @@
   }
 
   &__level {
-    color: #666;
+    color: #6e6d6d;
     font-size: 0.875rem;
+    background-color: #8ee6f4;
+    padding: 3px 8px;
+    border-radius: 10px;
   }
 
   &__price {

@@ -20,6 +20,14 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     setHasDoneFirstCompletionNotification,
   ] = useState(false);
 
+  // Thêm state để theo dõi milestone đã hiển thị
+  const [displayedMilestones, setDisplayedMilestones] = useState(() => {
+    const saved = localStorage.getItem(
+      `displayedMilestones-${courseId}-${userId}`
+    );
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const totalLessons = modules.reduce(
     (total, module) => total + module.lessons.length,
     0
@@ -30,7 +38,13 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     let highestMilestoneReached = lastMilestoneReached;
 
     milestones.forEach((milestone) => {
-      if (currentProgress >= milestone && lastMilestoneReached < milestone) {
+      // Kiểm tra xem milestone này đã được hiển thị chưa
+      const milestoneKey = `${milestone}-${courseId}-${userId}`;
+      if (
+        currentProgress >= milestone &&
+        lastMilestoneReached < milestone &&
+        !displayedMilestones[milestoneKey]
+      ) {
         highestMilestoneReached = milestone;
         let messageText = "";
 
@@ -58,6 +72,17 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             duration: 5,
             className: "custom-milestone-message",
           });
+
+          // Lưu trạng thái đã hiển thị
+          const newDisplayedMilestones = {
+            ...displayedMilestones,
+            [milestoneKey]: true,
+          };
+          setDisplayedMilestones(newDisplayedMilestones);
+          localStorage.setItem(
+            `displayedMilestones-${courseId}-${userId}`,
+            JSON.stringify(newDisplayedMilestones)
+          );
         }
       }
     });
@@ -65,6 +90,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     setLastMilestoneReached(highestMilestoneReached);
   };
 
+  // Code còn lại giữ nguyên không thay đổi
   useEffect(() => {
     const fetchProgress = async () => {
       try {
@@ -149,14 +175,14 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       >
         <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
           {progress === 100
-            ? "Chúc mừng bạn đã hoàn thành khóa học! 🎉"
+            ? "Chúc mừng bạn đã hoàn thành khóa học! 🎉🏆"
             : progress >= 75
-            ? "Bạn sắp hoàn thành khóa học! 🎯"
+            ? "Bạn sắp hoàn thành khóa học! 🎯✨"
             : progress >= 50
-            ? "Đã hoàn thành một nửa chặng đường! 💪"
+            ? "Đã hoàn thành một nửa chặng đường! 💪🚀"
             : progress > 0
-            ? "Còn chặng đường dài! 🌟"
-            : "Bắt đầu học nào! 📚"}
+            ? "Còn chặng đường dài! 🌟📝"
+            : "Bắt đầu học nào! 📚✨"}
         </div>
         <span>{progress.toFixed(1)}% hoàn thành</span>
         <span style={{ margin: "0 10px" }}>•</span>

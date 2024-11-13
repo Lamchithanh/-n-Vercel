@@ -36,9 +36,9 @@ const Login = () => {
       localStorage.setItem("token", response.token);
 
       switch (response.user.role) {
-        case "admin":
-          navigate("/admin");
-          break;
+        // case "admin":
+        //   navigate("/admin");
+        //   break;
         case "instructor":
           navigate("/instructor");
           break;
