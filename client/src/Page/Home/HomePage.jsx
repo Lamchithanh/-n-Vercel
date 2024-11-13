@@ -39,7 +39,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(8);
+  const [pageSize] = useState(9);
   const [notifications, setNotifications] = useState(() => {
     // Khởi tạo từ localStorage nếu có
     const savedNotifications = localStorage.getItem("courseNotifications");

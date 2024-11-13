@@ -57,6 +57,12 @@ app.use(
     path.join(__dirname, "../../client/src/assets/uploads/courses")
   )
 );
+app.use(
+  "/assets/uploads/avatar",
+  express.static(
+    path.join(__dirname, "../../client/public/assets/uploads/avatar")
+  )
+);
 
 // Routes
 

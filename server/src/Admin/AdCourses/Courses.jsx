@@ -212,7 +212,9 @@ const Courses = () => {
       key: "actions",
       render: (record) => (
         <span>
-          <Button onClick={() => editCourse(record)}>Chỉnh Sửa</Button>
+          <Button onClick={() => editCourse(record)} style={{ marginRight: 5 }}>
+            Chỉnh Sửa
+          </Button>
           <Button onClick={() => confirmDelete(record.id)} danger>
             Xóa
           </Button>
