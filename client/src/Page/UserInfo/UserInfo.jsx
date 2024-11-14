@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, Descriptions, Alert, Button } from "antd";
 import { useNavigate } from "react-router-dom";
+import Loader from "../../context/Loader";
 
 const UserInfo = () => {
   const [user, setUser] = useState(null);
@@ -19,7 +20,11 @@ const UserInfo = () => {
   }, []);
 
   if (loading) {
-    return <p>Đang tải thông tin người dùng...</p>;
+    return (
+      <p>
+        <Loader />
+      </p>
+    );
   }
 
   if (error) {
@@ -64,7 +69,11 @@ const UserInfo = () => {
       </Descriptions>
       <Button
         type="primary"
-        style={{marginTop: "16px" ,backgroundColor: '#4caf50', borderColor: '#4caf50' }}
+        style={{
+          marginTop: "16px",
+          backgroundColor: "#4caf50",
+          borderColor: "#4caf50",
+        }}
         onClick={() => navigate("/change-password")} // Chuyển hướng tới trang đổi mật khẩu
       >
         Đổi mật khẩu

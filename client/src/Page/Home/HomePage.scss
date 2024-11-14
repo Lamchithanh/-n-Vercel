@@ -1,54 +1,341 @@
-.demo-logo {
-  width: 120px;
-  height: 31px;
-  background: rgba(190, 173, 173, 0.3);
-  margin: 16px 28px 16px 0;
+// Variables
+$header-height: 64px;
+$mobile-header-height: 56px;
+$content-max-width: 1200px;
+$mobile-breakpoint: 768px;
+$small-mobile-breakpoint: 576px;
+
+// Mixins
+@mixin mobile {
+  @media (max-width: $mobile-breakpoint) {
+    @content;
+  }
 }
 
+@mixin small-mobile {
+  @media (max-width: $small-mobile-breakpoint) {
+    @content;
+  }
+}
+
+// Layout Structure
+.ant-layout {
+  // margin-top: $header-height;
+
+  @include mobile {
+    // margin-top: $mobile-header-height;
+  }
+
+  // Header Styles
+  .ant-layout-header {
+    padding: 0;
+    height: auto;
+    line-height: normal;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    @include mobile {
+      padding: 0 10px;
+    }
+  }
+}
+
+// Header Component
 .header {
+  // position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  // z-index: 1000;
+  width: 100%;
+
+  .header-content {
+    // display: flex;
+    align-items: center;
+    justify-content: space-between;
+    // background: #fed391;
+    border-radius: 9px;
+    height: $header-height;
+    max-width: $content-max-width;
+    margin: 5px 0;
+    padding: 0 16px;
+
+    @include mobile {
+      height: $mobile-header-height;
+    }
+  }
+
+  .demo-logo {
+    // width: 120px;
+    // height: 31px;
+    // background: rgba(190, 173, 173, 0.3);
+    // margin: 16px 28px 16px 0;
+
+    @include mobile {
+      width: 100px;
+      margin: 12px 16px 12px 0;
+    }
+  }
+
+  .mobile-menu-button {
+    display: none;
+
+    @include mobile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      padding: 8px;
+    }
+  }
+}
+
+// Header Menu
+.header-menu {
+  flex: 1;
   display: flex;
+  justify-content: flex-start;
   align-items: center;
+
+  @include mobile {
+    display: none;
+  }
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    margin: 0;
+    line-height: 64px;
+    transition: all 0.3s ease;
+
+    @include mobile {
+      padding: 0 10px;
+      height: 56px;
+      line-height: 56px;
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.025);
+    }
+
+    .ant-menu-submenu-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .anticon {
+        font-size: 18px;
+
+        @include small-mobile {
+          font-size: 16px;
+        }
+      }
+    }
+
+    .ant-badge {
+      .ant-badge-count {
+        transform: translate(50%, -50%);
+
+        @include small-mobile {
+          transform: translate(30%, -50%) scale(0.8);
+        }
+      }
+    }
+  }
 }
 
-.sider-menu {
-  height: 100%;
-  border-right: 0;
+// Mobile Menu Drawer
+.mobile-menu-drawer {
+  .ant-drawer-body {
+    padding: 0;
+  }
+
+  .mobile-menu {
+    border-right: none;
+
+    .ant-menu-item,
+    .ant-menu-submenu,
+    .ant-menu-submenu-title {
+      // height: 48px;
+      line-height: 48px;
+    }
+
+    .ant-badge {
+      .ant-badge-count {
+        right: 16px;
+      }
+    }
+  }
 }
 
-.breadcrumb {
-  margin: 16px 0;
-}
+// Main Content Area
 .content {
-  background-color: #ffffff; // Thay bằng mã màu trực tiếp
+  background-color: #fff;
   padding: 24px;
   border-radius: 8px;
-  display: grid;
+  margin: 0 auto;
+  max-width: $content-max-width;
 
+  @include mobile {
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  // Course List Grid
   .course-list {
     display: grid;
+    justify-items: center;
     grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    grid-gap: 26px; // Khoảng cách giữa các card
-    overflow: auto; /* Nếu cần */
+    grid-gap: 26px;
+    margin-top: 20px;
 
+    @include mobile {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-gap: 16px;
+    }
+
+    // Course Card
     .ant-card {
-      width: 100%; // Chiều rộng của card là 100% của grid cell
-      height: 90%; // Chiều cao tự động
-      border-radius: 10px; // Bo góc cho card
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); // Thêm bóng cho card
-      transition: transform 0.3s; // Hiệu ứng khi hover
+      width: 100%;
+      height: 90%;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+
+      &[data-aos] {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+
+        &.aos-animate {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
       &:hover {
-        transform: translateY(-5px); // Di chuyển card lên một chút khi hover
+        transform: translateY(-5px);
       }
 
       .ant-card-cover {
         img {
-          object-fit: contain; // Đảm bảo hình ảnh vừa vặn trong card
-          height: 200px; // Chiều cao cố định cho hình ảnh
-          border-top-left-radius: 10px; // Bo góc cho hình ảnh
+          object-fit: contain;
+          height: 200px;
+          border-top-left-radius: 10px;
           border-top-right-radius: 10px;
         }
       }
+
+      .ant-card-body {
+        padding: 16px;
+      }
     }
+  }
+}
+
+// Breadcrumb
+.breadcrumb {
+  margin: 16px 0;
+  padding: 0 24px;
+
+  @include mobile {
+    padding: 0 16px;
+  }
+}
+
+// Horizontal Menu Styles
+.ant-menu-horizontal {
+  border-bottom: none;
+
+  .ant-menu-item-selected,
+  .ant-menu-submenu-selected {
+    &::after {
+      border-bottom-width: 2px !important;
+    }
+  }
+
+  .ant-menu-item,
+  .ant-menu-submenu {
+    &::after {
+      transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    }
+  }
+}
+
+// Mobile-specific Menu Styles
+@include mobile {
+  .ant-menu-inline {
+    .ant-menu-item,
+    .ant-menu-submenu-title {
+      padding-left: 24px !important;
+
+      .ant-menu-title-content {
+        font-size: 14px;
+      }
+    }
+
+    .ant-menu-sub {
+      .ant-menu-item {
+        padding-left: 48px !important;
+      }
+    }
+  }
+}
+
+// Notification Drawer
+.ant-drawer {
+  .ant-list {
+    .ant-list-item {
+      padding: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+      }
+
+      .ant-list-item-meta {
+        .ant-list-item-meta-title {
+          margin-bottom: 4px;
+        }
+      }
+
+      .ant-tag {
+        margin-left: 8px;
+      }
+    }
+  }
+}
+
+// Featured Courses Section
+.featured-courses {
+  padding: 40px 24px;
+  background-color: #f5f5f5;
+
+  @include mobile {
+    padding: 24px 16px;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+}
+
+// Latest Blog Section
+.latest-blog {
+  padding: 40px 24px;
+
+  @include mobile {
+    padding: 24px 16px;
+  }
+}
+
+// Testimonials Section
+.testimonials {
+  padding: 40px 24px;
+  background-color: #f8f9fa;
+
+  @include mobile {
+    padding: 24px 16px;
   }
 }

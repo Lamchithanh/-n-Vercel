@@ -37,6 +37,7 @@ const CourseDetail = () => {
   const [watchedLessons, setWatchedLessons] = useState([]);
   const [totalCourseDuration, setTotalCourseDuration] = useState(0);
   const [moduleDurations, setModuleDurations] = useState({});
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -319,7 +320,7 @@ const CourseDetail = () => {
             role="img"
             aria-label="lock"
             style={{
-              marginLeft: "8px",
+              // marginLeft: "8px",
               color: "red",
               fontSize: "16px",
             }}
@@ -412,6 +413,129 @@ const CourseDetail = () => {
     ),
   }));
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const CourseInfoCard = () => (
+    <Card
+      style={{
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        ...(isMobile
+          ? { marginBottom: "16px" }
+          : { position: "sticky", top: "20px" }),
+      }}
+      title="Thông tin khóa học"
+    >
+      {!isEnrolled && (
+        <div style={{ marginBottom: 10 }} className="course-price">
+          <strong>
+            Giá:{" "}
+            <span style={{ color: "orange" }}>
+              {course.price === "0" || course.price === "0.00"
+                ? "Miễn phí"
+                : `${course.price} vnd`}
+            </span>
+          </strong>
+        </div>
+      )}
+
+      {isEnrolled && (
+        <CourseProgress
+          modules={modules}
+          lessons={lessons}
+          userId={JSON.parse(localStorage.getItem("user"))?.id}
+          courseId={courseId}
+          onRequestCertificate={handleRequestCertificate}
+        />
+      )}
+
+      <p style={{ marginTop: 10 }}>
+        <strong>Thời gian tổng:</strong>
+        <span
+          className="course-detail-min"
+          style={{
+            color: "#a7aeae",
+            fontFamily: "monospace",
+            fontSize: 15,
+          }}
+        >
+          {" "}
+          {convertMinutesToHMS(totalCourseDuration)}
+        </span>
+      </p>
+      <p>
+        <strong>Số bài học:</strong>{" "}
+        <span className="course-detail-min" style={{ color: "#a7aeae" }}>
+          {totalLessons} Bài
+        </span>
+      </p>
+      <p>
+        <strong>Mô tả:</strong>{" "}
+        <span className="course-detail-min" style={{ color: "#a7aeae" }}>
+          {course.description}
+        </span>
+      </p>
+
+      {!isEnrolled && (
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          {course.price === "0" || course.price === "0.00" ? (
+            <Button
+              style={{
+                backgroundColor: "#4caf50",
+                borderColor: "#4caf50",
+                width: isMobile ? "100%" : "auto",
+              }}
+              type="primary"
+              onClick={handleEnroll}
+            >
+              Đăng ký khóa học
+            </Button>
+          ) : hasPaid ? (
+            <Button
+              style={{
+                backgroundColor: "#4caf50",
+                borderColor: "#4caf50",
+                width: isMobile ? "100%" : "auto",
+              }}
+              type="primary"
+              onClick={handleEnroll}
+            >
+              Đăng ký khóa học
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              onClick={() => navigate(`/payment/${courseId}`)}
+              style={{
+                backgroundColor: "#f5222d",
+                borderColor: "#f5222d",
+                width: isMobile ? "100%" : "auto",
+              }}
+            >
+              Thanh toán
+            </Button>
+          )}
+        </div>
+      )}
+      {isEnrolled && (
+        <h6 style={{ color: "#11bd23", textAlign: "center", margin: 0 }}>
+          <span>
+            Đã đăng ký
+            <span style={{ marginLeft: 5 }}>
+              <FaCheck />
+            </span>
+          </span>
+        </h6>
+      )}
+    </Card>
+  );
+
   // Hàm chuyển đổi phút sang giờ, phút, giây
   const convertMinutesToHMS = (totalMinutes) => {
     if (!totalMinutes) return "0h 0p";
@@ -465,16 +589,36 @@ const CourseDetail = () => {
       <Button
         className="btn-back"
         onClick={() => navigate(-1)}
-        style={{ marginBottom: 16 }}
+        style={{ margin: 10 }}
       >
         ← Quay lại
       </Button>
 
-      <Row gutter={16}>
-        <Col span={18}>
+      <Row gutter={[16, 16]} justify="center">
+        <Col
+          xs={24}
+          sm={24}
+          md={18}
+          style={{ padding: isMobile ? "0 8px" : "0 16px" }}
+        >
           <Card
             title={course.title}
-            style={{ marginBottom: "20px", borderRadius: "8px" }}
+            style={{
+              marginBottom: "20px",
+              borderRadius: "8px",
+              ...(isMobile
+                ? {
+                    margin: "0",
+                    width: "100vw", // Chiếm toàn bộ chiều rộng màn hình
+                    borderRadius: "0", // Bỏ bo góc trên mobile
+                    paddingRight: "10px", // Giảm padding
+                    boxShadow: "none", // Bỏ shadow trên mobile
+                  }
+                : {
+                    margin: "10px",
+                    maxWidth: "100%",
+                  }),
+            }}
           >
             <div style={{ borderRadius: 8 }} className="video-section">
               {selectedLesson ? (
@@ -550,138 +694,33 @@ const CourseDetail = () => {
                 />
               )}
             </div>
+
             <Title level={4} style={{ margin: "30px 20px" }}>
               Nội dung khóa học
             </Title>
             <Collapse items={moduleItems} />
           </Card>{" "}
+          {isMobile && (
+            <div
+              style={{
+                width: "100%",
+                padding: "0 8px",
+                margin: "10px auto",
+              }}
+            >
+              <CourseInfoCard />
+            </div>
+          )}
           <Title style={{ margin: "20px 40px" }} level={4}>
             Đánh giá khóa học
           </Title>
           <CourseReviews courseId={courseId} isEnrolled={isEnrolled} />
         </Col>
-
-        <Col span={6}>
-          <Card
-            style={{
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              position: "sticky",
-              top: "20px",
-            }}
-            title="Thông tin khóa học"
-          >
-            {!isEnrolled && (
-              <div style={{ marginBottom: 10 }} className="course-price">
-                <strong>
-                  Giá:{" "}
-                  <span style={{ color: "orange" }}>
-                    {" "}
-                    {course.price === "0" || course.price === "0.00"
-                      ? "Miễn phí"
-                      : `${course.price} vnd`}
-                  </span>{" "}
-                </strong>
-              </div>
-            )}
-
-            {isEnrolled && (
-              <CourseProgress
-                modules={modules}
-                lessons={lessons}
-                userId={JSON.parse(localStorage.getItem("user"))?.id}
-                courseId={courseId}
-                onRequestCertificate={handleRequestCertificate} // Truyền hàm vào đây
-              />
-            )}
-
-            <p style={{ marginTop: 10 }}>
-              <strong>Thời gian tổng:</strong>
-              <span
-                className="course-detail-min"
-                style={{
-                  color: "#a7aeae",
-                  fontFamily: "monospace",
-                  fontSize: 15,
-                }}
-              >
-                {" "}
-                {convertMinutesToHMS(totalCourseDuration)}
-              </span>
-            </p>
-            <p>
-              <strong>Số bài học:</strong>{" "}
-              <span className="course-detail-min" style={{ color: "#a7aeae" }}>
-                {totalLessons} Bài
-              </span>
-            </p>
-            {/* {modules.map((module) => (
-              <p key={module.id}>
-                <strong>Thời gian {module.title}:</strong>
-                <span
-                  className="course-detail-min"
-                  style={{ color: "#a7aeae" }}
-                >
-                  {" "}
-                  {convertMinutesToHMS(moduleDurations[module.id])}
-                </span>
-              </p>
-            ))} */}
-            <p>
-              <strong>Mô tả:</strong>{" "}
-              <span className="course-detail-min" style={{ color: "#a7aeae" }}>
-                {course.description}
-              </span>
-            </p>
-            {!isEnrolled && (
-              <>
-                {course.price === "0" || course.price === "0.00" ? (
-                  <Button
-                    style={{
-                      backgroundColor: "#4caf50",
-                      borderColor: "#4caf50",
-                    }}
-                    type="primary"
-                    onClick={handleEnroll}
-                  >
-                    Đăng ký khóa học
-                  </Button>
-                ) : hasPaid ? (
-                  <Button
-                    style={{
-                      backgroundColor: "#4caf50",
-                      borderColor: "#4caf50",
-                    }}
-                    type="primary"
-                    onClick={handleEnroll}
-                  >
-                    Đăng ký khóa học
-                  </Button>
-                ) : (
-                  <Button
-                    type="primary"
-                    onClick={() => navigate(`/payment/${courseId}`)}
-                    style={{
-                      backgroundColor: "#f5222d",
-                      borderColor: "#f5222d",
-                    }}
-                  >
-                    Thanh toán
-                  </Button>
-                )}
-              </>
-            )}
-            {isEnrolled && (
-              <h6 style={{ color: "#11bd23", textAlign: "center" }}>
-                <span style={{ marginLeft: 10 }}>
-                  Đã đăng ký
-                  <span style={{ marginLeft: 5 }}>
-                    <FaCheck />
-                  </span>
-                </span>
-              </h6>
-            )}
-          </Card>
-        </Col>
+        {!isMobile && (
+          <Col md={6}>
+            <CourseInfoCard />
+          </Col>
+        )}
       </Row>
     </div>
   );

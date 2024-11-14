@@ -2,54 +2,84 @@ const express = require("express");
 const router = express.Router();
 const { updateProfile } = require("../controllers/AccountSettingsController");
 const { authMiddleware } = require("../middleware/auth");
-const multer = require("multer");
 const path = require("path");
+const multer = require("multer");
 const fs = require("fs");
 
-// Update user route - no validation middleware
-router.put("/:id", authMiddleware, updateProfile);
-
-// Route để upload ảnh dưới dạng base64
-router.post("/:userId/upload-avatar", authMiddleware, (req, res) => {
-  try {
-    // Kiểm tra xem có dữ liệu ảnh base64 trong body không
-    if (!req.body.imageData) {
-      return res.status(400).json({ message: "Không có ảnh được gửi lên" });
-    }
-
-    // Kiểm tra định dạng base64 hợp lệ
-    const regex = /^data:image\/(png|jpeg|jpg|gif);base64,/;
-    if (!regex.test(req.body.imageData)) {
-      return res.status(400).json({ message: "Dữ liệu ảnh không hợp lệ" });
-    }
-
-    // Cắt bỏ phần header của base64 (data:image/...;base64,)
-    const base64Data = req.body.imageData.replace(regex, "");
-
-    // Tạo tên file cho ảnh
+// Cấu hình multer để lưu file
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/avatars/"); // Thư mục lưu file
+  },
+  filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const fileName = `avatar-${uniqueSuffix}.png`; // Thay đổi phần mở rộng nếu cần
+    cb(null, "avatar-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
 
-    // Tạo thư mục lưu ảnh nếu chưa có
-    const uploadDir = path.join(__dirname, "../uploads/avatars");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // Giới hạn 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Chỉ cho phép file ảnh"));
     }
+  },
+});
 
-    // Lưu ảnh vào file
-    const filePath = path.join(uploadDir, fileName);
-    fs.writeFileSync(filePath, Buffer.from(base64Data, "base64"));
+router.put("/:userId", authMiddleware, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { avatar } = req.body;
 
-    // Trả về URL của ảnh đã upload
+    const user = await updateUserProfile(userId, { avatar });
+
     return res.status(200).json({
-      message: "Tải ảnh lên thành công",
-      imageUrl: `/uploads/avatars/${fileName}`,
+      success: true,
+      message: "Cập nhật thông tin người dùng thành công",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        bio: user.bio,
+      },
     });
   } catch (error) {
-    console.error("Lỗi khi tải ảnh lên:", error);
+    console.error("Lỗi khi cập nhật thông tin người dùng:", error);
     return res.status(500).json({ message: "Đã có lỗi xảy ra" });
   }
 });
-// Route xử lý upload ảnh
+
+router.post("/:userId/upload-avatar", authMiddleware, upload.single('avatar'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "Không có file được gửi lên" });
+      }
+  
+      // Tạo URL cho ảnh
+      const imageUrl = `/uploads/avatars/${req.file.filename}`;
+  
+      // Cập nhật URL ảnh vào database
+      const user = await updateUserProfile(req.params.userId, {
+        avatar: imageUrl
+      });
+  
+      return res.status(200).json({
+        success: true,
+        message: "Tải ảnh lên thành công",
+        imageUrl: imageUrl
+      });
+    } catch (error) {
+      console.error("Lỗi khi tải ảnh lên:", error);
+      return res.status(500).json({ message: "Đã có lỗi xảy ra" });
+    }
+  });
+  ute xử lý upload ảnh
 
 module.exports = router;

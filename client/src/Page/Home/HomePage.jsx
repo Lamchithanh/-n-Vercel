@@ -10,10 +10,12 @@ import {
   List,
   theme,
   Tag,
+  Button,
 } from "antd";
 
 import {
   LaptopOutlined,
+  MenuOutlined,
   NotificationOutlined,
   TrophyOutlined,
   UserOutlined,
@@ -23,13 +25,15 @@ import "./HomePage.scss";
 import Loader from "../../context/Loader";
 import { fetchCoursesAPI } from "../../../../server/src/Api/courseApi";
 import defaultImage from "../../assets/img/sach.png";
-
+import AOS from "aos";
+import "aos/dist/aos.css";
 import "react-toastify/dist/ReactToastify.css";
 // import HeroSection from "./HeroSection/HeroSection";
 import FeaturedCourses from "./FeaturedCourses/FeaturedCourses";
 import Testimonials from "./Testimonials/Testimonials";
 import LatestBlog from "./LatestBlog/LatestBlog";
 import CourseCard from "../../components/Card/Card";
+import BackToTop from "./BacktoTop";
 
 const { Header, Content } = Layout;
 
@@ -39,7 +43,9 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(9);
+  const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [pageSize] = useState(6);
   const [notifications, setNotifications] = useState(() => {
     // Khởi tạo từ localStorage nếu có
     const savedNotifications = localStorage.getItem("courseNotifications");
@@ -56,6 +62,14 @@ const HomePage = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      once: true,
+      offset: 100,
+    });
+  }, []);
 
   useEffect(() => {
     const shouldShowToast = localStorage.getItem("showSuccessToast");
@@ -154,13 +168,29 @@ const HomePage = () => {
     setUnreadCount(0);
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) {
+        setIsMobileMenuVisible(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleMenuClick = (path) => {
     if (path === "notifications") {
       handleNotificationClick();
     } else {
       navigate(path);
     }
+    if (isMobile) {
+      setIsMobileMenuVisible(false);
+    }
   };
+
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -168,7 +198,7 @@ const HomePage = () => {
   const items2 = [
     {
       key: "1",
-      icon: <LaptopOutlined />,
+      icon: <LaptopOutlined style={{ fontSize: "18px", color: "#1890ff" }} />,
       label: "Khóa học",
       children: [
         { label: "Khóa học của tôi", path: "my-courses" },
@@ -178,18 +208,20 @@ const HomePage = () => {
     },
     {
       key: "2",
-      icon: <UserOutlined />,
+      icon: <UserOutlined style={{ fontSize: "18px", color: "#52c41a" }} />,
       label: "Giới thiệu",
       children: [{ label: "Mở rộng", path: "introduce" }],
     },
     {
       key: "3",
-      icon: <NotificationOutlined />,
-      label: (
+      icon: (
         <Badge count={unreadCount} offset={[10, 0]}>
-          Thông báo
+          <NotificationOutlined
+            style={{ fontSize: "18px", color: "#fa8c16" }}
+          />
         </Badge>
       ),
+      label: "Thông báo",
       children: [
         { label: "Thông báo mới", path: "notifications" },
         { label: "Thông báo quan trọng", path: "/" },
@@ -198,9 +230,9 @@ const HomePage = () => {
     },
     {
       key: "4",
-      icon: <TrophyOutlined />, // Icon cho mục chứng chỉ
+      icon: <TrophyOutlined style={{ fontSize: "18px", color: "#fadb14" }} />,
       label: "Chứng chỉ",
-      children: [{ label: "Danh sách chứng chỉ", path: "certificates" }],
+      children: [{ label: "Chứng chỉ", path: "certificates" }],
     },
   ].map((menu) => ({
     ...menu,
@@ -208,6 +240,7 @@ const HomePage = () => {
       key: `${menu.key}-${index}`,
       label: item.label,
       onClick: () => handleMenuClick(item.path),
+      style: { paddingLeft: 24 }, // Thụt lề để rõ hơn trong menu con
     })),
   }));
 
@@ -221,11 +254,12 @@ const HomePage = () => {
       <div>
         <h4 style={{ fontSize: 18, margin: 20 }}>Tất cả khóa học</h4>
         <div className="course-list">
-          {currentCourses.map((course) => (
+          {currentCourses.map((course, index) => (
             <CourseCard
               key={course.id}
               course={course}
               newlyAddedCourses={newlyAddedCourses}
+              index={index}
             />
           ))}
         </div>
@@ -238,14 +272,44 @@ const HomePage = () => {
 
   return (
     <Layout className="">
-      <Header style={{ background: colorBgContainer }}>
+      <Header
+        style={{ background: colorBgContainer, padding: "0 16px" }}
+        className="header"
+      >
+        <div className="header-content">
+          <div className="demo-logo" />
+          {isMobile ? (
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setIsMobileMenuVisible(true)}
+              className="mobile-menu-button"
+            />
+          ) : (
+            <Menu
+              mode="horizontal"
+              defaultSelectedKeys={["1"]}
+              items={items2}
+              className="header-menu"
+            />
+          )}
+        </div>
+      </Header>
+      <Drawer
+        title="Danh Mục"
+        placement="left"
+        onClose={() => setIsMobileMenuVisible(false)}
+        open={isMobileMenuVisible}
+        className="mobile-menu-drawer"
+        width={280}
+      >
         <Menu
-          mode="horizontal"
+          mode="inline"
           defaultSelectedKeys={["1"]}
           items={items2}
-          className="header-menu"
+          className="mobile-menu"
         />
-      </Header>
+      </Drawer>
       <FeaturedCourses
         courses={courses
           .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
@@ -322,6 +386,7 @@ const HomePage = () => {
           locale={{ emptyText: "Không có thông báo mới" }}
         />
       </Drawer>
+      <BackToTop />
     </Layout>
   );
 };

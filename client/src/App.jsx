@@ -21,7 +21,7 @@ import PropTypes from "prop-types"; // Thêm import PropTypes
 import PaymentPage from "./Page/PaymentPage/PaymentPage ";
 import CertificatesPage from "./Page/CertificatesPage/CertificatesPage";
 import BlogPage from "./Page/BlogPage/BlogPage";
-import BackToTop from "./Page/Home/BacktoTop";
+// import BackToTop from "./Page/Home/BacktoTop";
 import Introduce from "./Page/Introduce/Introduce";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -70,7 +70,7 @@ const App = () => {
             }
           />
         </Routes>
-        <BackToTop />
+        {/* <BackToTop /> */}
         <ToastContainer position="top-center" autoClose={2000} />
       </div>
     </Router>

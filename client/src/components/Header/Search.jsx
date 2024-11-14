@@ -111,7 +111,7 @@ const CourseSearch = () => {
         <div
           style={{
             position: "absolute",
-            zIndex: 100,
+            zIndex: 1000,
             marginTop: 20,
             background: "#ffd3d3",
             padding: 20,

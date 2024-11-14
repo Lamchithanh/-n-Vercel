@@ -8,16 +8,19 @@ const AccountSettings = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(""); // Thêm state cho avatarUrl
   const [useDefaultAvatar, setUseDefaultAvatar] = useState(false);
-  const [avatarBase64, setAvatarBase64] = useState("");
+  // const [avatarBase64, setAvatarBase64] = useState("");
+  const [userData, setUserData] = useState(null); // Thêm state cho userData
   const navigate = useNavigate();
 
   const API_URL = "http://localhost:9000/api";
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
+    const storedUserData = localStorage.getItem("user");
+    if (storedUserData) {
+      const parsedUser = JSON.parse(storedUserData);
+      setUserData(parsedUser); // Lưu userData vào state
       form.setFieldsValue({
         fullName: parsedUser.username,
         email: parsedUser.email,
@@ -26,9 +29,11 @@ const AccountSettings = () => {
       });
       if (parsedUser.avatar) {
         setImageUrl(parsedUser.avatar);
+        setAvatarUrl(parsedUser.avatar);
         setUseDefaultAvatar(false);
       } else {
         setImageUrl(defaultAvatar);
+        setAvatarUrl(defaultAvatar);
         setUseDefaultAvatar(true);
       }
     } else {
@@ -37,41 +42,55 @@ const AccountSettings = () => {
     }
   }, [form, navigate]);
 
-  const onFinish = async (values) => {
+  const handleAvatarChange = async (info) => {
     try {
-      setLoading(true);
-      console.log("Dữ liệu gửi đi:", values);
+      if (!userData) {
+        message.error("Không tìm thấy thông tin người dùng");
+        return;
+      }
 
-      const response = await updateUserInDatabase(values);
-      console.log("Phản hồi từ backend:", response.data);
+      const formData = new FormData();
+      formData.append("avatar", info.file.originFileObj);
+
+      const response = await axios.post(
+        `${API_URL}/users/${userData.id}/upload-avatar`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       if (response.data.success) {
-        message.success("✅ Cập nhật thông tin người dùng thành công");
-      } else {
-        message.error("❌ Cập nhật thông tin không thành công");
+        const fullImageUrl = `${API_URL}${response.data.imageUrl}`;
+        setImageUrl(fullImageUrl);
+        setAvatarUrl(response.data.imageUrl);
+        setUseDefaultAvatar(false);
+        message.success("Upload ảnh thành công");
       }
     } catch (error) {
-      console.error("Error updating user:", error);
-      message.error("Có lỗi xảy ra khi cập nhật thông tin");
-    } finally {
-      setLoading(false);
+      console.error("Error uploading avatar:", error);
+      message.error("Có lỗi xảy ra khi upload ảnh");
     }
   };
 
   const updateUserInDatabase = async (values) => {
     try {
-      const userData = JSON.parse(localStorage.getItem("user"));
+      if (!userData) {
+        throw new Error("Không tìm thấy thông tin người dùng");
+      }
+
       const token = localStorage.getItem("token");
 
       const updateData = {
-        ...(values.fullName && { username: values.fullName }),
-        ...(values.bio && { bio: values.bio }),
-        ...(useDefaultAvatar ? {} : { avatar: avatarBase64 }),
+        username: values.fullName,
+        bio: values.bio || "",
+        avatar: avatarUrl, // Sử dụng avatarUrl đã lưu
         email: userData.email,
         role: userData.role,
       };
-
-      console.log("Dữ liệu sẽ cập nhật:", updateData);
 
       const response = await axios.put(
         `${API_URL}/users/${userData.id}`,
@@ -90,35 +109,36 @@ const AccountSettings = () => {
     }
   };
 
-  const handleAvatarChange = async (info) => {
-    if (info.file.status === "removed") {
-      setImageUrl(defaultAvatar);
-      setUseDefaultAvatar(true);
-      setAvatarBase64(""); // Xóa avatarBase64 khi không chọn ảnh
-    } else if (info.file.status === "uploading") {
-      // Handle uploading state if needed
-    } else if (info.file.status === "done") {
-      const base64 = await convertToBase64(info.file.originFileObj);
-      console.log("Base64 avatar: ", base64); // Kiểm tra base64
-      setImageUrl(base64);
-      setUseDefaultAvatar(false);
-      setAvatarBase64(base64);
+  const onFinish = async (values) => {
+    try {
+      setLoading(true);
+      const response = await updateUserInDatabase(values);
+
+      if (response.data.success) {
+        // Cập nhật localStorage với thông tin mới
+        const updatedUserData = {
+          ...userData,
+          username: response.data.data.username,
+          email: response.data.data.email,
+          bio: response.data.data.bio,
+          avatar: response.data.data.avatar,
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUserData));
+        setUserData(updatedUserData); // Cập nhật state userData
+
+        message.success("✅ Cập nhật thông tin người dùng thành công");
+      } else {
+        message.error("❌ Cập nhật thông tin không thành công");
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      message.error("Có lỗi xảy ra khi cập nhật thông tin");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file);
-      fileReader.onload = () => {
-        resolve(fileReader.result);
-      };
-      fileReader.onerror = (error) => {
-        reject(error);
-      };
-    });
-  };
-
+  // Phần return giữ nguyên như cũ
   return (
     <Card title="Thông tin cơ bản" className="max-w-2xl mx-auto mt-8 container">
       <p className="mb-4 text-gray-600">Quản lý thông tin cá nhân của bạn.</p>
@@ -129,9 +149,8 @@ const AccountSettings = () => {
           listType="picture-circle"
           className="avatar-uploader"
           showUploadList={false}
-          beforeUpload={() => false} // Ngừng upload file thực tế
-          onChange={handleAvatarChange} // Xử lý khi thay đổi ảnh
-          customRequest={() => false} // Không thực hiện upload
+          onChange={handleAvatarChange}
+          customRequest={({ onSuccess }) => onSuccess()}
         >
           <img
             src={imageUrl}
@@ -141,6 +160,7 @@ const AccountSettings = () => {
             onError={(e) => {
               if (!useDefaultAvatar) {
                 setImageUrl(defaultAvatar);
+                setAvatarUrl(defaultAvatar);
                 setUseDefaultAvatar(true);
                 message.warning("Không thể tải ảnh, đã dùng ảnh mặc định");
               }

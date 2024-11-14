@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
 import PropTypes from "prop-types";
 import styles from "./MyCourses.module.scss";
@@ -75,9 +76,39 @@ const MyCourses = () => {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [showLeftButton, setShowLeftButton] = useState(false);
+  const [showRightButton, setShowRightButton] = useState(true);
   const courseGridRef = useRef(null);
-  const scrollTimeout = useRef(null);
+  // const scrollTimeout = useRef(null);
   const navigate = useNavigate();
+
+  // Kiểm tra xem có nên hiển thị nút điều hướng không
+  const checkScrollButtons = () => {
+    if (courseGridRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = courseGridRef.current;
+      setShowLeftButton(scrollLeft > 0);
+      setShowRightButton(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  // Xử lý scroll
+  const handleScroll = (direction) => {
+    if (courseGridRef.current) {
+      const scrollAmount = 400; // Điều chỉnh khoảng cách scroll
+      const newScrollLeft =
+        direction === "left"
+          ? courseGridRef.current.scrollLeft - scrollAmount
+          : courseGridRef.current.scrollLeft + scrollAmount;
+
+      courseGridRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: "smooth",
+      });
+
+      setIsScrolling(true);
+      setTimeout(() => setIsScrolling(false), 150);
+    }
+  };
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -106,14 +137,13 @@ const MyCourses = () => {
         setLoading(false);
       } catch (err) {
         console.error("Error:", err);
-
-        if (err.response?.status === 403) {
-          setError("Bạn không có quyền truy cập khóa học này");
-        } else if (err.name === "SyntaxError") {
-          setError("Dữ liệu người dùng không hợp lệ. Vui lòng đăng nhập lại.");
-        } else {
-          setError("Có lỗi xảy ra khi tải khóa học. Vui lòng thử lại sau.");
-        }
+        setError(
+          err.response?.status === 403
+            ? "Bạn không có quyền truy cập khóa học này"
+            : err.name === "SyntaxError"
+            ? "Dữ liệu người dùng không hợp lệ. Vui lòng đăng nhập lại."
+            : "Có lỗi xảy ra khi tải khóa học. Vui lòng thử lại sau."
+        );
         setLoading(false);
       }
     };
@@ -121,43 +151,22 @@ const MyCourses = () => {
     fetchCourses();
   }, [navigate]);
 
-  // Xử lý cuộn mượt bằng chuột
   useEffect(() => {
-    const handleWheel = (e) => {
-      if (courseGridRef.current) {
-        e.preventDefault();
-        const scrollSpeed = 80; // Giảm tốc độ cuộn
-        const delta = (e.deltaY * scrollSpeed) / 100;
-
-        courseGridRef.current.scrollLeft += delta;
-        setIsScrolling(true);
-
-        // Reset scrolling state after scrolling ends
-        if (scrollTimeout.current) {
-          clearTimeout(scrollTimeout.current);
-        }
-        scrollTimeout.current = setTimeout(() => {
-          setIsScrolling(false);
-        }, 150);
-      }
-    };
-
     const currentRef = courseGridRef.current;
     if (currentRef) {
-      currentRef.addEventListener("wheel", handleWheel, { passive: false });
+      currentRef.addEventListener("scroll", checkScrollButtons);
+      // Kiểm tra ban đầu
+      checkScrollButtons();
     }
 
     return () => {
       if (currentRef) {
-        currentRef.removeEventListener("wheel", handleWheel);
-      }
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
+        currentRef.removeEventListener("scroll", checkScrollButtons);
       }
     };
-  }, []);
+  }, [courses]);
 
-  // Xử lý kéo thả bằng chuột với độ nhạy được điều chỉnh
+  // Mouse drag handling
   const handleMouseDown = (e) => {
     if (courseGridRef.current) {
       setIsDragging(true);
@@ -172,10 +181,11 @@ const MyCourses = () => {
     e.preventDefault();
     if (courseGridRef.current) {
       const x = e.pageX - courseGridRef.current.offsetLeft;
-      const sensitivity = 1.5; // Tăng độ nhạy khi kéo
+      const sensitivity = 1.5;
       const walk = (x - startX) * sensitivity;
       courseGridRef.current.scrollLeft = scrollLeft - walk;
       setIsScrolling(true);
+      checkScrollButtons();
     }
   };
 
@@ -225,7 +235,7 @@ const MyCourses = () => {
         </h1>
         <button
           onClick={() => navigate("/")}
-          className="px-4 py-2 bg-blue-500  rounded hover:bg-blue-600 transition-colors duration-200"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
         >
           Khám phá thêm khóa học
         </button>
@@ -243,6 +253,26 @@ const MyCourses = () => {
         </div>
       ) : (
         <div className="relative overflow-hidden">
+          {/* Left Navigation Button */}
+          <button
+            onClick={() => handleScroll("left")}
+            className={`absolute left-0 top-1/2 z-20 -translate-y-1/2 p-2 bg-white rounded-full shadow-lg transition-opacity duration-300 hover:bg-gray-100 ${
+              showLeftButton ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            <ChevronLeft className="w-6 h-6 text-gray-600" />
+          </button>
+
+          {/* Right Navigation Button */}
+          <button
+            onClick={() => handleScroll("right")}
+            className={`absolute right-0 top-1/2 z-20 -translate-y-1/2 p-2 bg-white rounded-full shadow-lg transition-opacity duration-300 hover:bg-gray-100 ${
+              showRightButton ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            <ChevronRight className="w-6 h-6 text-gray-600" />
+          </button>
+
           <div
             className={`pointer-events-none absolute left-0 top-0 z-10 h-full w-48 transition-opacity duration-300 ${
               isScrolling ? "opacity-90" : "opacity-70"
