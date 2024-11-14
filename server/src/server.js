@@ -20,7 +20,7 @@ const paymentRoutes = require("./routes/paymentRoutes.js");
 const blogRoutes = require("./routes/blogRoutes");
 const ChangePassword = require("./routes/ChangePasswordRoute.js");
 const CertificateRequestRoutes = require("./routes/CertificateRequestRoutes.js");
-
+const dashboardRoutes = require("./routes/IntroduceRotues.js");
 const app = express();
 const port = process.env.PORT || 9000;
 
@@ -79,7 +79,7 @@ app.use(paymentRoutes);
 app.use("/api", blogRoutes);
 app.use("/api", ChangePassword);
 app.use("/api", CertificateRequestRoutes);
-
+app.use("/api", dashboardRoutes);
 // Middleware xử lý lỗi
 app.use(handleMulterError);
 

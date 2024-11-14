@@ -1,5 +1,14 @@
-import { useEffect } from "react";
-import { Layout, Button, Card, Row, Col, Statistic, Timeline } from "antd";
+import { useEffect, useState } from "react";
+import {
+  Layout,
+  Button,
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Timeline,
+  Spin,
+} from "antd";
 import {
   BookOutlined,
   TeamOutlined,
@@ -9,21 +18,45 @@ import {
 import AOS from "aos";
 import "aos/dist/aos.css";
 import styles from "./Introduce.module.scss";
+import { useNavigate } from "react-router-dom";
+import { fetchdashboardAPI } from "../../../../server/src/Api/IntroduceAPI";
+import { getAuthHeader } from "../../../../server/src/Api/authAPI";
 
 const { Content } = Layout;
 
 const Introduce = () => {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = getAuthHeader();
+        const data = await fetchdashboardAPI(token);
+        setDashboardData(data); // Update the data if present
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        setDashboardData(null); // Ensure value is null if an error occurs
+      } finally {
+        setLoading(false); // Stop loading state
+      }
+    };
+
+    fetchData();
     AOS.init({
       duration: 1000,
       once: true,
     });
   }, []);
 
+  const handleOnclick = () => {
+    navigate("allcourses");
+  };
+
   return (
     <Layout className={styles.layout}>
       <Content>
-        {/* Hero Section */}
         <section className={styles.hero} id="home">
           <div className={styles.heroContent} data-aos="fade-up">
             <h1>Nền tảng học trực tuyến hàng đầu</h1>
@@ -31,55 +64,56 @@ const Introduce = () => {
               Khám phá hàng ngàn khóa học chất lượng cao từ các chuyên gia hàng
               đầu
             </p>
-            <Button type="primary" size="large">
+            <Button type="primary" size="large" onClick={handleOnclick}>
               Bắt đầu học ngay
             </Button>
           </div>
         </section>
 
-        {/* Stats Section */}
         <section className={styles.stats}>
           <Row gutter={[32, 32]} justify="center">
             <Col xs={24} sm={12} md={6}>
               <Card data-aos="zoom-in">
-                <Statistic
-                  title="Học viên"
-                  value={50000}
-                  prefix={<TeamOutlined />}
-                />
+                {loading ? (
+                  <Spin size="small" />
+                ) : (
+                  <Statistic
+                    title="Học viên"
+                    value={dashboardData?.total_users || 0}
+                    prefix={<TeamOutlined />}
+                  />
+                )}
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Card data-aos="zoom-in" data-aos-delay="100">
-                <Statistic
-                  title="Khóa học"
-                  value={200}
-                  prefix={<BookOutlined />}
-                />
+                {loading ? (
+                  <Spin size="small" />
+                ) : (
+                  <Statistic
+                    title="Khóa học"
+                    value={dashboardData?.total_courses || 0}
+                    prefix={<BookOutlined />}
+                  />
+                )}
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Card data-aos="zoom-in" data-aos-delay="200">
-                <Statistic
-                  title="Chứng chỉ"
-                  value={15000}
-                  prefix={<TrophyOutlined />}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Card data-aos="zoom-in" data-aos-delay="300">
-                <Statistic
-                  title="Giảng viên"
-                  value={100}
-                  prefix={<TeamOutlined />}
-                />
+                {loading ? (
+                  <Spin size="small" />
+                ) : (
+                  <Statistic
+                    title="Chứng chỉ"
+                    value={dashboardData?.total_certificates || 0}
+                    prefix={<TrophyOutlined />}
+                  />
+                )}
               </Card>
             </Col>
           </Row>
         </section>
 
-        {/* Features Section */}
         <section className={styles.features} id="features">
           <h2 data-aos="fade-up">Tại sao chọn chúng tôi?</h2>
           <Row gutter={[32, 32]}>
@@ -107,7 +141,6 @@ const Introduce = () => {
           </Row>
         </section>
 
-        {/* Learning Path Section */}
         <section className={styles.learningPath}>
           <h2 data-aos="fade-up">Lộ trình học tập</h2>
           <Timeline mode="alternate" className={styles.timeline}>

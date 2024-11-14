@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
+import AOS from "aos";
+import "aos/dist/aos.css";
 import CourseCard from "../../../components/Card/Card";
 import styles from "./FeaturedCourses.module.scss";
 
@@ -15,7 +17,6 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
       .slice(0, maxDisplayCount)
       .map((course) => ({
         ...course,
-        // Đảm bảo price luôn là string và format đúng
         price: course.price?.toString() || "0",
       }));
   }, [courses, maxDisplayCount]);
@@ -31,6 +32,11 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
     }
   }, [courses]);
 
+  // Khởi tạo AOS khi component được render
+  useEffect(() => {
+    AOS.init({ duration: 800 }); // Thiết lập thời gian animation
+  }, []);
+
   if (isLoading) {
     return <div>Đang tải khóa học...</div>;
   }
@@ -43,7 +49,11 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
     <div className={styles.featuredCourses__container}>
       {topEnrolledCourses.length > 0 ? (
         topEnrolledCourses.map((course) => (
-          <div key={course.id} className={styles.featuredCourses__cardWrapper}>
+          <div
+            key={course.id}
+            className={styles.featuredCourses__cardWrapper}
+            data-aos="fade-up" // Thêm animation "fade-up" cho AOS
+          >
             <CourseCard course={course} />
             <div
               style={{
@@ -55,8 +65,9 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
                 display: "inline-block",
               }}
               className={styles.featuredCourses__enrollmentCount}
+              data-aos="zoom-in" // Thêm animation "zoom-in" cho AOS
             >
-              + {course.enrollment_count?.toLocaleString() || 0} Hoc viên
+              + {course.enrollment_count?.toLocaleString() || 0} Học viên
             </div>
           </div>
         ))

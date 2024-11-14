@@ -5,10 +5,18 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import styles from "./MyCourses.module.scss";
 import defaultImage from "../../assets/img/sach.png";
+import { getProgressAPI } from "../../../../server/src/Api/courseApi";
 
-const CourseCard = ({ course }) => {
+const CourseCard = ({ course, progress }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+
+  const getProgressColor = (percent) => {
+    if (percent >= 100) return "#52c41a";
+    if (percent >= 75) return "#1890ff";
+    if (percent >= 50) return "#722ed1";
+    return "#108ee9";
+  };
 
   return (
     <div
@@ -41,12 +49,15 @@ const CourseCard = ({ course }) => {
             <div className={styles["featuredCourses__progress-container"]}>
               <div
                 className={styles["featuredCourses__progress-bar"]}
-                style={{ width: `${course.progress?.percentage || 0}%` }}
+                style={{
+                  width: `${progress?.percentage || 0}%`,
+                  backgroundColor: getProgressColor(progress?.percentage || 0),
+                }}
               />
             </div>
             <div className={styles["featuredCourses__progress-text"]}>
               <span>Tiến độ</span>
-              <span>{course.progress?.percentage || 0}%</span>
+              <span>{progress?.percentage?.toFixed(1) || 0}%</span>
             </div>
           </div>
         </div>
@@ -62,14 +73,17 @@ CourseCard.propTypes = {
     description: PropTypes.string,
     image: PropTypes.string,
     level: PropTypes.string.isRequired,
-    progress: PropTypes.shape({
-      percentage: PropTypes.number.isRequired,
-    }).isRequired,
   }).isRequired,
+  progress: PropTypes.shape({
+    percentage: PropTypes.number.isRequired,
+    watchedLessons: PropTypes.array.isRequired,
+    totalLessons: PropTypes.number.isRequired,
+  }),
 };
 
 const MyCourses = () => {
   const [courses, setCourses] = useState([]);
+  const [courseProgress, setCourseProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -79,39 +93,40 @@ const MyCourses = () => {
   const [showLeftButton, setShowLeftButton] = useState(false);
   const [showRightButton, setShowRightButton] = useState(true);
   const courseGridRef = useRef(null);
-  // const scrollTimeout = useRef(null);
   const navigate = useNavigate();
 
-  // Kiểm tra xem có nên hiển thị nút điều hướng không
-  const checkScrollButtons = () => {
-    if (courseGridRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = courseGridRef.current;
-      setShowLeftButton(scrollLeft > 0);
-      setShowRightButton(scrollLeft < scrollWidth - clientWidth - 1);
-    }
-  };
+  // Fetch progress for a single course
+  const fetchCourseProgress = async (userId, courseId, modules) => {
+    try {
+      const progressData = await getProgressAPI(userId, courseId);
 
-  // Xử lý scroll
-  const handleScroll = (direction) => {
-    if (courseGridRef.current) {
-      const scrollAmount = 400; // Điều chỉnh khoảng cách scroll
-      const newScrollLeft =
-        direction === "left"
-          ? courseGridRef.current.scrollLeft - scrollAmount
-          : courseGridRef.current.scrollLeft + scrollAmount;
+      const watched = progressData.filter((p) => p.watched);
+      const uniqueWatchedLessons = [...new Set(watched.map((p) => p.lessonId))];
+      const totalLessons = modules.reduce(
+        (total, module) => total + module.lessons.length,
+        0
+      );
 
-      courseGridRef.current.scrollTo({
-        left: newScrollLeft,
-        behavior: "smooth",
-      });
+      const progressPercentage =
+        (uniqueWatchedLessons.length / totalLessons) * 100;
 
-      setIsScrolling(true);
-      setTimeout(() => setIsScrolling(false), 150);
+      return {
+        percentage: progressPercentage,
+        watchedLessons: uniqueWatchedLessons,
+        totalLessons,
+      };
+    } catch (error) {
+      console.error(`Error fetching progress for course ${courseId}:`, error);
+      return {
+        percentage: 0,
+        watchedLessons: [],
+        totalLessons: 0,
+      };
     }
   };
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchCoursesAndProgress = async () => {
       try {
         const userString = localStorage.getItem("user");
 
@@ -129,11 +144,33 @@ const MyCourses = () => {
           return;
         }
 
-        const response = await axios.get(
+        const coursesResponse = await axios.get(
           `http://localhost:9000/api/my-courses/${user.id}`
         );
 
-        setCourses(response.data);
+        const coursesData = coursesResponse.data;
+        setCourses(coursesData);
+
+        // Fetch progress for each course using the updated fetchCourseProgress function
+        const progressPromises = coursesData.map(async (course) => {
+          const progress = await fetchCourseProgress(
+            user.id,
+            course.id,
+            course.modules
+          );
+          return { [course.id]: progress };
+        });
+
+        const progressResults = await Promise.all(progressPromises);
+        const progressData = progressResults.reduce(
+          (acc, curr) => ({
+            ...acc,
+            ...curr,
+          }),
+          {}
+        );
+
+        setCourseProgress(progressData);
         setLoading(false);
       } catch (err) {
         console.error("Error:", err);
@@ -148,25 +185,37 @@ const MyCourses = () => {
       }
     };
 
-    fetchCourses();
+    fetchCoursesAndProgress();
   }, [navigate]);
 
-  useEffect(() => {
-    const currentRef = courseGridRef.current;
-    if (currentRef) {
-      currentRef.addEventListener("scroll", checkScrollButtons);
-      // Kiểm tra ban đầu
-      checkScrollButtons();
+  // Rest of the component remains the same...
+  const checkScrollButtons = () => {
+    if (courseGridRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = courseGridRef.current;
+      setShowLeftButton(scrollLeft > 0);
+      setShowRightButton(scrollLeft < scrollWidth - clientWidth - 1);
     }
+  };
 
-    return () => {
-      if (currentRef) {
-        currentRef.removeEventListener("scroll", checkScrollButtons);
-      }
-    };
-  }, [courses]);
+  const handleScroll = (direction) => {
+    if (courseGridRef.current) {
+      const scrollAmount = 400;
+      const newScrollLeft =
+        direction === "left"
+          ? courseGridRef.current.scrollLeft - scrollAmount
+          : courseGridRef.current.scrollLeft + scrollAmount;
 
-  // Mouse drag handling
+      courseGridRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: "smooth",
+      });
+
+      setIsScrolling(true);
+      setTimeout(() => setIsScrolling(false), 150);
+    }
+  };
+
+  // Mouse event handlers remain the same...
   const handleMouseDown = (e) => {
     if (courseGridRef.current) {
       setIsDragging(true);
@@ -234,8 +283,8 @@ const MyCourses = () => {
           Khóa học của tôi ({courses.length})
         </h1>
         <button
-          onClick={() => navigate("/")}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+          onClick={() => navigate("courses")}
+          className="px-4 py-2 bg-blue-500 rounded hover:bg-blue-600 transition-colors duration-200"
         >
           Khám phá thêm khóa học
         </button>
@@ -245,15 +294,14 @@ const MyCourses = () => {
         <div className="text-center py-12">
           <p className="text-gray-600 mb-4">Bạn chưa đăng ký khóa học nào.</p>
           <button
-            onClick={() => navigate("/courses")}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+            onClick={() => navigate("/allcourses")}
+            className="px-4 py-2 bg-blue-500  rounded hover:bg-blue-600 transition-colors duration-200"
           >
             Xem danh sách khóa học
           </button>
         </div>
       ) : (
         <div className="relative overflow-hidden">
-          {/* Left Navigation Button */}
           <button
             onClick={() => handleScroll("left")}
             className={`absolute left-0 top-1/2 z-20 -translate-y-1/2 p-2 bg-white rounded-full shadow-lg transition-opacity duration-300 hover:bg-gray-100 ${
@@ -263,7 +311,6 @@ const MyCourses = () => {
             <ChevronLeft className="w-6 h-6 text-gray-600" />
           </button>
 
-          {/* Right Navigation Button */}
           <button
             onClick={() => handleScroll("right")}
             className={`absolute right-0 top-1/2 z-20 -translate-y-1/2 p-2 bg-white rounded-full shadow-lg transition-opacity duration-300 hover:bg-gray-100 ${
@@ -291,7 +338,11 @@ const MyCourses = () => {
             onMouseLeave={handleMouseLeave}
           >
             {courses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard
+                key={course.id}
+                course={course}
+                progress={courseProgress[course.id]}
+              />
             ))}
           </div>
           <div

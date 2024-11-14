@@ -45,9 +45,9 @@ const App = () => {
       <div className="app">
         <Routes>
           <Route path="/" element={<User />}>
-            <Route index element={<HomePage />} />
+            <Route index element={<Introduce />} />
+            <Route path="allcourses" element={<HomePage />} />
             <Route path="user-info" element={<UserInfo />} />
-            <Route path="introduce" element={<Introduce />} />
             <Route path="payment/:id" element={<PaymentPage />} />
             <Route path="certificates" element={<CertificatesPage />} />
             <Route path="change-password" element={<ChangePassword />} />

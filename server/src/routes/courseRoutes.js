@@ -16,12 +16,6 @@ router.get("/search", courseController.searchCourses); // Route tìm kiếm
 router.get("/progress/:userId/:courseId", courseController.getProgress);
 router.post("/progress/update", courseController.updateProgress);
 
-// Thêm vào server Node.js
-// const uploadDir = path.join(__dirname, "../../../client/src/assets/uploads");
-// if (!fs.existsSync(uploadDir)) {
-//   fs.mkdirSync(uploadDir, { recursive: true });
-// }
-
 // Cấu hình multer
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
