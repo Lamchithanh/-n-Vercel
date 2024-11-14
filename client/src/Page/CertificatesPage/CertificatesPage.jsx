@@ -4,6 +4,8 @@ import axios from "axios";
 import "./CertificatesPage.scss";
 import Loader from "../../context/Loader";
 import { useNavigate } from "react-router-dom";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const { Text } = Typography;
 
@@ -15,8 +17,17 @@ const CertificatesPage = () => {
   const navigate = useNavigate();
 
   const handleJoinClick = () => {
-    navigate("/"); // Điều hướng đến trang đăng nhập
+    navigate("/allcourses"); // Điều hướng đến trang đăng nhập
   };
+
+  useEffect(() => {
+    AOS.init({ duration: 1000 }); // Thiết lập thời gian hiệu ứng
+  }, []);
+
+  useEffect(() => {
+    // Cuộn lên đầu trang mỗi khi URL thay đổi
+    window.scrollTo(0, 0);
+  }, [location]);
 
   useEffect(() => {
     const fetchUserCertificates = async () => {
@@ -71,7 +82,11 @@ const CertificatesPage = () => {
       <div className="certificates-content-container">
         {certificates.length > 0 ? (
           certificates.map((cert) => (
-            <form key={cert.id} className="form-certificates">
+            <form
+              key={cert.id}
+              className="form-certificates"
+              data-aos="zoom-in"
+            >
               <div className="certificates-header">
                 <div className="certificates-course"></div>
                 <div className="certificates-time"></div>

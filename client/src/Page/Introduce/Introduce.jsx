@@ -64,7 +64,12 @@ const Introduce = () => {
               Khám phá hàng ngàn khóa học chất lượng cao từ các chuyên gia hàng
               đầu
             </p>
-            <Button type="primary" size="large" onClick={handleOnclick}>
+            <Button
+              style={{ background: "#539B47" }}
+              type="primary"
+              size="large"
+              onClick={handleOnclick}
+            >
               Bắt đầu học ngay
             </Button>
           </div>

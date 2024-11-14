@@ -1,112 +1,70 @@
-.testimonials {
-  &__container {
-    padding: 2rem 0;
-    background-color: #f8f9fa;
+.testimonials__form {
+  background: #eeecec;
+  padding: 20px 0;
+
+  .testimonials__header {
+    margin: 30px 50px;
   }
 
-  &__title {
-    font-size: 2rem;
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 2rem;
-    color: #2c3e50;
-  }
-
-  &__track {
-    padding: 1rem;
-    overflow: hidden;
-    position: relative;
-    white-space: nowrap;
-  }
-
-  &__slider {
+  .testimonials__container {
     display: flex;
-    gap: 2rem;
-    padding: 0.5rem;
-    animation: scroll-horizontal 20s linear infinite;
-  }
+    margin: 30px 50px;
 
-  &__card {
-    flex: 0 0 auto;
-    width: 350px;
-    height: 100px;
-    background: white;
-    border-radius: 50px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
-    // display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    transform: translateY(0);
-
-    &:nth-child(2n) {
-      transform: translateY(
-        20px
-      ); // Tạo hiệu ứng so le cho các card ở hàng thứ hai
+    .testimonials__subtitle {
+      width: 80%;
+      font-style: 18px;
+      color: #47775f;
     }
 
-    &:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    .testimonials__cards {
+      display: grid;
+      grid-gap: 20px; /* Khoảng cách giữa các card */
+      width: 100%; /* Chiếm toàn bộ chiều rộng của container */
+      max-width: 1000px; /* Giới hạn chiều rộng tối đa */
+      margin: 0 auto; /* Căn giữa container */
+
+      /* Responsive grid layout */
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      /* Chia đều cột card với min-width 200px và tối đa chiếm 1 phần không gian của container */
     }
-  }
 
-  &_header {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-  }
-
-  &__avatar {
-    align-self: center;
-    border: 3px solid #e1e8ff;
-  }
-
-  &__name {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    text-align: center;
-    color: #2c3e50;
-  }
-
-  &__rating {
-    text-align: center;
-
-    :global(.ant-rate) {
-      font-size: 1rem;
-      color: #ffd700;
+    .reviewCard {
+      background-color: #fff;
+      width: 100%;
+      height: auto;
+      border-radius: 9px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid #ddd;
+      padding: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      font-size: 14px;
     }
-  }
 
-  &__content {
-    margin-left: 30px;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    color: #5f6368;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    // .avatar {
+    //   margin-bottom: 10px;
+    // }
 
-  &__date {
-    margin-top: auto;
-    margin-right: 10px;
-    font-size: 0.85rem;
-    color: #9ca3af;
-    text-align: right;
-  }
+    .reviewText {
+      font-size: 14px;
+      width: 100%; /* Đảm bảo văn bản chiếm toàn bộ chiều rộng của card */
+      margin-bottom: 0;
+      color: #555;
+      line-height: 1.2;
 
-  // Animation keyframes cho chuyển động ngang
-  @keyframes scroll-horizontal {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-100%); // Di chuyển hết chiều dài track
+      /* Đảm bảo văn bản xuống dòng khi hết không gian */
+      word-wrap: break-word; /* Cho phép từ dài xuống dòng khi cần */
+      word-break: break-word; /* Đảm bảo từ không bị kéo dài ra ngoài */
+
+      /* Giới hạn tối đa 2 dòng, nếu muốn */
+      display: -webkit-box;
+      -webkit-line-clamp: 2; /* Giới hạn tối đa 2 dòng */
+      -webkit-box-orient: vertical;
+
+      /* Ẩn phần văn bản vượt quá */
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }

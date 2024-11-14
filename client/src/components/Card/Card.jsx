@@ -22,35 +22,37 @@ const CourseCard = ({ course, newlyAddedCourses = [] }) => {
   const isFree = course.price === "0" || course.price === "0.00";
 
   return (
-    <div
-      className="course-card-container"
-      onClick={handleCardClick}
-      data-aos="fade-up" // Add animation here
-    >
-      <div className="course-image-wrapper" data-aos="zoom-in">
-        <img
-          src={course.image || defaultImage}
-          alt={course.title}
-          className="course-image"
-        />
-        {!isFree && (
-          <span className="hot-label" data-aos="fade-left">
-            <img src={MacPremium} style={{ width: 40 }} />
-          </span>
-        )}
-      </div>
+    <div className="form_card">
+      <div
+        className="course-card-container"
+        onClick={handleCardClick}
+        data-aos="fade-up" // Add animation here
+      >
+        <div className="course-image-wrapper" data-aos="zoom-in">
+          <img
+            src={course.image || defaultImage}
+            alt={course.title}
+            className="course-image"
+          />
+          {!isFree && (
+            <span className="hot-label" data-aos="fade-left">
+              <img src={MacPremium} style={{ width: 40 }} />
+            </span>
+          )}
+        </div>
 
-      <div className="course-content" data-aos="fade-right">
-        <h3 className={`course-title ${isNewCourse ? "new-course" : ""}`}>
-          {course.title}
-        </h3>
+        <div className="course-content" data-aos="fade-right">
+          <h3 className={`course-title ${isNewCourse ? "new-course" : ""}`}>
+            {course.title}
+          </h3>
 
-        <div className="course-metadata">
-          <span className="course-price">
-            {isFree ? "Miễn phí" : `${course.price} vnd`}
-          </span>
+          <div className="course-metadata">
+            <span className="course-price">
+              {isFree ? "Miễn phí" : `${course.price} vnd`}
+            </span>
 
-          <span className="course-level"> {course.level}</span>
+            <span className="course-level"> {course.level}</span>
+          </div>
         </div>
       </div>
     </div>

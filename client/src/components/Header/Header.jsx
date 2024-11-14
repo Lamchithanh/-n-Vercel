@@ -5,7 +5,7 @@ import CourseSearch from "./Search.jsx";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./Header.scss";
-
+import logo from "../../assets/img/image-removebg-preview.png";
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -46,10 +46,7 @@ const Header = () => {
     <header className="header">
       <NavLink className="header__logo" to="/">
         <span className="logo-icon">
-          <img
-            src="https://img.icons8.com/bubbles/50/classroom.png"
-            alt="classroom"
-          />
+          <img src={logo} alt="classroom" />
         </span>
         <span className="logo-text">Làm để qua đồ án</span>
       </NavLink>

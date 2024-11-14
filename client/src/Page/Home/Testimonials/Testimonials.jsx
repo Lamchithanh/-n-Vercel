@@ -1,21 +1,21 @@
+import { Avatar, Spin, Alert } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-import { Avatar, Rate, Alert, Spin } from "antd";
 import PropTypes from "prop-types";
 import styles from "./Testimonials.module.scss";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const Testimonials = ({ courseId }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0,
-  });
 
   useEffect(() => {
+    // Initialize AOS
+    AOS.init({ duration: 1000 });
+
     const fetchReviews = async () => {
       try {
         setLoading(true);
@@ -27,17 +27,16 @@ const Testimonials = ({ courseId }) => {
 
         const response = await axios.get(url, {
           params: {
-            page: pagination.current,
-            limit: pagination.pageSize,
+            page: 1,
+            limit: 10,
           },
         });
 
         if (response.data.success) {
-          setReviews(response.data.data);
-          setPagination((prev) => ({
-            ...prev,
-            total: response.data.pagination.total,
-          }));
+          const filteredReviews = response.data.data
+            .filter((review) => review.rating > 4)
+            .slice(0, 6); // Only show 6 reviews with rating > 4
+          setReviews(filteredReviews);
         } else {
           throw new Error(response.data.message || "Failed to fetch reviews");
         }
@@ -54,7 +53,12 @@ const Testimonials = ({ courseId }) => {
     };
 
     fetchReviews();
-  }, [courseId, pagination.current, pagination.pageSize]);
+
+    // Cleanup AOS when the component unmounts
+    return () => {
+      AOS.refresh(); // To refresh the AOS on unmount
+    };
+  }, [courseId]);
 
   if (loading) {
     return (
@@ -73,9 +77,7 @@ const Testimonials = ({ courseId }) => {
         className={styles.testimonials__error}
         action={
           <button
-            onClick={() => {
-              setPagination((prev) => ({ ...prev, current: 1 }));
-            }}
+            onClick={() => window.location.reload()}
             className="ant-btn ant-btn-primary"
           >
             Thử lại
@@ -97,46 +99,30 @@ const Testimonials = ({ courseId }) => {
   }
 
   return (
-    <div className={styles.testimonials__container}>
-      <div className="max-w-6xl mx-auto px-4">
-        <h2 className={styles.testimonials__title}>Đánh Giá Của Học Viên</h2>
-      </div>
-
-      <div className={styles.testimonials__track}>
-        <div className={styles.testimonials__slider}>
+    <div data-aos="fade-up" className={styles.testimonials__form}>
+      <h3 className={styles.testimonials__header}>Đánh Giá Của Học Viên</h3>
+      <div className={styles.testimonials__container}>
+        <h6 data-aos="fade-right" className={styles.testimonials__subtitle}>
+          Nhận xét từ các học viên giúp bạn lựa chọn được khóa học phù hợp với
+          bản thân
+        </h6>
+        <div className={styles.testimonials__cards}>
           {reviews.map((review) => (
-            <div key={review.id} className={styles.testimonials__card}>
-              <div
-                style={{ display: "flex" }}
-                className={styles.testimonials__header}
-              >
-                <Avatar
-                  size={44}
-                  icon={<UserOutlined />}
-                  src={review.avatar}
-                  className={styles.testimonials__avatar}
-                />
-                <div
-                  style={{
-                    display: "grid",
-                    justifyItems: "start",
-                    marginLeft: 10,
-                  }}
-                >
-                  <h3 className={styles.testimonials__name}>
-                    {review.full_name}
-                  </h3>
-                  <div className={styles.testimonials__rating}>
-                    <Rate disabled defaultValue={review.rating} />
-                  </div>
-                </div>
-              </div>
-              <p className={styles.testimonials__content}>
+            <div
+              key={review.id}
+              className={styles.reviewCard}
+              data-aos="fade-up"
+            >
+              <Avatar
+                data-aos="flip-left"
+                data-aos-duration="10 00"
+                icon={<UserOutlined />}
+                src={review.avatar} // Assuming avatarUrl field exists in review
+                className={styles.avatar}
+              />
+              <p data-aos="fade-right" className={styles.reviewText}>
                 {review.review_text}
               </p>
-              <div className={styles.testimonials__date}>
-                {new Date(review.created_at).toLocaleDateString("vi-VN")}
-              </div>
             </div>
           ))}
         </div>

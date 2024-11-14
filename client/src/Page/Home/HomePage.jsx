@@ -96,8 +96,7 @@ const HomePage = () => {
     const fetchCoursesData = async () => {
       try {
         const newCourses = await fetchCoursesAPI();
-        setCourses(newCourses);
-
+        setCourses(newCourses.sort((a, b) => b.createdAt - a.createdAt));
         // Kiểm tra khóa học mới bằng cách so sánh với lastKnownCourses
         const newAddedCourses = newCourses.filter(
           (course) =>
@@ -248,7 +247,12 @@ const HomePage = () => {
   const renderHomeContent = () => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    const currentCourses = courses.slice(startIndex, endIndex);
+
+    // Combine newly added courses and current page courses, then sort by createdAt
+    const allCourses = [
+      ...courses.filter((course) => newlyAddedCourses.includes(course.id)),
+      ...courses.slice(startIndex, endIndex),
+    ].sort((a, b) => b.createdAt - a.createdAt);
 
     return (
       <div>
@@ -259,8 +263,9 @@ const HomePage = () => {
         >
           Tất cả khóa học
         </h4>
+
         <div className="course-list">
-          {currentCourses.map((course, index) => (
+          {allCourses.map((course, index) => (
             <div
               key={course.id}
               data-aos="zoom-in"
@@ -275,9 +280,20 @@ const HomePage = () => {
             </div>
           ))}
         </div>
+
+        {/* <div data-aos="fade-up" data-aos-delay="300">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={courses.length}
+            onChange={(page) => setCurrentPage(page)}
+            style={{ marginTop: "16px", textAlign: "center" }}
+          />
+        </div> */}
       </div>
     );
   };
+
   if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
 
@@ -309,7 +325,7 @@ const HomePage = () => {
         </div>
       </Header>
 
-      <div data-aos="fade-up" data-aos-delay="1000">
+      <div style={{ height: "100vh" }} data-aos="fade-up" data-aos-delay="800">
         <FeaturedCourses
           courses={courses
             .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
@@ -324,7 +340,7 @@ const HomePage = () => {
         />
       </div>
 
-      <div data-aos="slide-up" data-aos-delay="800">
+      <div data-aos="fade-left" data-aos-delay="300">
         <Testimonials />
       </div>
 

@@ -1,22 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Playfair+Display:wght@512&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@600&family=Frank+Ruhl+Libre:wght@300..900&family=Playfair+Display&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@600&family=Exo:ital,wght@0,500;1,500&family=Frank+Ruhl+Libre:wght@300..900&family=Playfair+Display:wght@500&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Dancing+Script:wght@700&family=Exo:ital,wght@0,500;1,500&family=Playfair+Display:wght@500&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=Great+Vibes&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=Great+Vibes&family=Quattrocento:wght@400;700&display=swap");
 
 .certificates-scroll-view {
   height: auto;
   overflow-y: auto;
-  // background: linear-gradient(
-  //   45deg,
-  //   #001f3f,
-  //   #0074d9,
-  //   #7fdbff,
-  //   #b0c4de,
-  //   #4682b4
-  // );
   background-size: 400% 400%;
   animation: rainbow-animation 12s ease infinite;
 
@@ -31,39 +18,40 @@
       background-position: 0% 50%;
     }
   }
-  /* Ẩn thanh cuộn cho các trình duyệt Webkit (Chrome, Safari) */
+
   &::-webkit-scrollbar {
     width: 0;
     background: transparent;
   }
-
-  /* Ẩn thanh cuộn cho Firefox */
-  scrollbar-width: none;
-
-  /* Ẩn thanh cuộn cho IE và Edge */
-  -ms-overflow-style: none;
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE và Edge
 
   .certificates-content-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 30px;
-    gap: 20px; // Khoảng cách giữa các certificates
+    gap: 20px;
 
     .form-certificates {
-      display: flex;
-      justify-content: center;
-      align-content: space-evenly;
-      align-items: center;
       background-image: url("../../assets/img/Certificate3.png");
       background-size: cover;
       background-position: center;
       width: 1000px;
       height: 700px;
       background-color: #f9f5e9;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
       position: relative;
       z-index: 100;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: translateY(-5px) scale(1.02);
+      }
 
       .certificates-username {
         font-size: 40px;
@@ -99,21 +87,33 @@
         }
       }
     }
+
     .no-certificates {
       text-align: center;
-      background-color: rgb(249, 249, 249);
+      // background-color: rgb(249, 249, 249);
       padding: 20px 40px;
       border-radius: 8px;
-      box-shadow: #ffb1b1 0 5px 10px 2px;
+      // box-shadow: #f0e9e9 0 5px 10px 2px;
     }
   }
 }
 
-.certificates-loading,
-.certificates-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 300px;
+/* Responsive cho thiết bị di động */
+@media (max-width: 768px) {
+  .form-certificates {
+    width: 90%;
+    height: auto;
+    padding: 15px;
+    font-size: 14px;
+  }
+
+  .certificates-username {
+    font-size: 24px;
+  }
+
+  .certificates-footer {
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+  }
 }
