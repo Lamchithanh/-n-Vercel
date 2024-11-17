@@ -1,5 +1,14 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, Col, Row, Typography, message, Collapse, Button } from "antd";
+import {
+  Card,
+  Col,
+  Row,
+  Typography,
+  message,
+  Collapse,
+  Button,
+  Modal,
+} from "antd";
 import { FaCheck } from "react-icons/fa";
 import {
   fetchCourseById,
@@ -37,7 +46,13 @@ const CourseDetail = () => {
   const [totalLessons, setTotalLessons] = useState(0);
   const [watchedLessons, setWatchedLessons] = useState([]);
   const [totalCourseDuration, setTotalCourseDuration] = useState(0);
-  const [moduleDurations, setModuleDurations] = useState({});
+  const [setModuleDurations] = useState({});
+  const [availableLessons, setAvailableLessons] = useState([]);
+  const [newLessons, setNewLessons] = useState([]);
+  const [isLockedModalVisible, setIsLockedModalVisible] = useState(false);
+  const [isNewLessonModalVisible, setIsNewLessonModalVisible] = useState(false);
+  const [selectedLockedLesson, setSelectedLockedLesson] = useState(null);
+  const [newLessonDetails, setNewLessonDetails] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
@@ -131,6 +146,91 @@ const CourseDetail = () => {
 
     fetchWatchedLessons();
   }, [courseId]);
+
+  useEffect(() => {
+    const calculateAvailableLessons = () => {
+      let available = [];
+      let newOnes = [];
+      let lastWatchedOrder = 0;
+
+      // Tìm bài học có order cao nhất đã xem
+      modules.forEach((module) => {
+        module.lessons.forEach((lesson) => {
+          if (watchedLessons.includes(lesson.id)) {
+            lastWatchedOrder = Math.max(lastWatchedOrder, lesson.order);
+          }
+        });
+      });
+
+      // Xác định các bài học khả dụng và bài học mới
+      modules.forEach((module) => {
+        module.lessons.forEach((lesson) => {
+          // Bài học đầu tiên luôn khả dụng
+          if (lesson.order === 1) {
+            available.push(lesson.id);
+          }
+          // Các bài học tiếp theo chỉ khả dụng nếu bài học trước đã xem
+          else if (lesson.order <= lastWatchedOrder + 1) {
+            available.push(lesson.id);
+            // Nếu là bài mới được thêm vào (order < lastWatchedOrder nhưng chưa xem)
+            if (
+              lesson.order <= lastWatchedOrder &&
+              !watchedLessons.includes(lesson.id)
+            ) {
+              newOnes.push(lesson.id);
+            }
+          }
+        });
+      });
+
+      setAvailableLessons(available);
+      setNewLessons(newOnes);
+    };
+
+    calculateAvailableLessons();
+  }, [modules, watchedLessons]);
+
+  useEffect(() => {
+    const checkNewLessons = () => {
+      if (newLessons.length > 0) {
+        // Tìm thông tin chi tiết của bài học mới đầu tiên
+        let newLessonInfo = null;
+        modules.forEach((module) => {
+          module.lessons.forEach((lesson) => {
+            if (newLessons.includes(lesson.id)) {
+              newLessonInfo = {
+                lesson: lesson,
+                module: module,
+                previousLesson: findPreviousLesson(lesson.order),
+              };
+            }
+          });
+        });
+
+        if (newLessonInfo) {
+          setNewLessonDetails(newLessonInfo);
+          setIsNewLessonModalVisible(true);
+        }
+      }
+    };
+
+    checkNewLessons();
+  }, [newLessons, modules]);
+
+  const findPreviousLesson = (currentOrder) => {
+    let previousLesson = null;
+    modules.forEach((module) => {
+      module.lessons.forEach((lesson) => {
+        if (lesson.order === currentOrder - 1) {
+          previousLesson = {
+            lesson: lesson,
+            module: module,
+          };
+        }
+      });
+    });
+    return previousLesson;
+  };
 
   // Hàm lấy thời lượng của từng module
   const fetchModuleDurations = async (moduleIds) => {
@@ -232,6 +332,24 @@ const CourseDetail = () => {
 
   const handleLessonClick = async (lesson) => {
     if (isEnrolled) {
+      if (!availableLessons.includes(lesson.id)) {
+        // Tìm thông tin về module chứa bài học và bài học trước đó
+        let lessonInfo = null;
+        modules.forEach((module) => {
+          if (module.lessons.includes(lesson)) {
+            lessonInfo = {
+              lesson: lesson,
+              module: module,
+              previousLesson: findPreviousLesson(lesson.order),
+            };
+          }
+        });
+
+        setSelectedLockedLesson(lessonInfo);
+        setIsLockedModalVisible(true);
+        return;
+      }
+
       setSelectedLesson(lesson);
       const user = JSON.parse(localStorage.getItem("user"));
       if (user) {
@@ -241,7 +359,6 @@ const CourseDetail = () => {
             lessonId: lesson.id,
             watched: true,
           });
-          // Cập nhật danh sách bài học đã xem
           setWatchedLessons((prev) => {
             if (!prev.includes(lesson.id)) {
               return [...prev, lesson.id];
@@ -256,6 +373,7 @@ const CourseDetail = () => {
       message.warning("Bạn cần đăng ký khóa học để xem video của bài học này.");
     }
   };
+
   // Hàm cập nhật thứ tự bài học từ các chương và bài học hiện có
   const updateLessonOrder = (modules) => {
     let orderIndex = 1;
@@ -342,10 +460,16 @@ const CourseDetail = () => {
               }`}
               onClick={() => handleLessonClick(lesson)}
               style={{
-                cursor: "pointer",
+                cursor: availableLessons.includes(lesson.id)
+                  ? "pointer"
+                  : "not-allowed",
                 padding: "10px",
-                backgroundColor:
-                  selectedLesson?.id === lesson.id ? "#f0f0f0" : "#d0ebf1",
+                backgroundColor: (() => {
+                  if (selectedLesson?.id === lesson.id) return "#f0f0f0";
+                  if (newLessons.includes(lesson.id)) return "#fffbe6"; // Màu vàng nhạt cho bài học mới
+                  if (!availableLessons.includes(lesson.id)) return "#f5f5f5"; // Màu xám nhạt cho bài học chưa khả dụng
+                  return "#d0ebf1";
+                })(),
                 borderRadius: "4px",
                 marginBottom: "8px",
                 display: "flex",
@@ -356,6 +480,7 @@ const CourseDetail = () => {
                   selectedLesson?.id === lesson.id
                     ? "0 0 8px rgba(0, 123, 255, 0.3)"
                     : "none",
+                opacity: availableLessons.includes(lesson.id) ? 1 : 0.7,
               }}
             >
               <div
@@ -373,6 +498,20 @@ const CourseDetail = () => {
                       fontSize: "16px",
                     }}
                   />
+                )}
+                {newLessons.includes(lesson.id) && (
+                  <span
+                    style={{
+                      backgroundColor: "#faad14",
+                      color: "white",
+                      padding: "2px 8px",
+                      borderRadius: "10px",
+                      fontSize: "12px",
+                      marginLeft: "8px",
+                    }}
+                  >
+                    Mới
+                  </span>
                 )}
               </div>
               {lesson.duration && (
@@ -545,18 +684,6 @@ const CourseDetail = () => {
     return `${hours}h${minutes}P`;
   };
 
-  // Tính tổng thời gian
-  const totalDuration = modules.reduce((total, module) => {
-    const moduleLessons = lessons[module.id] || [];
-    const moduleDuration = moduleLessons.reduce((moduleTotal, lesson) => {
-      return moduleTotal + (lesson.duration || 0);
-    }, 0);
-    return total + moduleDuration;
-  }, 0);
-
-  // Sử dụng hàm convert để hiển thị thời gian
-  const formattedDuration = convertMinutesToHMS(totalDuration);
-
   const checkPaymentStatus = () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) return false;
@@ -726,6 +853,99 @@ const CourseDetail = () => {
           </Col>
         )}
       </Row>
+      <>
+        <Modal
+          title="Bài học chưa khả dụng"
+          open={isLockedModalVisible}
+          onCancel={() => setIsLockedModalVisible(false)}
+          footer={[
+            <Button key="back" onClick={() => setIsLockedModalVisible(false)}>
+              Đã hiểu
+            </Button>,
+            selectedLockedLesson?.previousLesson && (
+              <Button
+                key="watch-previous"
+                type="primary"
+                onClick={() => {
+                  setIsLockedModalVisible(false);
+                  handleLessonClick(selectedLockedLesson.previousLesson.lesson);
+                }}
+              >
+                Xem bài học trước
+              </Button>
+            ),
+          ]}
+        >
+          {selectedLockedLesson && (
+            <div>
+              <p>
+                <strong>Bài học:</strong> {selectedLockedLesson.lesson.title}
+              </p>
+              <p>
+                <strong>Thuộc chương:</strong>{" "}
+                {selectedLockedLesson.module.title}
+              </p>
+              {selectedLockedLesson.previousLesson ? (
+                <>
+                  <p>Để xem bài học này, bạn cần hoàn thành bài học trước:</p>
+                  <p style={{ color: "#1890ff" }}>
+                    {selectedLockedLesson.previousLesson.lesson.title}
+                  </p>
+                </>
+              ) : (
+                <p>Đây là bài học đầu tiên của chương trình.</p>
+              )}
+            </div>
+          )}
+        </Modal>
+
+        <Modal
+          title="Bài học mới được thêm vào"
+          open={isNewLessonModalVisible}
+          onCancel={() => setIsNewLessonModalVisible(false)}
+          footer={[
+            <Button
+              key="back"
+              onClick={() => setIsNewLessonModalVisible(false)}
+            >
+              Để sau
+            </Button>,
+            <Button
+              key="watch-now"
+              type="primary"
+              onClick={() => {
+                setIsNewLessonModalVisible(false);
+                if (newLessonDetails) {
+                  handleLessonClick(newLessonDetails.lesson);
+                }
+              }}
+            >
+              Xem ngay
+            </Button>,
+          ]}
+        >
+          {newLessonDetails && (
+            <div>
+              <p>
+                <strong>Bài học mới:</strong> {newLessonDetails.lesson.title}
+              </p>
+              <p>
+                <strong>Thuộc chương:</strong> {newLessonDetails.module.title}
+              </p>
+              <p>
+                Bài học này đã được thêm vào khóa học. Bạn nên xem để đảm bảo
+                không bỏ lỡ kiến thức quan trọng.
+              </p>
+              {newLessonDetails.previousLesson && (
+                <p>
+                  <strong>Được thêm vào sau bài:</strong>{" "}
+                  {newLessonDetails.previousLesson.lesson.title}
+                </p>
+              )}
+            </div>
+          )}
+        </Modal>
+      </>
     </div>
   );
 };

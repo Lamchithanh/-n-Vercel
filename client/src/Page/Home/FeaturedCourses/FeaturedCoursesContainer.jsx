@@ -72,7 +72,16 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
           </div>
         ))
       ) : (
-        <div>Không có khóa học nổi bật.</div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%", // Hoặc chiều cao cụ thể nếu cần
+          }}
+        >
+          Không có khóa học nổi bật.
+        </div>
       )}
     </div>
   );

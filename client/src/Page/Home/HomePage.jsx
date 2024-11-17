@@ -4,7 +4,6 @@ import {
   Layout,
   Menu,
   Breadcrumb,
-  message,
   Pagination,
   Badge,
   Drawer,
@@ -42,7 +41,7 @@ const HomePage = () => {
   const [courses, setCourses] = useState([]);
   const [newlyAddedCourses, setNewlyAddedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -70,7 +69,7 @@ const HomePage = () => {
   }, [location]);
 
   AOS.init({
-    duration: 1000,
+    duration: 800,
     once: true,
     offset: 100,
     easing: "ease-out-cubic",
@@ -300,7 +299,7 @@ const HomePage = () => {
               key={course.id}
               data-aos="zoom-in"
               data-aos-delay={index * 100}
-              data-aos-duration="800"
+              data-aos-duration="300"
             >
               <CourseCard
                 course={course}
@@ -323,7 +322,7 @@ const HomePage = () => {
         style={{ background: colorBgContainer, padding: "0 16px" }}
         className="header"
         data-aos="fade-down"
-        data-aos-duration="800"
+        data-aos-duration="500"
       >
         <div className="header-content">
           <div className="demo-logo" />
@@ -345,7 +344,7 @@ const HomePage = () => {
         </div>
       </Header>
 
-      <div style={{ height: "100vh" }} data-aos="fade-up" data-aos-delay="800">
+      <div style={{ height: "100vh" }} data-aos="fade-up" data-aos-delay="500">
         <FeaturedCourses
           courses={courses
             .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))

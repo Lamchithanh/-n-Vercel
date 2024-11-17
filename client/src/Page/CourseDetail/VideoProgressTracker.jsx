@@ -11,7 +11,6 @@ import PropTypes from "prop-types";
 const VideoProgressTracker = ({
   lessonId,
   videoUrl,
-
   modules,
   onProgressUpdate,
 }) => {
@@ -95,15 +94,13 @@ const VideoProgressTracker = ({
           return;
         }
 
-        if (!modules || modules.length === 0) {
-          message.error("Không tìm thấy thông tin khóa học.");
-          return;
+        if (!modules || !Array.isArray(modules)) {
+          return; // Tránh hiển thị lỗi nếu modules chưa load xong
         }
 
         const currentModule = modules.find((m) => m.id === lessonId);
         if (!currentModule) {
-          message.error("Không tìm thấy bài học hiện tại.");
-          return;
+          return; // Tránh hiển thị lỗi nếu không tìm thấy module hiện tại
         }
 
         const progressData = await getProgressAPI(
@@ -123,12 +120,8 @@ const VideoProgressTracker = ({
           );
           return;
         }
-
-        // Nếu tất cả bài học trước đã hoàn thành
-        message.success("Bạn có thể bắt đầu bài học này!");
       } catch (error) {
         console.error("Lỗi khi kiểm tra tiến độ:", error);
-        message.error("Có lỗi xảy ra khi kiểm tra tiến độ bài học.");
       }
     };
 
@@ -155,6 +148,7 @@ const VideoProgressTracker = ({
     </div>
   );
 };
+
 VideoProgressTracker.propTypes = {
   lessonId: PropTypes.string.isRequired,
   videoUrl: PropTypes.string.isRequired,
@@ -167,4 +161,5 @@ VideoProgressTracker.propTypes = {
   ).isRequired,
   onProgressUpdate: PropTypes.func.isRequired,
 };
+
 export default VideoProgressTracker;
