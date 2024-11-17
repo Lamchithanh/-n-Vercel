@@ -5,11 +5,18 @@ import axios from "axios";
 const CertificateRequired = () => {
   const [requests, setRequests] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [currentRequest, setCurrentRequest] = useState(null); // Thông tin yêu cầu hiện tại
+  const [currentRequest, setCurrentRequest] = useState(null);
 
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${String(date.getDate()).padStart(2, "0")}/${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}/${date.getFullYear()}`;
+  };
 
   const fetchRequests = async () => {
     try {
@@ -20,7 +27,12 @@ const CertificateRequired = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setRequests(response.data); // Lưu dữ liệu yêu cầu vào state
+      // Format dates before setting the state
+      const formattedRequests = response.data.map((request) => ({
+        ...request,
+        request_date: formatDate(request.request_date),
+      }));
+      setRequests(formattedRequests);
     } catch (error) {
       console.error("Lỗi khi lấy yêu cầu:", error);
       message.error("Không thể lấy yêu cầu chứng chỉ.");
@@ -38,8 +50,8 @@ const CertificateRequired = () => {
         }
       );
       message.success("Đã chấp nhận yêu cầu chứng chỉ.");
-      setIsModalVisible(false); // Đóng modal
-      fetchRequests(); // Làm mới danh sách yêu cầu
+      setIsModalVisible(false);
+      fetchRequests();
     } catch (error) {
       console.error("Lỗi khi chấp nhận yêu cầu:", error);
       message.error("Không thể chấp nhận yêu cầu.");
@@ -57,8 +69,8 @@ const CertificateRequired = () => {
         }
       );
       message.success("Đã từ chối yêu cầu chứng chỉ.");
-      setIsModalVisible(false); // Đóng modal
-      fetchRequests(); // Làm mới danh sách yêu cầu
+      setIsModalVisible(false);
+      fetchRequests();
     } catch (error) {
       console.error("Lỗi khi từ chối yêu cầu:", error);
       message.error("Không thể từ chối yêu cầu.");
@@ -81,12 +93,12 @@ const CertificateRequired = () => {
   ];
 
   const showRequestDetails = (request) => {
-    setCurrentRequest(request); // Lưu thông tin yêu cầu vào state
-    setIsModalVisible(true); // Mở modal
+    setCurrentRequest(request);
+    setIsModalVisible(true);
   };
 
   const handleCancel = () => {
-    setIsModalVisible(false); // Đóng modal
+    setIsModalVisible(false);
   };
 
   return (
@@ -94,7 +106,6 @@ const CertificateRequired = () => {
       <h1>Quản lý yêu cầu cấp chứng chỉ</h1>
       <Table dataSource={requests} columns={columns} rowKey="id" />
 
-      {/* Modal hiển thị chi tiết yêu cầu */}
       <Modal
         title="Chi tiết yêu cầu cấp chứng chỉ"
         visible={isModalVisible}

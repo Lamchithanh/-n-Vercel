@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import YouTube from "react-youtube";
 import { message } from "antd";
 import {
@@ -6,16 +6,17 @@ import {
   getProgressAPI,
 } from "../../../../server/src/Api/courseApi";
 import "./VideoProgressTracker.scss";
+import PropTypes from "prop-types";
 
 const VideoProgressTracker = ({
   lessonId,
   videoUrl,
-  duration,
+
   modules,
   onProgressUpdate,
 }) => {
   const [player, setPlayer] = useState(null);
-  const [watchedPercentage, setWatchedPercentage] = useState(0);
+  const [setWatchedPercentage] = useState(0);
   const progressUpdateRef = useRef(false);
   const progressInterval = useRef(null);
 
@@ -89,34 +90,45 @@ const VideoProgressTracker = ({
     const checkPreviousLessons = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        if (user) {
-          // Lấy tiến độ của các bài học trước đó
-          const progressData = await getProgressAPI(
-            user.id,
-            modules.find((m) => m.id === lessonId).course_id
-          );
-
-          // Kiểm tra xem các bài học trước có được hoàn thành chưa
-          const completedLessons = progressData.filter((p) => p.watched);
-          const currentLessonIndex = modules.findIndex(
-            (m) => m.id === lessonId
-          );
-
-          if (
-            currentLessonIndex > 0 &&
-            completedLessons.length < currentLessonIndex
-          ) {
-            message.error(
-              "Bạn cần hoàn thành các bài học trước đó trước khi xem bài này."
-            );
-            return;
-          }
+        if (!user) {
+          message.error("Bạn cần đăng nhập để xem bài học này.");
+          return;
         }
 
-        // Nếu kiểm tra thành công, cho phép xem video
-        setPlayer(event.target);
+        if (!modules || modules.length === 0) {
+          message.error("Không tìm thấy thông tin khóa học.");
+          return;
+        }
+
+        const currentModule = modules.find((m) => m.id === lessonId);
+        if (!currentModule) {
+          message.error("Không tìm thấy bài học hiện tại.");
+          return;
+        }
+
+        const progressData = await getProgressAPI(
+          user.id,
+          currentModule.course_id
+        );
+
+        const completedLessons = progressData.filter((p) => p.watched);
+        const currentLessonIndex = modules.findIndex((m) => m.id === lessonId);
+
+        if (
+          currentLessonIndex > 0 &&
+          completedLessons.length < currentLessonIndex
+        ) {
+          message.error(
+            "Bạn cần hoàn thành các bài học trước đó trước khi xem bài này."
+          );
+          return;
+        }
+
+        // Nếu tất cả bài học trước đã hoàn thành
+        message.success("Bạn có thể bắt đầu bài học này!");
       } catch (error) {
         console.error("Lỗi khi kiểm tra tiến độ:", error);
+        message.error("Có lỗi xảy ra khi kiểm tra tiến độ bài học.");
       }
     };
 
@@ -143,5 +155,16 @@ const VideoProgressTracker = ({
     </div>
   );
 };
-
+VideoProgressTracker.propTypes = {
+  lessonId: PropTypes.string.isRequired,
+  videoUrl: PropTypes.string.isRequired,
+  duration: PropTypes.number,
+  modules: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      course_id: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  onProgressUpdate: PropTypes.func.isRequired,
+};
 export default VideoProgressTracker;

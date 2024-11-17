@@ -21,6 +21,7 @@ import defaultImage from "../../assets/img/sach.png";
 import Loader from "../../context/Loader";
 import CourseProgress from "./CourseProgress";
 import VideoProgressTracker from "./VideoProgressTracker";
+import CertificateNotification from "../CertificatesPage/CertificateNotification";
 // import CourseReviews from "./CourseReviews ";
 const { Title, Paragraph } = Typography;
 
@@ -586,6 +587,9 @@ const CourseDetail = () => {
 
   return (
     <div className="course-detail container">
+      <CertificateNotification
+        currentUser={JSON.parse(localStorage.getItem("user"))}
+      />
       <Button
         className="btn-back"
         onClick={() => navigate(-1)}

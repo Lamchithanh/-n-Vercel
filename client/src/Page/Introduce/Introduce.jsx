@@ -21,6 +21,7 @@ import styles from "./Introduce.module.scss";
 import { useNavigate } from "react-router-dom";
 import { fetchdashboardAPI } from "../../../../server/src/Api/IntroduceAPI";
 import { getAuthHeader } from "../../../../server/src/Api/authAPI";
+import CertificateNotification from "../CertificatesPage/CertificateNotification";
 
 const { Content } = Layout;
 
@@ -56,6 +57,9 @@ const Introduce = () => {
 
   return (
     <Layout className={styles.layout}>
+      <CertificateNotification
+        currentUser={JSON.parse(localStorage.getItem("user"))}
+      />
       <Content>
         <section className={styles.hero} id="home">
           <div className={styles.heroContent} data-aos="fade-up">

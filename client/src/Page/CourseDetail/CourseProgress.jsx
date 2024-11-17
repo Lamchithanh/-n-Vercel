@@ -189,16 +189,17 @@ const CourseProgress = ({ modules, userId, courseId }) => {
         <span>
           {watchedLessons.length}/{totalLessons} bài học
         </span>
-
-        {canRequestCertificate && certificateStatus === null && (
-          <Button
-            type="primary"
-            onClick={handleRequestCertificate}
-            className="mt-4"
-          >
-            Yêu cầu cấp chứng chỉ
-          </Button>
-        )}
+        <p>
+          {canRequestCertificate && certificateStatus === null && (
+            <Button
+              type="primary"
+              onClick={handleRequestCertificate}
+              className="mt-4"
+            >
+              Yêu cầu cấp chứng chỉ
+            </Button>
+          )}
+        </p>
 
         {certificateStatus !== null && (
           <div className="certificate-status">

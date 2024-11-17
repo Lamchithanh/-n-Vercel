@@ -6,6 +6,7 @@ import PropTypes from "prop-types";
 import styles from "./MyCourses.module.scss";
 import defaultImage from "../../assets/img/sach.png";
 import { getProgressAPI } from "../../../../server/src/Api/courseApi";
+import { Button } from "antd";
 
 const CourseCard = ({ course, progress }) => {
   const navigate = useNavigate();
@@ -279,6 +280,13 @@ const MyCourses = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
+        <Button
+          className="btn-back"
+          onClick={() => navigate(-1)}
+          style={{ margin: 10 }}
+        >
+          ← Quay lại
+        </Button>
         <h1 className="text-2xl font-bold">
           Khóa học của tôi ({courses.length})
         </h1>

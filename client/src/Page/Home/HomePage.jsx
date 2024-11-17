@@ -1,3 +1,4 @@
+// page cũ
 import { useState, useEffect } from "react";
 import {
   Layout,
@@ -33,6 +34,7 @@ import Testimonials from "./Testimonials/Testimonials";
 import LatestBlog from "./LatestBlog/LatestBlog";
 import CourseCard from "../../components/Card/Card";
 import BackToTop from "./BacktoTop";
+// import CertificateNotification from "../CertificatesPage/CertificateNotification";
 
 const { Header, Content } = Layout;
 
@@ -46,10 +48,10 @@ const HomePage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [pageSize] = useState(6);
   const [notifications, setNotifications] = useState(() => {
-    // Khởi tạo từ localStorage nếu có
     const savedNotifications = localStorage.getItem("courseNotifications");
     return savedNotifications ? JSON.parse(savedNotifications) : [];
   });
+
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] =
     useState(false);
@@ -97,25 +99,50 @@ const HomePage = () => {
       try {
         const newCourses = await fetchCoursesAPI();
         setCourses(newCourses.sort((a, b) => b.createdAt - a.createdAt));
-        // Kiểm tra khóa học mới bằng cách so sánh với lastKnownCourses
+
+        // Kiểm tra khóa học mới
         const newAddedCourses = newCourses.filter(
           (course) =>
             !lastKnownCourses.some((prevCourse) => prevCourse.id === course.id)
         );
         setNewlyAddedCourses(newAddedCourses.map((course) => course.id));
 
-        if (newAddedCourses.length > 0) {
-          const newNotifications = newAddedCourses.map((course) => ({
-            id: Date.now() + Math.random(),
-            courseId: course.id,
-            title: course.title,
-            message: `Khóa học mới: ${course.title}`,
-            timestamp: new Date().toISOString(),
-            read: false,
-          }));
+        // Kiểm tra khóa học đã bị xóa
+        const deletedCourses = lastKnownCourses.filter(
+          (prevCourse) =>
+            !newCourses.some((course) => course.id === prevCourse.id)
+        );
+
+        if (newAddedCourses.length > 0 || deletedCourses.length > 0) {
+          let updatedNotifications = [...notifications];
+
+          // Thêm thông báo cho khóa học mới
+          if (newAddedCourses.length > 0) {
+            const newNotifications = newAddedCourses.map((course) => ({
+              id: Date.now() + Math.random(),
+              courseId: course.id,
+              title: course.title,
+              message: `Khóa học mới: ${course.title}`,
+              timestamp: new Date().toISOString(),
+              read: false,
+            }));
+            updatedNotifications = [
+              ...newNotifications,
+              ...updatedNotifications,
+            ];
+          }
+
+          // Xóa thông báo của các khóa học đã bị xóa
+          if (deletedCourses.length > 0) {
+            updatedNotifications = updatedNotifications.filter(
+              (notification) =>
+                !deletedCourses.some(
+                  (deletedCourse) => deletedCourse.id === notification.courseId
+                )
+            );
+          }
 
           // Cập nhật notifications và localStorage
-          const updatedNotifications = [...newNotifications, ...notifications];
           setNotifications(updatedNotifications);
           localStorage.setItem(
             "courseNotifications",
@@ -123,7 +150,10 @@ const HomePage = () => {
           );
 
           // Cập nhật unreadCount
-          setUnreadCount((prev) => prev + newAddedCourses.length);
+          const unreadCount = updatedNotifications.filter(
+            (notification) => !notification.read
+          ).length;
+          setUnreadCount(unreadCount);
 
           // Cập nhật lastKnownCourses
           setLastKnownCourses(newCourses);
@@ -131,8 +161,8 @@ const HomePage = () => {
         }
       } catch (err) {
         console.error("Lỗi khi tải danh sách khóa học:", err);
-        setError("Lỗi khi tải danh sách khóa học. Vui lòng thử lại sau.");
-        message.error("Lỗi khi tải danh sách khóa học. Vui lòng thử lại sau.");
+        // setError("Lỗi khi tải danh sách khóa học. Vui lòng thử lại sau.");
+        // message.error("Lỗi khi tải danh sách khóa học. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
@@ -143,7 +173,7 @@ const HomePage = () => {
     const interval = setInterval(fetchCoursesData, 30000);
 
     return () => clearInterval(interval);
-  }, [lastKnownCourses]);
+  }, [lastKnownCourses, notifications]);
 
   const handleNotificationClick = () => {
     setIsNotificationDrawerOpen(true);
@@ -216,7 +246,7 @@ const HomePage = () => {
       icon: (
         <Badge count={unreadCount} offset={[10, 0]}>
           <NotificationOutlined
-            style={{ fontSize: "18px", color: "#fa8c16" }}
+            style={{ fontSize: "18px", color: "#fa8c16", alignItems: "center" }}
           />
         </Badge>
       ),
@@ -280,16 +310,6 @@ const HomePage = () => {
             </div>
           ))}
         </div>
-
-        {/* <div data-aos="fade-up" data-aos-delay="300">
-          <Pagination
-            current={currentPage}
-            pageSize={pageSize}
-            total={courses.length}
-            onChange={(page) => setCurrentPage(page)}
-            style={{ marginTop: "16px", textAlign: "center" }}
-          />
-        </div> */}
       </div>
     );
   };
@@ -386,7 +406,9 @@ const HomePage = () => {
           className="mobile-menu"
         />
       </Drawer>
-
+      {/* <CertificateNotification
+        currentUser={JSON.parse(localStorage.getItem("user"))}
+      /> */}
       <Drawer
         title="Thông báo mới"
         placement="right"
@@ -396,40 +418,44 @@ const HomePage = () => {
       >
         <List
           dataSource={notifications}
+          // Trong phần render của List trong Drawer
           renderItem={(notification) => (
             <List.Item
               style={{
                 cursor: "pointer",
                 transition: "background-color 0.3s",
                 padding: "12px",
+                backgroundColor: notification.important
+                  ? "#fff7e6"
+                  : "transparent",
               }}
               className="hover:bg-gray-100"
             >
               <List.Item.Meta
                 onClick={() => {
-                  navigate(`/courses/${notification.courseId}`);
+                  if (notification.type === "certificate") {
+                    navigate("/certificates");
+                  } else {
+                    navigate(`/courses/${notification.courseId}`);
+                  }
                   handleNotificationClose();
                 }}
                 title={
                   <span style={{ color: notification.read ? "#666" : "#000" }}>
                     {notification.title}
                     {!notification.read && (
-                      <span style={{ marginLeft: "8px", color: "red" }}>
-                        <Tag color="red" style={{ marginRight: "8px" }}>
-                          New
-                        </Tag>
-                      </span>
+                      <Tag color="red" style={{ marginRight: "8px" }}>
+                        New
+                      </Tag>
+                    )}
+                    {notification.important && (
+                      <Tag color="gold" style={{ marginRight: "8px" }}>
+                        Important
+                      </Tag>
                     )}
                   </span>
                 }
-                description={
-                  <>
-                    <div>{notification.message}</div>
-                    <div style={{ fontSize: "12px", color: "#888" }}>
-                      {new Date(notification.timestamp).toLocaleString()}
-                    </div>
-                  </>
-                }
+                description={notification.message}
               />
             </List.Item>
           )}

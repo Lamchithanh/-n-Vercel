@@ -79,6 +79,13 @@ const CertificatesPage = () => {
 
   return (
     <div className="certificates-scroll-view">
+      <Button
+        className="btn-back"
+        onClick={() => navigate(-1)}
+        style={{ margin: 10 }}
+      >
+        ← Quay lại
+      </Button>
       <div className="certificates-content-container">
         {certificates.length > 0 ? (
           certificates.map((cert) => (

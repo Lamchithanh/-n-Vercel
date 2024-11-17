@@ -16,63 +16,79 @@ import UserInfo from "./Page/UserInfo/UserInfo";
 import ChangePassword from "./Page/ChangePassword/ChangePassword";
 import MyCourses from "./Page/MyCourses/MyCourses";
 import AccountSettings from "./Page/AccountSettings/AccountSettings";
-import CourseDetail from "./Page/CourseDetail/CourseDetail"; // Nhập CourseDetail
-import PropTypes from "prop-types"; // Thêm import PropTypes
+import CourseDetail from "./Page/CourseDetail/CourseDetail";
+import PropTypes from "prop-types";
 import PaymentPage from "./Page/PaymentPage/PaymentPage ";
 import CertificatesPage from "./Page/CertificatesPage/CertificatesPage";
 import BlogPage from "./Page/BlogPage/BlogPage";
-// import BackToTop from "./Page/Home/BacktoTop";
 import Introduce from "./Page/Introduce/Introduce";
+import CertificateNotification from "./Page/CertificatesPage/CertificateNotification";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = JSON.parse(localStorage.getItem("user"));
-  // Kiểm tra xem người dùng có quyền truy cập hay không
   if (!user || !allowedRoles.includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
   return children;
 };
 
-// Thêm khai báo PropTypes cho các props
 ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
   allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
+// Wrapper component để chứa CertificateNotification và children
+const NotificationWrapper = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  return (
+    <>
+      {user && <CertificateNotification />}{" "}
+      {/* Chỉ hiển thị khi có user đăng nhập */}
+      {children}
+    </>
+  );
+};
+
+NotificationWrapper.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 const App = () => {
   return (
     <Router>
-      <div className="app">
-        <Routes>
-          <Route path="/" element={<User />}>
-            <Route index element={<Introduce />} />
-            <Route path="allcourses" element={<HomePage />} />
-            <Route path="user-info" element={<UserInfo />} />
-            <Route path="payment/:id" element={<PaymentPage />} />
-            <Route path="certificates" element={<CertificatesPage />} />
-            <Route path="change-password" element={<ChangePassword />} />
-            <Route path="my-courses" element={<MyCourses />} />
-            <Route path="account-settings" element={<AccountSettings />} />
-            <Route path="courses/:id" element={<CourseDetail />} />{" "}
-            <Route path="/blogpage" element={<BlogPage />} />
-          </Route>
+      <NotificationWrapper>
+        <div className="app">
+          <Routes>
+            <Route path="/" element={<User />}>
+              <Route index element={<Introduce />} />
+              <Route path="allcourses" element={<HomePage />} />
+              <Route path="user-info" element={<UserInfo />} />
+              <Route path="payment/:id" element={<PaymentPage />} />
+              <Route path="certificates" element={<CertificatesPage />} />
+              <Route path="change-password" element={<ChangePassword />} />
+              <Route path="my-courses" element={<MyCourses />} />
+              <Route path="account-settings" element={<AccountSettings />} />
+              <Route path="courses/:id" element={<CourseDetail />} />
+              <Route path="/blogpage" element={<BlogPage />} />
+            </Route>
 
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-        {/* <BackToTop /> */}
-        <ToastContainer position="top-center" autoClose={2000} />
-      </div>
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          <ToastContainer position="top-center" autoClose={2000} />
+        </div>
+      </NotificationWrapper>
     </Router>
   );
 };

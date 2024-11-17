@@ -27,7 +27,7 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
       setIsLoading(false);
       setError(null);
     } else {
-      setError("Không có dữ liệu khóa học");
+      // setError("Không có dữ liệu khóa học");
       setIsLoading(false);
     }
   }, [courses]);

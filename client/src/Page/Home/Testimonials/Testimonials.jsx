@@ -13,9 +13,15 @@ const Testimonials = ({ courseId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Initialize AOS
-    AOS.init({ duration: 1000 });
+    AOS.init({
+      duration: 800, // Thời gian animation
+      once: true, // Chỉ chạy một lần khi scroll tới
+      easing: "ease-in-out", // Kiểu chuyển động
+    });
+    return () => AOS.refresh();
+  }, []);
 
+  useEffect(() => {
     const fetchReviews = async () => {
       try {
         setLoading(true);
@@ -103,8 +109,7 @@ const Testimonials = ({ courseId }) => {
       <h3 className={styles.testimonials__header}>Đánh Giá Của Học Viên</h3>
       <div className={styles.testimonials__container}>
         <h6 data-aos="fade-right" className={styles.testimonials__subtitle}>
-          Nhận xét từ các học viên giúp bạn lựa chọn được khóa học phù hợp với
-          bản thân
+          Nhận xét từ các học viên giúp bạn lựa chọn khóa học phù hợp
         </h6>
         <div className={styles.testimonials__cards}>
           {reviews.map((review) => (
@@ -115,9 +120,8 @@ const Testimonials = ({ courseId }) => {
             >
               <Avatar
                 data-aos="flip-left"
-                data-aos-duration="10 00"
+                src={review.avatar}
                 icon={<UserOutlined />}
-                src={review.avatar} // Assuming avatarUrl field exists in review
                 className={styles.avatar}
               />
               <p data-aos="fade-right" className={styles.reviewText}>

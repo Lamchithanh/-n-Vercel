@@ -28,14 +28,23 @@ const StyledCard = styled(Card)`
   }
 
   .ant-card-body {
-    padding: 24px;
+    padding: 16px;
+
+    @media (min-width: 768px) {
+      padding: 24px; // Tăng padding cho màn hình lớn
+    }
   }
 `;
 
 const Container = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
+  max-width: 100%; // Để toàn bộ phần tử phù hợp với chiều rộng màn hình
+  padding: 16px;
+
+  @media (min-width: 768px) {
+    max-width: 1200px; // Giới hạn chiều rộng tối đa cho màn hình lớn
+    margin: 0 auto;
+    padding: 24px;
+  }
 `;
 
 const CardWrapper = styled.div`
@@ -46,7 +55,11 @@ const CardWrapper = styled.div`
 
 const StyledModal = styled(Modal)`
   .ant-modal-content {
-    padding: 24px;
+    padding: 16px;
+
+    @media (min-width: 768px) {
+      padding: 24px;
+    }
   }
 
   .ant-modal-body {
@@ -65,20 +78,6 @@ const ContentContainer = styled.div`
     height: auto;
     margin: 16px 0;
     border-radius: 8px;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    margin-top: 24px;
-    margin-bottom: 16px;
-  }
-
-  p {
-    margin-bottom: 16px;
   }
 `;
 
@@ -165,10 +164,15 @@ const BlogPage = () => {
           <>
             <Row gutter={[24, 24]}>
               {currentPosts.map((post, index) => (
-                <Col span={24} key={post.id}>
+                <Col
+                  xs={24} // Chiếm toàn bộ chiều rộng trên màn hình nhỏ
+                  sm={24} // Tương tự màn hình nhỏ
+                  md={12} // Chia làm 2 cột trên màn hình trung bình
+                  lg={12} // Tương tự màn hình lớn
+                  key={post.id}
+                >
                   <CardWrapper alignRight={index % 2 !== 0}>
                     <StyledCard
-                      style={{ width: "50%" }}
                       onClick={() => handleCardClick(post)}
                       cover={
                         post.image && (
@@ -209,6 +213,7 @@ const BlogPage = () => {
                 total={posts.length}
                 pageSize={pageSize}
                 onChange={handlePageChange}
+                responsive // Ant Design tự động làm responsive cho Pagination
               />
             </Row>
           </>
