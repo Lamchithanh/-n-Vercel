@@ -177,7 +177,7 @@ exports.deleteCourse = async (req, res) => {
 
 exports.searchCourses = async (req, res) => {
   try {
-    const { query, category, level } = req.query;
+    const { query } = req.query;
 
     let sql = `
       SELECT 
@@ -201,23 +201,16 @@ exports.searchCourses = async (req, res) => {
     const params = [];
 
     if (query) {
-      sql += ` AND (c.title LIKE ? OR c.description LIKE ?)`;
-      params.push(`%${query}%`, `%${query}%`);
-    }
-
-    if (category && category !== "all") {
-      sql += ` AND c.category = ?`;
-      params.push(category);
-    }
-
-    if (level && level !== "all") {
-      sql += ` AND c.level = ?`;
-      params.push(level);
+      sql += ` AND (
+        c.title LIKE ? 
+        OR c.description LIKE ? 
+        OR c.category LIKE ?
+      )`;
+      params.push(`%${query}%`, `%${query}%`, `%${query}%`);
     }
 
     sql += ` GROUP BY c.id, c.title, c.description, c.price, c.level, c.category, c.image, u.username`;
 
-    // Sử dụng pool để thực hiện truy vấn
     const [results] = await pool.query(sql, params);
 
     res.json({

@@ -10,11 +10,10 @@ const { Title, Text } = Typography;
 
 const CourseSearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [category] = useState("all");
-  const [level] = useState("all");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false); // Thêm state để theo dõi việc đã tìm kiếm hay chưa
+  const [searched, setSearched] = useState(false);
+
   const navigate = useNavigate();
   const searchRef = useRef(null);
 
@@ -29,11 +28,7 @@ const CourseSearch = () => {
       try {
         setLoading(true);
         const response = await axios.get(`${API_URL}/search`, {
-          params: {
-            query,
-            category,
-            level,
-          },
+          params: { query },
         });
 
         if (response.data.success) {
@@ -47,10 +42,10 @@ const CourseSearch = () => {
         setResults([]);
       } finally {
         setLoading(false);
-        setSearched(true); // Đánh dấu đã thực hiện tìm kiếm
+        setSearched(true);
       }
     }, 300),
-    [category, level]
+    []
   );
 
   useEffect(() => {
@@ -113,7 +108,8 @@ const CourseSearch = () => {
             position: "absolute",
             zIndex: 1000,
             marginTop: 20,
-            background: "#ffd3d3",
+            background: "#8C42F6",
+
             padding: 20,
             borderRadius: 8,
             left: 0,
@@ -136,19 +132,20 @@ const CourseSearch = () => {
             position: "absolute",
             zIndex: 100,
             marginTop: 20,
-            background: "#ffd3d3",
+            background: "#8C42F6",
             padding: 20,
             borderRadius: 8,
             left: 0,
+            width: "100%",
           }}
           grid={{
             gutter: 16,
-            xs: 1,
-            sm: 2,
-            md: 2,
-            lg: 3,
-            xl: 3,
-            xxl: 4,
+            xs: 1, // 1 cột trên các màn hình nhỏ
+            sm: 2, // 2 cột trên các màn hình vừa
+            md: 2, // 2 cột trên các màn hình lớn
+            lg: 3, // 3 cột trên màn hình lớn
+            xl: 3, // 3 cột trên màn hình rất lớn
+            xxl: 3, // 3 cột trên màn hình siêu lớn
           }}
           dataSource={results}
           pagination={{
@@ -156,11 +153,18 @@ const CourseSearch = () => {
           }}
           renderItem={(course) => (
             <List.Item
-              style={{ display: "flex", justifyContent: "center" }}
+              style={{
+                display: "flex",
+                justifyContent: "center", // Căn giữa khi chỉ có 1 hoặc 2 card
+                marginBottom: "1rem", // Giãn cách giữa các dòng
+              }}
               key={course.id}
             >
               <Card
-                style={{ width: "80%" }}
+                style={{
+                  width: "100%", // Sử dụng full width của item
+                  maxWidth: "350px", // Đảm bảo card không quá rộng khi chỉ có ít card
+                }}
                 hoverable
                 onClick={() => handleCardClick(course.id)}
               >

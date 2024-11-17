@@ -384,10 +384,18 @@ const Courses = () => {
               },
             ]}
           >
-            <Select>
+            <Select
+              mode="tags"
+              placeholder="Chọn hoặc nhập danh mục mới"
+              allowClear
+            >
               <Option value="frontend">Frontend</Option>
               <Option value="backend">Backend</Option>
               <Option value="fullstack">Fullstack</Option>
+              <Option value="devops">DevOps</Option>
+              <Option value="mobile">Mobile Development</Option>
+              <Option value="database">Database</Option>
+              <Option value="cloud">Cloud Computing</Option>
             </Select>
           </Form.Item>
           <Form.Item name="videoUrl" label="URL Giới Thiệu Video">
