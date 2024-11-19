@@ -11,6 +11,8 @@ import {
   Col,
   Select,
 } from "antd";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { GripVertical } from "lucide-react";
 import { fetchCoursesAPI } from "../../Api/courseApi";
 import { fetchLessonsAPI } from "../../Api/lessonApi";
 import { fetchModulesAPI } from "../../Api/moduleApi";
@@ -53,6 +55,26 @@ const Lessons = () => {
     }
   }, [selectedCourse]);
 
+  const reorderLessons = async (lessons, startIndex, endIndex) => {
+    const newLessons = Array.from(lessons);
+    const [removed] = newLessons.splice(startIndex, 1);
+    newLessons.splice(endIndex, 0, removed);
+
+    // Cập nhật lại order_index cho tất cả các bài học
+    const updatedLessons = newLessons.map((lesson, index) => ({
+      ...lesson,
+      order_index: index,
+    }));
+
+    return updatedLessons;
+  };
+  const updateMultipleLessons = async (updatedLessons) => {
+    const token = localStorage.getItem("token");
+    const updatePromises = updatedLessons.map((lesson) =>
+      updateLessonAPI(lesson.id, lesson, token)
+    );
+    await Promise.all(updatePromises);
+  };
   // Fetch lessons
   const fetchLessons = useCallback(async () => {
     if (!selectedCourse) {
@@ -75,6 +97,26 @@ const Lessons = () => {
       setLoading(false);
     }
   }, [selectedModule, selectedCourse]);
+
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+
+    try {
+      const updatedLessons = await reorderLessons(
+        lessons,
+        result.source.index,
+        result.destination.index
+      );
+
+      setLessons(updatedLessons);
+      await updateMultipleLessons(updatedLessons);
+      message.success("Lesson order updated successfully");
+    } catch (error) {
+      console.error("Error updating lesson order:", error);
+      message.error("Failed to update lesson order");
+      fetchLessons(); // Rollback by refetching
+    }
+  };
 
   // Fetch modules
   const fetchModules = useCallback(async () => {
@@ -137,7 +179,7 @@ const Lessons = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      // Create a new module if needed
+      // Xử lý tạo module mới nếu cần
       let finalModuleId = selectedModule;
       if (newModuleName) {
         const moduleData = {
@@ -149,40 +191,72 @@ const Lessons = () => {
         finalModuleId = newModule.id;
       }
 
-      const lessonData = {
-        ...values,
-        course_id: selectedCourse,
-        module_id: finalModuleId,
-      };
+      const targetOrderIndex = parseInt(values.order_index);
+      let currentLessons = [...lessons];
 
-      const conflictingLesson = lessons.find(
-        (lesson) =>
-          lesson.order_index === lessonData.order_index &&
-          (!editingLesson || lesson.id !== editingLesson.id)
-      );
+      // Xử lý khi thêm mới
+      if (!editingLesson) {
+        const newLesson = {
+          ...values,
+          course_id: selectedCourse,
+          module_id: finalModuleId,
+          order_index: targetOrderIndex,
+        };
 
-      if (conflictingLesson) {
-        conflictingLesson.order_index = editingLesson
-          ? editingLesson.order_index
-          : lessonData.order_index;
+        // Tạo bài học mới
+        const addedLesson = await addLessonAPI(newLesson, token);
 
-        await updateLessonAPI(conflictingLesson.id, conflictingLesson, token);
-      }
-
-      if (editingLesson) {
-        await updateLessonAPI(editingLesson.id, lessonData, token);
-        message.success("Lesson updated successfully");
+        // Chèn bài học mới vào vị trí mong muốn
+        currentLessons = [
+          ...currentLessons.slice(0, targetOrderIndex),
+          addedLesson,
+          ...currentLessons.slice(targetOrderIndex),
+        ];
       } else {
-        await addLessonAPI(lessonData, token);
-        message.success("Lesson added successfully");
+        // Xử lý khi cập nhật
+        const currentIndex = currentLessons.findIndex(
+          (lesson) => lesson.id === editingLesson.id
+        );
+
+        // Xóa bài học hiện tại khỏi mảng
+        currentLessons.splice(currentIndex, 1);
+
+        // Cập nhật thông tin bài học
+        const updatedLesson = {
+          ...editingLesson,
+          ...values,
+          course_id: selectedCourse,
+          module_id: finalModuleId,
+          order_index: targetOrderIndex,
+        };
+
+        // Chèn bài học đã cập nhật vào vị trí mới
+        currentLessons.splice(targetOrderIndex, 0, updatedLesson);
+
+        // Cập nhật bài học
+        await updateLessonAPI(editingLesson.id, updatedLesson, token);
       }
+
+      // Cập nhật order_index cho tất cả các bài học
+      const finalLessons = currentLessons.map((lesson, index) => ({
+        ...lesson,
+        order_index: index,
+      }));
+
+      // Cập nhật tất cả các bài học bị ảnh hưởng
+      await updateMultipleLessons(finalLessons);
+
+      message.success(
+        editingLesson
+          ? "Lesson updated successfully"
+          : "Lesson added successfully"
+      );
 
       setModalVisible(false);
       form.resetFields();
       setNewModuleName("");
       setSelectedModule(null);
       fetchLessons();
-      fetchModules();
     } catch (error) {
       console.error("Error adding/updating lesson:", error);
       message.error("Unable to add/update lesson. Please try again.");
@@ -340,56 +414,94 @@ const Lessons = () => {
         </Button>
       </div>
 
-      <Row gutter={16}>
-        {!initialLoading && !loading && lessons.length === 0 ? (
-          <Col span={24}>
-            <Card>No lessons available</Card>
-          </Col>
-        ) : (
-          lessons.map((lesson) => (
-            <Col key={lesson.id} xs={24} sm={12} md={8} lg={6}>
-              <Card
-                title={lesson.title}
-                extra={
-                  <>
-                    <Button
-                      onClick={() => {
-                        setEditingLesson(lesson);
-                        form.setFieldsValue(lesson);
-                        setSelectedModule(lesson.module_id);
-                        setModalVisible(true);
-                      }}
-                      style={{ marginRight: 8 }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      onClick={() => handleDeleteLesson(lesson.id)}
-                      danger
-                    >
-                      Delete
-                    </Button>
-                  </>
-                }
-              >
-                <p>
-                  <strong>Module:</strong> {lesson.module_name}
-                </p>
-                <p>{lesson.description}</p>
-                <p>
-                  <strong>Content:</strong> {lesson.content}
-                </p>
-                <p>
-                  <strong>Video URL:</strong> {lesson.video_url}
-                </p>
-                <p>
-                  <strong>Order:</strong> {lesson.order_index}
-                </p>
-              </Card>
-            </Col>
-          ))
-        )}
-      </Row>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="lessons">
+          {(provided) => (
+            <Row
+              gutter={16}
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+            >
+              {!initialLoading && !loading && lessons.length === 0 ? (
+                <Col span={24}>
+                  <Card>No lessons available</Card>
+                </Col>
+              ) : (
+                lessons.map((lesson, index) => (
+                  <Draggable
+                    key={lesson.id}
+                    draggableId={String(lesson.id)}
+                    index={index}
+                  >
+                    {(provided) => (
+                      <Col
+                        xs={24}
+                        sm={12}
+                        md={8}
+                        lg={6}
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                      >
+                        <Card
+                          title={
+                            <div
+                              style={{ display: "flex", alignItems: "center" }}
+                            >
+                              <div
+                                {...provided.dragHandleProps}
+                                style={{ marginRight: 8 }}
+                              >
+                                <GripVertical size={16} />
+                              </div>
+                              {lesson.title}
+                            </div>
+                          }
+                          extra={
+                            <>
+                              <Button
+                                onClick={() => {
+                                  setEditingLesson(lesson);
+                                  form.setFieldsValue(lesson);
+                                  setSelectedModule(lesson.module_id);
+                                  setModalVisible(true);
+                                }}
+                                style={{ marginRight: 8 }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteLesson(lesson.id)}
+                                danger
+                              >
+                                Delete
+                              </Button>
+                            </>
+                          }
+                        >
+                          <p>
+                            <strong>Module:</strong> {lesson.module_name}
+                          </p>
+                          <p>{lesson.description}</p>
+                          <p>
+                            <strong>Content:</strong> {lesson.content}
+                          </p>
+                          <p>
+                            <strong>Video URL:</strong> {lesson.video_url}
+                          </p>
+                          <p>
+                            <strong>Order:</strong> {lesson.order_index}
+                          </p>
+                        </Card>
+                      </Col>
+                    )}
+                  </Draggable>
+                ))
+              )}
+              {provided.placeholder}
+            </Row>
+          )}
+        </Droppable>
+      </DragDropContext>
 
       <Modal
         title={editingLesson ? "Edit Lesson" : "Add New Lesson"}

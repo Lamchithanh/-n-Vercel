@@ -22,7 +22,7 @@ const ChangePassword = require("./routes/ChangePasswordRoute.js");
 const CertificateRequestRoutes = require("./routes/CertificateRequestRoutes.js");
 const dashboardRoutes = require("./routes/IntroduceRotues.js");
 const app = express();
-const port = process.env.PORT || 9000;
+const port = process.env.PORT || 9001;
 
 // Cấu hình CORS
 app.use(cors());

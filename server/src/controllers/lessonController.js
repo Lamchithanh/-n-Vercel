@@ -122,20 +122,34 @@ exports.getLessonsByModuleId = async (req, res) => {
 
 // Thêm bài học mới
 exports.addLesson = async (req, res) => {
+  const connection = await pool.getConnection();
+
   try {
+    await connection.beginTransaction();
+
     const { courseId } = req.params;
     const { module_id, title, content, description, video_url, order_index } =
       req.body;
 
-    // Lấy thời lượng video nếu có URL
+    // Increase order_index of existing lessons
+    await connection.query(
+      `UPDATE lessons 
+       SET order_index = order_index + 1 
+       WHERE course_id = ? AND order_index >= ?`,
+      [courseId, order_index]
+    );
+
+    // Get video duration if URL provided
     let duration = null;
     if (video_url) {
       duration = await getVideoDuration(video_url, youtube);
     }
 
-    // Chèn bài học với duration
-    const [result] = await pool.query(
-      "INSERT INTO lessons (course_id, module_id, title, content, description, video_url, duration, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    // Insert new lesson
+    const [result] = await connection.query(
+      `INSERT INTO lessons 
+       (course_id, module_id, title, content, description, video_url, duration, order_index) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         courseId,
         module_id,
@@ -148,17 +162,22 @@ exports.addLesson = async (req, res) => {
       ]
     );
 
+    // Commit transaction
+    await connection.commit();
+
     const [newLesson] = await pool.query("SELECT * FROM lessons WHERE id = ?", [
       result.insertId,
     ]);
 
     res.status(201).json(newLesson[0]);
   } catch (error) {
+    await connection.rollback();
     console.error("Error adding lesson:", error);
     res.status(500).json({ error: "Unable to add lesson" });
+  } finally {
+    connection.release();
   }
 };
-// Cập nhật bài học
 
 // Cập nhật hàm updateLesson
 exports.updateLesson = async (req, res) => {
@@ -167,35 +186,93 @@ exports.updateLesson = async (req, res) => {
     const { module_id, title, content, description, video_url, order_index } =
       req.body;
 
-    // Get new video duration if URL changed
-    let duration = null;
-    if (video_url) {
-      duration = await getVideoDuration(video_url, youtube);
-    }
+    // Bắt đầu transaction để đảm bảo tính nhất quán của dữ liệu
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
 
-    const [updatedLesson] = await pool.query(
-      "UPDATE lessons SET module_id = ?, title = ?, content = ?, description = ?, video_url = ?, duration = ?, order_index = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND course_id = ?",
-      [
-        module_id,
-        title,
-        content,
-        description,
-        video_url,
-        duration,
-        order_index,
+    try {
+      // Get current lesson
+      const [currentLesson] = await connection.query(
+        "SELECT order_index FROM lessons WHERE id = ? AND course_id = ?",
+        [lessonId, courseId]
+      );
+
+      if (currentLesson.length === 0) {
+        await connection.rollback();
+        return res.status(404).json({ error: "Lesson not found" });
+      }
+
+      const oldOrderIndex = currentLesson[0].order_index;
+      const newOrderIndex = order_index;
+
+      // Update other lessons' order if needed
+      if (oldOrderIndex !== newOrderIndex) {
+        if (oldOrderIndex < newOrderIndex) {
+          // Moving down - decrease order_index for lessons in between
+          await connection.query(
+            `UPDATE lessons 
+             SET order_index = order_index - 1 
+             WHERE course_id = ? 
+             AND order_index > ? 
+             AND order_index <= ?
+             AND id != ?`,
+            [courseId, oldOrderIndex, newOrderIndex, lessonId]
+          );
+        } else {
+          // Moving up - increase order_index for lessons in between
+          await connection.query(
+            `UPDATE lessons 
+             SET order_index = order_index + 1 
+             WHERE course_id = ? 
+             AND order_index >= ? 
+             AND order_index < ?
+             AND id != ?`,
+            [courseId, newOrderIndex, oldOrderIndex, lessonId]
+          );
+        }
+      }
+
+      // Get new video duration if URL changed
+      let duration = null;
+      if (video_url) {
+        duration = await getVideoDuration(video_url, youtube);
+      }
+
+      // Update the lesson
+      await connection.query(
+        `UPDATE lessons 
+         SET module_id = ?, title = ?, content = ?, description = ?, 
+             video_url = ?, duration = ?, order_index = ?, 
+             updated_at = CURRENT_TIMESTAMP 
+         WHERE id = ? AND course_id = ?`,
+        [
+          module_id,
+          title,
+          content,
+          description,
+          video_url,
+          duration,
+          order_index,
+          lessonId,
+          courseId,
+        ]
+      );
+
+      // Commit transaction
+      await connection.commit();
+
+      // Get updated lesson
+      const [lesson] = await pool.query("SELECT * FROM lessons WHERE id = ?", [
         lessonId,
-        courseId,
-      ]
-    );
+      ]);
 
-    if (updatedLesson.affectedRows === 0) {
-      return res.status(404).json({ error: "Lesson not found" });
+      res.json(lesson[0]);
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
     }
-
-    const [lesson] = await pool.query("SELECT * FROM lessons WHERE id = ?", [
-      lessonId,
-    ]);
-    res.status(200).json(lesson[0]);
   } catch (error) {
     console.error("Error updating lesson:", error);
     res.status(500).json({ error: "Unable to update lesson" });
@@ -204,20 +281,49 @@ exports.updateLesson = async (req, res) => {
 
 // Xóa bài học
 exports.deleteLesson = async (req, res) => {
+  const connection = await pool.getConnection();
+
   try {
+    await connection.beginTransaction();
+
     const { courseId, lessonId } = req.params;
-    const result = await pool.query(
+
+    // Get current lesson order_index
+    const [currentLesson] = await connection.query(
+      "SELECT order_index FROM lessons WHERE id = ? AND course_id = ?",
+      [lessonId, courseId]
+    );
+
+    if (currentLesson.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ error: "Lesson not found" });
+    }
+
+    const currentOrderIndex = currentLesson[0].order_index;
+
+    // Delete the lesson
+    await connection.query(
       "DELETE FROM lessons WHERE id = ? AND course_id = ?",
       [lessonId, courseId]
     );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Lesson not found" });
-    }
+    // Update order_index for remaining lessons
+    await connection.query(
+      `UPDATE lessons 
+       SET order_index = order_index - 1 
+       WHERE course_id = ? AND order_index > ?`,
+      [courseId, currentOrderIndex]
+    );
+
+    // Commit transaction
+    await connection.commit();
 
     res.json({ message: "Lesson deleted successfully" });
   } catch (error) {
+    await connection.rollback();
     console.error("Error deleting lesson:", error);
     res.status(500).json({ error: "Unable to delete lesson" });
+  } finally {
+    connection.release();
   }
 };
