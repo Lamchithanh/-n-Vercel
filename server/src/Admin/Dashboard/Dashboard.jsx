@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Card, Row, Col, Typography } from "antd";
+import { Card, Row, Col, Typography, Spin, Alert } from "antd";
 import {
   UserOutlined,
   BookOutlined,
   DollarOutlined,
-  RiseOutlined,
+  TrophyOutlined,
 } from "@ant-design/icons";
 import {
   BarChart,
@@ -18,32 +18,25 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { fetchdashboardAPI } from "../../Api/IntroduceAPI.js";
 import "aos/dist/aos.css";
 import AOS from "aos";
 
 const { Title } = Typography;
 
-// Giả lập dữ liệu thống kê
-const monthlyData = [
-  { name: "Jan", students: 120, courses: 15, revenue: 3000 },
-  { name: "Feb", students: 150, courses: 18, revenue: 3800 },
-  { name: "Mar", students: 200, courses: 22, revenue: 5000 },
-  { name: "Apr", students: 180, courses: 25, revenue: 4500 },
-  { name: "May", students: 220, courses: 28, revenue: 5500 },
-  { name: "Jun", students: 250, courses: 30, revenue: 6200 },
-];
-
-const topCourses = [
-  { name: "React Fundamentals", students: 450, revenue: 11250 },
-  { name: "JavaScript Advanced", students: 380, revenue: 9500 },
-  { name: "Python for Beginners", students: 320, revenue: 8000 },
-  { name: "Web Development", students: 300, revenue: 7500 },
-];
-
 const Dashboard = () => {
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [totalCourses, setTotalCourses] = useState(0);
-  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    totals: {
+      users: 0,
+      courses: 0,
+      certificates: 0,
+      revenue: 0,
+    },
+    monthlyData: [],
+    topCourses: [],
+  });
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     AOS.init({
@@ -51,11 +44,20 @@ const Dashboard = () => {
       once: true,
     });
 
-    // Tính toán tổng số liệu
-    const lastMonth = monthlyData[monthlyData.length - 1];
-    setTotalStudents(lastMonth.students);
-    setTotalCourses(lastMonth.courses);
-    setTotalRevenue(lastMonth.revenue);
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+        const data = await fetchdashboardAPI(token);
+        setDashboardData(data);
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const StatCard = ({ title, value, icon: Icon, color }) => (
@@ -96,53 +98,79 @@ const Dashboard = () => {
     </Card>
   );
 
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "24px" }}>
+        <Alert message="Error" description={error} type="error" showIcon />
+      </div>
+    );
+  }
+
+  const { totals, monthlyData, topCourses } = dashboardData;
+
   return (
     <div style={{ padding: "24px" }}>
       <Title level={2} data-aos="fade-right">
         Dashboard
       </Title>
 
-      {/* Thống kê tổng quan */}
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Tổng Học Viên"
-            value={totalStudents}
+            title="Total Students"
+            value={totals.users.toLocaleString()}
             icon={UserOutlined}
             color="#1890ff"
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Tổng Khóa Học"
-            value={totalCourses}
+            title="Total Courses"
+            value={totals.courses.toLocaleString()}
             icon={BookOutlined}
             color="#52c41a"
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Doanh Thu (USD)"
-            value={`$${totalRevenue}`}
+            title="Revenue (USD)"
+            value={`$${totals.revenue.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`}
             icon={DollarOutlined}
             color="#faad14"
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Tăng Trưởng"
-            value="15.3%"
-            icon={RiseOutlined}
+            title="Certificates Issued"
+            value={totals.certificates.toLocaleString()}
+            icon={TrophyOutlined}
             color="#722ed1"
           />
         </Col>
       </Row>
 
-      {/* Biểu đồ thống kê */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card
-            title="Thống Kê Theo Tháng"
+            title="Monthly Statistics"
             data-aos="fade-up"
             data-aos-delay="100"
           >
@@ -157,13 +185,13 @@ const Dashboard = () => {
                   type="monotone"
                   dataKey="students"
                   stroke="#1890ff"
-                  name="Học viên"
+                  name="Students"
                 />
                 <Line
                   type="monotone"
                   dataKey="revenue"
                   stroke="#52c41a"
-                  name="Doanh thu"
+                  name="Revenue"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -171,11 +199,7 @@ const Dashboard = () => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card
-            title="Khóa Học Nổi Bật"
-            data-aos="fade-up"
-            data-aos-delay="200"
-          >
+          <Card title="Top Courses" data-aos="fade-up" data-aos-delay="200">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={topCourses}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -183,8 +207,8 @@ const Dashboard = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="students" fill="#1890ff" name="Học viên" />
-                <Bar dataKey="revenue" fill="#52c41a" name="Doanh thu" />
+                <Bar dataKey="students" fill="#1890ff" name="Students" />
+                <Bar dataKey="revenue" fill="#52c41a" name="Revenue" />
               </BarChart>
             </ResponsiveContainer>
           </Card>

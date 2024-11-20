@@ -88,7 +88,12 @@ const AdminDashboard = () => {
       <Sider>
         <div
           className="logo"
-          style={{ height: "64px", padding: "16px", color: "white" }}
+          style={{
+            height: "64px",
+            padding: "16px",
+            color: "white",
+            marginTop: 20,
+          }}
         >
           Admin Panel
         </div>
@@ -128,7 +133,7 @@ const AdminDashboard = () => {
             alignItems: "center",
           }}
         >
-          <h2 style={{ margin: 0 }}>Admin Dashboard</h2>
+          <h2 style={{ margin: 20 }}>Admin Dashboard</h2>
           <Button
             onClick={() => {
               localStorage.removeItem("token");
