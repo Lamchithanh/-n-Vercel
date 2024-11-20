@@ -64,7 +64,7 @@ const CourseSearch = () => {
       setResults([]);
       setSearchQuery("");
       setSearched(false);
-      navigate(`/courses/${courseId}`);
+      navigate(`/courses/${courseId}?fromPaymentPage=true`);
     }
   };
 

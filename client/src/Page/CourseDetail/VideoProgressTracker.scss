@@ -26,3 +26,15 @@
     max-width: 100%;
   }
 }
+.completed-badge {
+  background-color: #4caf50;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.completed {
+  font-weight: bold;
+  color: #4caf50;
+}

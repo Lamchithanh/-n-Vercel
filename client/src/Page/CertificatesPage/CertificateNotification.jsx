@@ -32,6 +32,7 @@ const CertificateNotification = ({ currentUser }) => {
       read: false,
       important: true,
     }));
+
     const updatedNotifications = [
       ...newNotifications,
       ...existingNotifications,
@@ -40,15 +41,9 @@ const CertificateNotification = ({ currentUser }) => {
       "courseNotifications",
       JSON.stringify(updatedNotifications)
     );
-
-    notification.success({
-      message: "Chứng chỉ mới",
-      description: "Bạn đã nhận được chứng chỉ mới. Kiểm tra ngay!",
-      icon: <TrophyOutlined style={{ color: "#fadb14" }} />,
-      duration: 5,
-    });
   };
 
+  // Đóng modal và hiển thị chứng chỉ tiếp theo nếu có
   const handleModalClose = () => {
     setIsModalVisible(false);
     const remainingCerts = newCertificates.filter(
@@ -76,6 +71,7 @@ const CertificateNotification = ({ currentUser }) => {
           (cert) => !notifiedCertificates.includes(cert.id)
         );
 
+        // Nếu có chứng chỉ mới cho tài khoản hiện tại
         if (newCerts.length > 0) {
           setNewCertificates(newCerts);
           showNextCertificate(newCerts[0]);
@@ -87,6 +83,14 @@ const CertificateNotification = ({ currentUser }) => {
             "notifiedCertificates",
             JSON.stringify(updatedNotifiedCerts)
           );
+
+          // Chỉ thông báo khi chứng chỉ đã được cấp
+          notification.success({
+            message: "Chứng chỉ mới",
+            description: "Bạn đã nhận được chứng chỉ mới. Kiểm tra ngay!",
+            icon: <TrophyOutlined style={{ color: "#fadb14" }} />,
+            duration: 5,
+          });
           addToGeneralNotifications(newCerts);
         }
       } catch (error) {

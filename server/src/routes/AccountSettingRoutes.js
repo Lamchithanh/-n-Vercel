@@ -56,30 +56,34 @@ router.put("/:userId", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/:userId/upload-avatar", authMiddleware, upload.single('avatar'), async (req, res) => {
+router.post(
+  "/users/:userId/upload-avatar",
+  authMiddleware,
+  upload.single("avatar"), // Đảm bảo rằng 'avatar' là tên của file input
+  async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "Không có file được gửi lên" });
       }
-  
-      // Tạo URL cho ảnh
+
+      // Kiểm tra thư mục chứa ảnh
       const imageUrl = `/uploads/avatars/${req.file.filename}`;
-  
+
       // Cập nhật URL ảnh vào database
       const user = await updateUserProfile(req.params.userId, {
-        avatar: imageUrl
+        avatar: imageUrl,
       });
-  
+
       return res.status(200).json({
         success: true,
         message: "Tải ảnh lên thành công",
-        imageUrl: imageUrl
+        imageUrl: imageUrl,
       });
     } catch (error) {
       console.error("Lỗi khi tải ảnh lên:", error);
       return res.status(500).json({ message: "Đã có lỗi xảy ra" });
     }
-  });
-  ute xử lý upload ảnh
+  }
+);
 
 module.exports = router;

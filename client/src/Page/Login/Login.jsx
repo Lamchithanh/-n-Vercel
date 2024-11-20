@@ -1,67 +1,65 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import {
-  ArrowLeftOutlined,
-  LockOutlined,
-  LoginOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { Form, Input, Button, Card, Space, Typography } from "antd";
-import { login } from "../../../../server/src/Api/authAPI.js";
-import Title from "antd/es/skeleton/Title.js";
+import { Form, Input, Button, Select, Typography } from "antd";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { useEffect } from "react";
+import {
+  UserOutlined,
+  LockOutlined,
+  MailOutlined,
+  SwapOutlined,
+  ArrowLeftOutlined,
+  LoginOutlined,
+  UserAddOutlined,
+} from "@ant-design/icons";
+import { login, register } from "../../../../server/src/Api/authAPI";
 import "./Login.scss";
 
 const { Text } = Typography;
+const { Option } = Select;
 
 const Login = () => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    AOS.init({
-      duration: 1000,
-      once: true,
-    });
+    AOS.init({ duration: 800, once: false });
   }, []);
 
-  const handleSubmit = async (values) => {
+  const handleLogin = async (values) => {
+    setIsLoading(true);
     try {
       const response = await login(values.email, values.password);
-      toast.success("Đăng nhập thành công!");
-      localStorage.setItem("showSuccessToast", "true");
-      localStorage.setItem("user", JSON.stringify(response.user));
-      localStorage.setItem("token", response.token);
 
-      switch (response.user.role) {
-        // case "admin":
-        //   navigate("/admin");
-        //   break;
-        case "instructor":
+      if (response && response.user && response.token) {
+        // Lưu thông tin người dùng và token vào localStorage
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.setItem("user", JSON.stringify(response.user));
+        localStorage.setItem("token", response.token);
+
+        toast.success(`Chào mừng ${response.user.username || "bạn"}!`);
+
+        // Điều hướng dựa trên vai trò của người dùng
+        if (response.user.role === "instructor") {
           navigate("/instructor");
-          break;
-        default:
+        } else if (response.user.role === "student") {
           navigate("/");
+        } else {
+          navigate("/");
+        }
+      } else {
+        toast.error("Dữ liệu phản hồi không hợp lệ từ máy chủ.");
       }
     } catch (error) {
-      console.error("Login error:", error);
-
       if (error.response?.status === 403 && error.response?.data?.lockInfo) {
+        // Xử lý trường hợp tài khoản bị khóa
         const { lockInfo } = error.response.data;
-
         const formatDateTime = (dateString) => {
           if (!dateString) return "Vĩnh viễn";
-          return new Date(dateString).toLocaleString("vi-VN", {
-            timeZone: "Asia/Ho_Chi_Minh",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          });
+          return new Date(dateString).toLocaleString("vi-VN");
         };
 
         toast.error(
@@ -81,55 +79,75 @@ const Login = () => {
               </p>
             </div>
           </div>,
-          {
-            autoClose: false,
-            closeButton: true,
-            closeOnClick: false,
-            draggable: false,
-            className: "lock-toast",
-          }
+          { autoClose: 5000 }
         );
-        return;
+      } else {
+        toast.error(error.response?.data?.error || "Đăng nhập thất bại");
       }
-
-      const errorMessage =
-        error.response?.data?.error || "Đã xảy ra lỗi. Vui lòng thử lại.";
-      toast.error(errorMessage);
     }
+    setIsLoading(false);
+  };
+
+  const handleRegister = async (values) => {
+    if (values.password !== values.confirmPassword) {
+      toast.error("Mật khẩu không khớp!");
+      return;
+    }
+
+    let formattedEmail = values.email.trim();
+    if (!formattedEmail.includes("@")) {
+      formattedEmail += "@gmail.com";
+    }
+
+    setIsLoading(true);
+    try {
+      await register({
+        username: values.username,
+        email: formattedEmail,
+        password: values.password,
+        role: values.role || "student",
+      });
+      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+      setIsLogin(true);
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Đăng ký thất bại");
+    }
+    setIsLoading(false);
   };
 
   return (
     <div className="login-container">
       <Button
         icon={<ArrowLeftOutlined />}
-        type="link"
-        onClick={() => navigate(-1)}
         className="back-button"
+        onClick={() => navigate(-1)}
         data-aos="fade-right"
       >
         Quay lại
       </Button>
 
-      <Card className="login-card" data-aos="zoom-in">
-        <Space direction="vertical" size={24} style={{ width: "100%" }}>
-          <div
-            className="login-header"
-            data-aos="fade-down"
-            data-aos-delay="200"
-          >
-            <Title level={2} className="login-title">
-              <LoginOutlined className="login-icon" />
-              Đăng nhập
-            </Title>
-            <Text type="secondary" className="login-subtitle">
-              Đăng nhập vào tài khoản của bạn để tiếp tục
-            </Text>
-          </div>
+      <div className="login-card" data-aos="zoom-in">
+        <div className="login-header">
+          <h2 className="login-title">
+            {isLogin ? (
+              <>
+                <LoginOutlined className="login-icon" /> Đăng nhập
+              </>
+            ) : (
+              <>
+                <UserAddOutlined className="login-icon" /> Đăng ký
+              </>
+            )}
+          </h2>
+          <Text className="login-subtitle">
+            {isLogin ? "Chào mừng bạn trở lại!" : "Tạo tài khoản để bắt đầu"}
+          </Text>
+        </div>
 
+        {isLogin ? (
           <Form
             name="login"
-            onFinish={handleSubmit}
-            size="large"
+            onFinish={handleLogin}
             layout="vertical"
             className="login-form"
           >
@@ -139,12 +157,10 @@ const Login = () => {
                 { required: true, message: "Vui lòng nhập email!" },
                 { type: "email", message: "Email không hợp lệ!" },
               ]}
-              data-aos="fade-up"
-              data-aos-delay="300"
             >
               <Input
-                prefix={<UserOutlined className="form-icon" />}
-                placeholder="Nhập email"
+                prefix={<MailOutlined className="form-icon" />}
+                placeholder="Email"
                 className="login-input"
               />
             </Form.Item>
@@ -152,33 +168,21 @@ const Login = () => {
             <Form.Item
               name="password"
               rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-              data-aos="fade-up"
-              data-aos-delay="400"
             >
               <Input.Password
                 prefix={<LockOutlined className="form-icon" />}
-                placeholder="Nhập mật khẩu"
+                placeholder="Mật khẩu"
                 className="login-input"
               />
             </Form.Item>
 
-            <Form.Item data-aos="fade-up" data-aos-delay="500">
-              <Button htmlType="submit" block className="login-button">
-                <LoginOutlined /> Đăng nhập
-              </Button>
-            </Form.Item>
-
-            <div
-              className="login-links"
-              data-aos="fade-up"
-              data-aos-delay="600"
-            >
+            <div className="login-links">
               <Button
                 type="link"
-                onClick={() => navigate("/register")}
+                onClick={() => setIsLogin(false)}
                 className="register-link"
               >
-                Tạo tài khoản mới
+                Chưa có tài khoản?
               </Button>
               <Button
                 type="link"
@@ -188,9 +192,106 @@ const Login = () => {
                 Quên mật khẩu?
               </Button>
             </div>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isLoading}
+                className="login-button"
+                block
+              >
+                <LoginOutlined /> Đăng nhập
+              </Button>
+            </Form.Item>
           </Form>
-        </Space>
-      </Card>
+        ) : (
+          <Form
+            name="register"
+            onFinish={handleRegister}
+            layout="vertical"
+            className="login-form"
+          >
+            <Form.Item
+              name="username"
+              rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
+            >
+              <Input
+                prefix={<UserOutlined className="form-icon" />}
+                placeholder="Tên người dùng"
+                className="login-input"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="email"
+              rules={[
+                { required: true, message: "Vui lòng nhập email!" },
+                { type: "email", message: "Email không hợp lệ!" },
+              ]}
+            >
+              <Input
+                prefix={<MailOutlined className="form-icon" />}
+                placeholder="Email"
+                className="login-input"
+              />
+            </Form.Item>
+
+            <Form.Item name="role" initialValue="student">
+              <Select className="login-input">
+                <Option value="student">Học viên</Option>
+                <Option value="instructor">Giảng viên</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="password"
+              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+            >
+              <Input.Password
+                prefix={<LockOutlined className="form-icon" />}
+                placeholder="Mật khẩu"
+                className="login-input"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="confirmPassword"
+              rules={[
+                { required: true, message: "Vui lòng xác nhận mật khẩu!" },
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined className="form-icon" />}
+                placeholder="Xác nhận mật khẩu"
+                className="login-input"
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isLoading}
+                className="login-button"
+                block
+              >
+                <UserAddOutlined /> Đăng ký
+              </Button>
+            </Form.Item>
+
+            <div className="login-links">
+              <Button
+                type="link"
+                onClick={() => setIsLogin(true)}
+                className="register-link"
+              >
+                <SwapOutlined /> Đã có tài khoản? Đăng nhập
+              </Button>
+            </div>
+          </Form>
+        )}
+      </div>
     </div>
   );
 };

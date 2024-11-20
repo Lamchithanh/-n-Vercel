@@ -48,6 +48,13 @@ const UserInfo = () => {
 
   return (
     <Card title="Thông tin người dùng">
+      <Button
+        className="btn-back"
+        onClick={() => navigate(-1)}
+        style={{ margin: 10 }}
+      >
+        ← Quay lại
+      </Button>
       <Descriptions layout="vertical" bordered>
         <Descriptions.Item label="Tên người dùng">
           {user.username}

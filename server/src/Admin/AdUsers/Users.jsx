@@ -228,7 +228,6 @@ const Users = () => {
       );
 
       setLockModalVisible(false);
-      message.success("Đã khóa tài khoản thành công");
     } catch (error) {
       console.error("Lỗi khi khóa tài khoản:", error);
       message.error("Không thể khóa tài khoản. Vui lòng thử lại.");

@@ -7,6 +7,7 @@ const LockUserModal = ({ visible, onCancel, onConfirm, user }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [customDuration, setCustomDuration] = useState(false);
+  const [showUnlockConfirm, setShowUnlockConfirm] = useState(false); // State for unlock confirmation
 
   const handleOk = async () => {
     try {
@@ -37,6 +38,26 @@ const LockUserModal = ({ visible, onCancel, onConfirm, user }) => {
     }
   };
 
+  const handleUnlockConfirm = () => {
+    setShowUnlockConfirm(true); // Trigger confirmation dialog for unlocking
+  };
+
+  const handleUnlock = async () => {
+    try {
+      setLoading(true);
+      // Proceed with unlocking
+      await onConfirm({
+        isLocked: false,
+      });
+      setShowUnlockConfirm(false); // Close confirmation dialog
+      message.success("Mở khóa tài khoản thành công");
+    } catch (error) {
+      message.error("Có lỗi xảy ra khi mở khóa tài khoản");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDurationChange = (value) => {
     if (value === "custom") {
       setCustomDuration(true);
@@ -51,11 +72,12 @@ const LockUserModal = ({ visible, onCancel, onConfirm, user }) => {
         user?.username
       }`}
       open={visible}
-      onOk={handleOk}
+      onOk={user?.isLocked ? handleUnlock : handleOk} // Adjust onOk behavior based on lock status
       onCancel={() => {
         onCancel();
         form.resetFields();
         setCustomDuration(false);
+        setShowUnlockConfirm(false); // Reset unlock confirmation state on cancel
       }}
       confirmLoading={loading}
       okText={user?.isLocked ? "Mở khóa" : "Khóa"}
@@ -132,7 +154,26 @@ const LockUserModal = ({ visible, onCancel, onConfirm, user }) => {
           )}
         </Form>
       )}
-      {user?.isLocked && <p>Bạn có chắc chắn muốn mở khóa tài khoản này?</p>}
+
+      {user?.isLocked && (
+        <>
+          <p>Bạn có chắc chắn muốn mở khóa tài khoản này?</p>
+          <button onClick={handleUnlockConfirm}>Mở khóa tài khoản</button>{" "}
+          {/* Trigger the unlock confirmation */}
+        </>
+      )}
+
+      {/* Modal to confirm unlocking */}
+      <Modal
+        title="Xác nhận mở khóa tài khoản"
+        open={showUnlockConfirm}
+        onCancel={() => setShowUnlockConfirm(false)} // Close confirmation modal
+        onOk={handleUnlock} // Handle unlock confirmation
+        okText="Mở khóa"
+        cancelText="Hủy"
+      >
+        <p>Bạn có chắc chắn muốn mở khóa tài khoản của người dùng này?</p>
+      </Modal>
     </Modal>
   );
 };

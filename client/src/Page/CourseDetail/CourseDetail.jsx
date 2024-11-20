@@ -31,6 +31,7 @@ import Loader from "../../context/Loader";
 import CourseProgress from "./CourseProgress";
 import VideoProgressTracker from "./VideoProgressTracker";
 import CertificateNotification from "../CertificatesPage/CertificateNotification";
+import { checkPaymentStatusAPI } from "../../../../server/src/Api/paymentApi";
 // import CourseReviews from "./CourseReviews ";
 const { Title, Paragraph } = Typography;
 
@@ -53,6 +54,7 @@ const CourseDetail = () => {
   const [isNewLessonModalVisible, setIsNewLessonModalVisible] = useState(false);
   const [selectedLockedLesson, setSelectedLockedLesson] = useState(null);
   const [newLessonDetails, setNewLessonDetails] = useState(null);
+  const [progress, setProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
 
@@ -153,7 +155,7 @@ const CourseDetail = () => {
       let newOnes = [];
       let lastWatchedOrder = 0;
 
-      // Tìm bài học có order cao nhất đã xem
+      // Tìm bài học có order cao nhất đã xem (đã hoàn thành 90%)
       modules.forEach((module) => {
         module.lessons.forEach((lesson) => {
           if (watchedLessons.includes(lesson.id)) {
@@ -169,10 +171,92 @@ const CourseDetail = () => {
           if (lesson.order === 1) {
             available.push(lesson.id);
           }
-          // Các bài học tiếp theo chỉ khả dụng nếu bài học trước đã xem
+          // Các bài học tiếp theo chỉ khả dụng nếu bài học trước đã hoàn thành 90%
           else if (lesson.order <= lastWatchedOrder + 1) {
             available.push(lesson.id);
-            // Nếu là bài mới được thêm vào (order < lastWatchedOrder nhưng chưa xem)
+            if (
+              lesson.order <= lastWatchedOrder &&
+              !watchedLessons.includes(lesson.id)
+            ) {
+              newOnes.push(lesson.id);
+            }
+          }
+        });
+      });
+
+      setAvailableLessons(available);
+      setNewLessons(newOnes);
+    };
+
+    calculateAvailableLessons();
+  }, [modules, watchedLessons]);
+
+  const handleVideoProgress = async (lessonId, progress) => {
+    if (progress >= 90) {
+      // Only mark as watched when progress reaches 90%
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user) {
+        try {
+          const response = await updateProgressAPI({
+            userId: user.id,
+            lessonId: lessonId,
+            watched: true,
+            progress: progress,
+          });
+
+          if (response.success) {
+            message.success("Tiến độ đã được cập nhật!");
+          } else {
+            message.error("Cập nhật tiến độ thất bại.");
+          }
+
+          // Update the watched lessons list
+          setWatchedLessons((prev) => {
+            if (!prev.includes(lessonId)) {
+              return [...prev, lessonId];
+            }
+            return prev;
+          });
+
+          // Optional: Trigger course progress recalculation
+          const totalProgress =
+            ((watchedLessons.length + 1) / modules.length) * 100;
+
+          // You might want to update course progress state here
+          setProgress(totalProgress);
+        } catch (error) {
+          console.error("Error updating progress:", error);
+          message.error("Không thể cập nhật tiến độ");
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    const calculateAvailableLessons = () => {
+      let available = [];
+      let newOnes = [];
+      let lastWatchedOrder = 0;
+
+      // Find the highest order lesson that has been watched (at least 90%)
+      modules.forEach((module) => {
+        module.lessons.forEach((lesson) => {
+          if (watchedLessons.includes(lesson.id)) {
+            lastWatchedOrder = Math.max(lastWatchedOrder, lesson.order);
+          }
+        });
+      });
+
+      // Determine available lessons and new ones
+      modules.forEach((module) => {
+        module.lessons.forEach((lesson) => {
+          // The first lesson is always available
+          if (lesson.order === 1) {
+            available.push(lesson.id);
+          }
+          // Subsequent lessons are available if the previous lesson is watched (90% or more)
+          else if (lesson.order <= lastWatchedOrder + 1) {
+            available.push(lesson.id);
             if (
               lesson.order <= lastWatchedOrder &&
               !watchedLessons.includes(lesson.id)
@@ -332,6 +416,7 @@ const CourseDetail = () => {
 
   const handleLessonClick = async (lesson) => {
     if (isEnrolled) {
+      // Kiểm tra xem bài học có khả dụng không
       if (!availableLessons.includes(lesson.id)) {
         // Tìm thông tin về module chứa bài học và bài học trước đó
         let lessonInfo = null;
@@ -354,16 +439,13 @@ const CourseDetail = () => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (user) {
         try {
+          // Không tự động đánh dấu là đã xem nữa - việc này sẽ được thực hiện trong VideoProgressTracker
+          // khi người dùng xem đủ 90% thời lượng
           await updateProgressAPI({
             userId: user.id,
             lessonId: lesson.id,
-            watched: true,
-          });
-          setWatchedLessons((prev) => {
-            if (!prev.includes(lesson.id)) {
-              return [...prev, lesson.id];
-            }
-            return prev;
+            watched: false, // Mặc định là false khi mới click vào bài học
+            progress: progress, // Thêm trường progress để theo dõi
           });
         } catch (error) {
           console.error("Error updating progress:", error);
@@ -684,16 +766,28 @@ const CourseDetail = () => {
     return `${hours}h${minutes}P`;
   };
 
-  const checkPaymentStatus = () => {
+  const checkPaymentStatus = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) return false;
 
-    const paidCoursesData =
-      JSON.parse(localStorage.getItem("paidCourses")) || {};
-    const userPaidCourses = paidCoursesData[user.id] || [];
-
-    return userPaidCourses.includes(courseId);
+    try {
+      const { hasPaid } = await checkPaymentStatusAPI(user.id, courseId);
+      return hasPaid;
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+      message.error("Không thể kiểm tra trạng thái thanh toán");
+      return false;
+    }
   };
+
+  useEffect(() => {
+    const fetchPaymentStatus = async () => {
+      const status = await checkPaymentStatus();
+      setHasPaid(status);
+    };
+
+    fetchPaymentStatus();
+  }, [courseId]);
 
   const handleRequestCertificate = (userId, courseId) => {
     // Logic xử lý yêu cầu chứng chỉ, ví dụ: gọi API
@@ -763,16 +857,10 @@ const CourseDetail = () => {
                       videoUrl={selectedLesson.video_url}
                       duration={selectedLesson.duration}
                       courseId={courseId}
-                      onProgressUpdate={(lessonId) => {
-                        setWatchedLessons((prev) => {
-                          if (!prev.includes(lessonId)) {
-                            return [...prev, lessonId];
-                          }
-                          return prev;
-                        });
-                      }}
+                      onProgressUpdate={handleVideoProgress} // Cập nhật handler mới
+                      requiredProgress={90}
                     />
-                    <Paragraph style={{ marginTop: "16px" }}>
+                    <Paragraph style={{ marginTop: "16px", fontWeight: 600 }}>
                       {selectedLesson.description ||
                         "Chưa có mô tả cho bài học này."}
                     </Paragraph>
@@ -855,7 +943,7 @@ const CourseDetail = () => {
       </Row>
       <>
         <Modal
-          title="Bài học chưa khả dụng"
+          title="Bạn chưa hoàn thành bài học trước!"
           open={isLockedModalVisible}
           onCancel={() => setIsLockedModalVisible(false)}
           footer={[

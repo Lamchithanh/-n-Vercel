@@ -9,14 +9,14 @@ exports.updateProfile = async (req, res) => {
     console.log("Dữ liệu nhận được:", { username, email, bio, avatar });
 
     const updateQuery = `
-      UPDATE users
-      SET username = ?,
-          email = ?,
-          bio = COALESCE(?, bio),
-          avatar = ?,
-          updated_at = NOW()
-      WHERE id = ?
-    `;
+  UPDATE users
+  SET username = ?,
+      email = ?,
+      bio = ?, 
+      avatar = ?,
+      updated_at = NOW()
+  WHERE id = ?
+`;
 
     const [result] = await pool.query(updateQuery, [
       username,
@@ -42,10 +42,22 @@ exports.updateProfile = async (req, res) => {
     // Cập nhật lại localStorage với thông tin mới
     const userData = updatedUser[0];
 
+    console.log("Update Query Params:", [username, email, bio, avatar, userId]);
+
+    console.log("Query Result:", result);
+    console.log("Updated User Data:", updatedUser[0]);
+
+    // In AccountSettingsController.js
     res.status(200).json({
       success: true,
       message: "Cập nhật thông tin người dùng thành công",
-      data: userData,
+      data: {
+        id: userData.id, // Change from user.id to userData.id
+        username: userData.username, // Change from user.username to userData.username
+        email: userData.email,
+        bio: userData.bio,
+        avatar: userData.avatar,
+      },
     });
   } catch (error) {
     console.error("Lỗi trong quá trình cập nhật người dùng:", error);

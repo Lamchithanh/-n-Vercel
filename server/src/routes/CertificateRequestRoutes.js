@@ -38,21 +38,16 @@ router.get("/certificates/requests", async (req, res) => {
 router.post("/certificates/accept/:requestId", async (req, res) => {
   try {
     const requestId = req.params.requestId;
+
+    // Cập nhật trạng thái yêu cầu thành 'accepted'
     await pool.query(
       "UPDATE certificate_requests SET accepted = 1 WHERE id = ?",
       [requestId]
     );
-    const [userRow] = await pool.query(
-      "SELECT user_id, course_id FROM certificate_requests WHERE id = ?",
-      [requestId]
-    );
-    await pool.query(
-      "INSERT INTO certificates (user_id, course_id, issued_at) VALUES (?, ?, NOW())",
-      [userRow.user_id, userRow.course_id]
-    );
+
     res.json({ message: "Certificate request accepted" });
   } catch (err) {
-    console.error(err);
+    console.error("Error accepting certificate request:", err);
     res.status(500).json({ message: "Error accepting certificate request" });
   }
 });
@@ -80,6 +75,7 @@ router.get("/certificates/status/:userId/:courseId", async (req, res) => {
       "SELECT accepted FROM certificate_requests WHERE user_id = ? AND course_id = ?",
       [userId, courseId]
     );
+    console.log("Request Rows:", requestRows); // Thêm log để kiểm tra kết quả của truy vấn
 
     if (requestRows.length === 0) {
       return res.status(404).json({

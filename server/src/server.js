@@ -75,7 +75,7 @@ app.use("/api", enrollmentRoutes);
 app.use("/api", courseReviewsRoutes);
 app.use("/api/courses", searchRoutes);
 app.use("/api", certificateRoutes);
-app.use(paymentRoutes);
+app.use("/api", paymentRoutes);
 app.use("/api", blogRoutes);
 app.use("/api", ChangePassword);
 app.use("/api", CertificateRequestRoutes);

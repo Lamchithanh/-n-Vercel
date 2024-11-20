@@ -13,9 +13,11 @@ const VideoProgressTracker = ({
   videoUrl,
   modules,
   onProgressUpdate,
+  resetNotification = false,
+  unlockNextLesson, // Thêm tham số unlockNextLesson
 }) => {
+  const [hasNotifiedCompletion, setHasNotifiedCompletion] = useState(false);
   const [player, setPlayer] = useState(null);
-  const [setWatchedPercentage] = useState(0);
   const progressUpdateRef = useRef(false);
   const progressInterval = useRef(null);
 
@@ -34,36 +36,36 @@ const VideoProgressTracker = ({
     },
   };
 
+  useEffect(() => {
+    if (resetNotification) {
+      setHasNotifiedCompletion(false);
+    }
+  }, [lessonId, resetNotification]);
+
   const onReady = (event) => {
     setPlayer(event.target);
   };
 
   const updateWatchProgress = async (currentTime, videoDuration) => {
     const percentage = (currentTime / videoDuration) * 100;
-    setWatchedPercentage(percentage);
 
-    if (percentage > 95 && !progressUpdateRef.current) {
-      progressUpdateRef.current = true;
-
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
-        progressInterval.current = null;
-      }
+    if (percentage >= 90 && !hasNotifiedCompletion) {
+      message.success("Bạn đã hoàn thành 90% thời lượng bài học! 🎉");
+      setHasNotifiedCompletion(true);
 
       const user = JSON.parse(localStorage.getItem("user"));
       if (user) {
-        try {
-          await updateProgressAPI({
-            userId: user.id,
-            lessonId: lessonId,
-            watched: true,
-            watchedDuration: currentTime,
-          });
-          onProgressUpdate(lessonId);
-          message.success("Bài học đã được hoàn thành!");
-        } catch (error) {
-          console.error("Error updating progress:", error);
-          progressUpdateRef.current = false;
+        await updateProgressAPI({
+          userId: user.id,
+          lessonId: lessonId,
+          watched: true,
+          watchedDuration: currentTime,
+        });
+        onProgressUpdate(lessonId);
+
+        // Mở khóa bài học tiếp theo khi hoàn thành 90% bài học hiện tại
+        if (unlockNextLesson) {
+          unlockNextLesson(lessonId);
         }
       }
     }
@@ -95,12 +97,12 @@ const VideoProgressTracker = ({
         }
 
         if (!modules || !Array.isArray(modules)) {
-          return; // Tránh hiển thị lỗi nếu modules chưa load xong
+          return;
         }
 
         const currentModule = modules.find((m) => m.id === lessonId);
         if (!currentModule) {
-          return; // Tránh hiển thị lỗi nếu không tìm thấy module hiện tại
+          return;
         }
 
         const progressData = await getProgressAPI(
@@ -152,7 +154,6 @@ const VideoProgressTracker = ({
 VideoProgressTracker.propTypes = {
   lessonId: PropTypes.string.isRequired,
   videoUrl: PropTypes.string.isRequired,
-  duration: PropTypes.number,
   modules: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
@@ -160,6 +161,8 @@ VideoProgressTracker.propTypes = {
     })
   ).isRequired,
   onProgressUpdate: PropTypes.func.isRequired,
+  unlockNextLesson: PropTypes.func, // Hàm mở khóa bài học tiếp theo
+  resetNotification: PropTypes.bool,
 };
 
 export default VideoProgressTracker;

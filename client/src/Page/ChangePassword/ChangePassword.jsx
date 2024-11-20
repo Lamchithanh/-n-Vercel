@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
-import { Card, Form, Input, Button, Alert, message } from "antd";
+import { Card, Form, Input, Button, Alert, message, Modal } from "antd";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const ChangePassword = () => {
   const [user, setUser] = useState(null);
-  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const navigate = useNavigate(); // Hook để điều hướng
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
+
     if (storedUser && token) {
       setUser({ ...storedUser, token });
     } else {
@@ -52,7 +55,6 @@ const ChangePassword = () => {
           },
           body: JSON.stringify({
             userId: user.id,
-            oldPassword: user.password_hash, // Sử dụng mật khẩu lưu trong localStorage
             newPassword,
           }),
         }
@@ -72,6 +74,11 @@ const ChangePassword = () => {
               password_hash: newPassword,
             })
           );
+
+          // Hiển thị modal sau khi đổi mật khẩu thành công
+          setTimeout(() => {
+            setIsModalVisible(true);
+          }, 2000);
         } else {
           setError(data.message || "Không thể đổi mật khẩu. Vui lòng thử lại.");
         }
@@ -80,14 +87,22 @@ const ChangePassword = () => {
       }
     } catch (err) {
       console.error("Error in change password:", err);
-      if (err.response && err.response.status === 401) {
-        setError("Mật khẩu cũ không chính xác. Vui lòng thử lại.");
-      } else {
-        setError(err.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
-      }
+      setError(err.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLoginAgain = () => {
+    // Xử lý khi người dùng chọn đăng nhập lại
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/login"); // Chuyển hướng đến trang đăng nhập
+  };
+
+  const handleLater = () => {
+    // Xử lý khi người dùng chọn để sau
+    setIsModalVisible(false);
   };
 
   if (!user) {
@@ -102,6 +117,13 @@ const ChangePassword = () => {
 
   return (
     <Card title="Đổi mật khẩu">
+      <Button
+        className="btn-back"
+        onClick={() => navigate(-1)}
+        style={{ margin: 10 }}
+      >
+        ← Quay lại
+      </Button>
       {error && (
         <Alert message="Lỗi" description={error} type="error" showIcon />
       )}
@@ -114,16 +136,6 @@ const ChangePassword = () => {
         />
       )}
       <Form layout="vertical" onFinish={handleChangePassword}>
-        <Form.Item
-          label="Mật khẩu cũ"
-          name="oldPassword"
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu cũ!" }]}
-        >
-          <Input.Password
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-          />
-        </Form.Item>
         <Form.Item
           label="Mật khẩu mới"
           name="newPassword"
@@ -157,6 +169,21 @@ const ChangePassword = () => {
           </Button>
         </Form.Item>
       </Form>
+
+      {/* Modal yêu cầu đăng nhập lại */}
+      <Modal
+        title="Thông báo"
+        visible={isModalVisible}
+        onOk={handleLoginAgain}
+        onCancel={handleLater}
+        okText="Đăng nhập lại"
+        cancelText="Để sau"
+      >
+        <p>
+          Đổi mật khẩu thành công! Vui lòng đăng nhập lại để tiếp tục hoặc chọn
+          "Để sau".
+        </p>
+      </Modal>
     </Card>
   );
 };

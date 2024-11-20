@@ -4,6 +4,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import CourseCard from "../../../components/Card/Card";
 import styles from "./FeaturedCourses.module.scss";
+import Loader from "../../../context/Loader";
 
 const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -34,11 +35,15 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
 
   // Khởi tạo AOS khi component được render
   useEffect(() => {
-    AOS.init({ duration: 800 }); // Thiết lập thời gian animation
+    AOS.init({ duration: 500 }); // Thiết lập thời gian animation
   }, []);
 
   if (isLoading) {
-    return <div>Đang tải khóa học...</div>;
+    return (
+      <div style={{ alignItems: "center" }}>
+        <Loader />
+      </div>
+    );
   }
 
   if (error) {
@@ -80,7 +85,7 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
             height: "100%", // Hoặc chiều cao cụ thể nếu cần
           }}
         >
-          Không có khóa học nổi bật.
+          {/* Không có khóa học nổi bật. */}
         </div>
       )}
     </div>

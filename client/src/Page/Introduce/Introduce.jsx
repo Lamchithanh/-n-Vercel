@@ -57,9 +57,7 @@ const Introduce = () => {
 
   return (
     <Layout className={styles.layout}>
-      <CertificateNotification
-        currentUser={JSON.parse(localStorage.getItem("user"))}
-      />
+      <CertificateNotification />
       <Content>
         <section className={styles.hero} id="home">
           <div className={styles.heroContent} data-aos="fade-up">

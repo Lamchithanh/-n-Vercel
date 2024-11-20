@@ -15,12 +15,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
   const [canRequestCertificate, setCanRequestCertificate] = useState(false);
   const [certificateStatus, setCertificateStatus] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
-  const [
-    hasDoneFirstCompletionNotification,
-    setHasDoneFirstCompletionNotification,
-  ] = useState(false);
-
-  // Thêm state để theo dõi milestone đã hiển thị
+  const [isRequestingCertificate, setIsRequestingCertificate] = useState(false);
   const [displayedMilestones, setDisplayedMilestones] = useState(() => {
     const saved = localStorage.getItem(
       `displayedMilestones-${courseId}-${userId}`
@@ -38,7 +33,6 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     let highestMilestoneReached = lastMilestoneReached;
 
     milestones.forEach((milestone) => {
-      // Kiểm tra xem milestone này đã được hiển thị chưa
       const milestoneKey = `${milestone}-${courseId}-${userId}`;
       if (
         currentProgress >= milestone &&
@@ -56,11 +50,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             messageText = "Tuyệt vời! Bạn đã hoàn thành 75% khóa học! 🎯";
             break;
           case 100:
-            if (!hasDoneFirstCompletionNotification) {
-              messageText = "Chúc mừng! Bạn đã hoàn thành toàn bộ khóa học! 🎉";
-              setCanRequestCertificate(true);
-              setHasDoneFirstCompletionNotification(true);
-            }
+            messageText = "Chúc mừng! Bạn đã hoàn thành toàn bộ khóa học! 🎉";
             break;
           default:
             break;
@@ -73,7 +63,6 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             className: "custom-milestone-message",
           });
 
-          // Lưu trạng thái đã hiển thị
           const newDisplayedMilestones = {
             ...displayedMilestones,
             [milestoneKey]: true,
@@ -90,36 +79,68 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     setLastMilestoneReached(highestMilestoneReached);
   };
 
-  // Code còn lại giữ nguyên không thay đổi
   useEffect(() => {
     const fetchProgress = async () => {
       try {
         const response = await getProgressAPI(userId, courseId);
-        const watched = response.filter((p) => p.watched);
-        const uniqueWatchedLessons = [
-          ...new Set(watched.map((p) => p.lessonId)),
-        ];
-        setWatchedLessons(uniqueWatchedLessons);
+
+        const watched = response.filter(
+          (p) => p.watched === true || p.progress >= 90
+        );
+
+        const watchedLessonIds = watched.map((p) => p.lessonId);
+
+        localStorage.setItem(
+          `watchedLessons-${courseId}-${userId}`,
+          JSON.stringify(watchedLessonIds)
+        );
 
         const progressPercentage =
-          (uniqueWatchedLessons.length / totalLessons) * 100;
+          (watchedLessonIds.length / totalLessons) * 100;
+
+        setWatchedLessons(watchedLessonIds);
         setProgress(progressPercentage);
+
+        if (progressPercentage >= 100) {
+          setCanRequestCertificate(true);
+        } else {
+          setCanRequestCertificate(false);
+        }
 
         checkProgressMilestones(progressPercentage);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu tiến độ:", error);
-        message.error("Không thể cập nhật tiến độ học tập");
+        if (error.response && error.response.status !== 404) {
+          message.error(
+            "Không thể cập nhật tiến độ học tập. Vui lòng thử lại sau."
+          );
+        }
+
+        localStorage.removeItem(`watchedLessons-${courseId}-${userId}`);
+        setWatchedLessons([]);
+        setProgress(0);
+        setCanRequestCertificate(false);
       }
     };
 
     const fetchCertificateStatus = async () => {
       try {
         const response = await getCertificateStatusAPI(userId, courseId);
-        setCertificateStatus(response.data);
+        if (response.data && response.data.status) {
+          setCertificateStatus(response.data.status);
+        }
       } catch (error) {
-        console.error("Lỗi khi lấy trạng thái cấp chứng chỉ:", error);
+        console.error("Error fetching certificate status:", error);
+        // Chỉ hiển thị thông báo khi người dùng đang yêu cầu cấp chứng chỉ
+        if (isRequestingCertificate) {
+          message.error(
+            "Không thể kiểm tra trạng thái chứng chỉ. Vui lòng thử lại sau."
+          );
+        }
+        setCertificateStatus(null);
       } finally {
         setLoadingStatus(false);
+        setIsRequestingCertificate(false);
       }
     };
 
@@ -127,6 +148,10 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       fetchProgress();
       fetchCertificateStatus();
     }
+
+    return () => {
+      localStorage.removeItem(`watchedLessons-${courseId}-${userId}`);
+    };
   }, [userId, courseId, totalLessons]);
 
   const getProgressColor = (percent) => {
@@ -143,12 +168,29 @@ const CourseProgress = ({ modules, userId, courseId }) => {
   };
 
   const handleRequestCertificate = async () => {
+    setIsRequestingCertificate(true);
     try {
-      await requestCertificateAPI(userId, courseId);
-      message.success("Yêu cầu cấp chứng chỉ thành công! 🎓");
-      setCanRequestCertificate(false);
+      const response = await requestCertificateAPI(userId, courseId);
+      if (response.data.accepted === false) {
+        message.error(
+          "Yêu cầu cấp chứng chỉ không thành công. Vui lòng kiểm tra lại điều kiện yêu cầu chứng chỉ."
+        );
+      } else {
+        message.success("Yêu cầu cấp chứng chỉ thành công! 🎓");
+        setCanRequestCertificate(false);
+        // Cập nhật lại trạng thái chứng chỉ sau khi yêu cầu thành công
+        const statusResponse = await getCertificateStatusAPI(userId, courseId);
+        if (statusResponse.data && statusResponse.data.status) {
+          setCertificateStatus(statusResponse.data.status);
+        }
+      }
     } catch (error) {
       console.error("Lỗi khi gửi yêu cầu cấp chứng chỉ:", error);
+      message.error(
+        "Không thể gửi yêu cầu cấp chứng chỉ. Vui lòng thử lại sau."
+      );
+    } finally {
+      setIsRequestingCertificate(false);
     }
   };
 
@@ -195,6 +237,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
               type="primary"
               onClick={handleRequestCertificate}
               className="mt-4"
+              loading={isRequestingCertificate}
             >
               Yêu cầu cấp chứng chỉ
             </Button>
@@ -203,18 +246,17 @@ const CourseProgress = ({ modules, userId, courseId }) => {
 
         {certificateStatus !== null && (
           <div className="certificate-status">
-            {certificateStatus.status === "Đã cấp chứng chỉ" ? (
+            {certificateStatus === "Đã cấp chứng chỉ" ? (
               <span style={{ color: "green" }}>
                 Bạn đã nhận được chứng chỉ!🏆
               </span>
-            ) : certificateStatus.status ===
+            ) : certificateStatus ===
               "Yêu cầu chứng chỉ đã được chấp nhận, nhưng chứng chỉ chưa được cấp" ? (
               <span style={{ color: "orange" }}>
-                Yêu cầu chứng chỉ đã được chấp nhận, nhưng chứng chỉ chưa được
-                cấp.
+                Yêu cầu chứng chỉ đã được chấp nhận, chứng chỉ sẽ được cấp sớm.
               </span>
             ) : (
-              <span>Yêu cầu chứng chỉ đang chờ duyệt...</span>
+              <span>Yêu cầu chứng chỉ đang được xử lý...</span>
             )}
           </div>
         )}

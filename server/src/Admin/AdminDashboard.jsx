@@ -14,6 +14,7 @@ import Users from "./AdUsers/Users.jsx";
 import Lessons from "./Adlessons/lessons.jsx";
 import Certificates from "./AdCertificates/Certificates.jsx";
 import BlogManagement from "./BlogManagement/BlogManagement.jsx";
+import Dashboard from "./Dashboard/Dashboard.jsx";
 
 const { Header, Content, Sider } = Layout;
 
@@ -75,6 +76,8 @@ const AdminDashboard = () => {
         return <Users fetchUsers={fetchUsers} />;
       case "blog":
         return <BlogManagement />;
+      case "Dashboard":
+        return <Dashboard />;
       default:
         return null;
     }
@@ -95,6 +98,9 @@ const AdminDashboard = () => {
           defaultSelectedKeys={["users"]}
           onClick={({ key }) => setSelectedMenu(key)}
         >
+          <Menu.Item key="Dashboard" icon={<UserOutlined />}>
+            Dashboard
+          </Menu.Item>
           <Menu.Item key="users" icon={<UserOutlined />}>
             Users
           </Menu.Item>

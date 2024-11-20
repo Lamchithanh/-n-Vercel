@@ -10,12 +10,68 @@ import {
   ClockCircleOutlined,
   BookOutlined,
   VideoCameraOutlined,
+  CreditCardOutlined,
+  BankOutlined,
+  WalletOutlined,
+  PayCircleOutlined,
 } from "@ant-design/icons";
-// import PaymentMethodSelector from "./PaymentMethodSelector";
 import { useMediaQuery } from "react-responsive";
-import PaymentMethodSelector from "./PaymentMethodSelector";
-
+import {
+  checkPaymentStatusAPI,
+  confirmPayment,
+  initiatePayment,
+} from "../../../../server/src/Api/paymentApi";
+import PropTypes from "prop-types";
 const { Title, Text } = Typography;
+
+// Define valid payment methods according to database schema
+const PAYMENT_METHODS = {
+  credit_card: {
+    key: "credit_card",
+    label: "Thẻ tín dụng",
+    icon: <CreditCardOutlined />,
+  },
+  bank_transfer: {
+    key: "bank_transfer",
+    label: "Chuyển khoản ngân hàng",
+    icon: <BankOutlined />,
+  },
+  ewallet: {
+    key: "ewallet",
+    label: "Ví điện tử",
+    icon: <WalletOutlined />,
+  },
+  paypal: {
+    key: "paypal",
+    label: "PayPal",
+    icon: <PayCircleOutlined />,
+  },
+};
+
+const PaymentMethodSelector = ({ onMethodSelect, selectedMethod }) => {
+  return (
+    <div style={{ display: "grid", gap: "12px" }}>
+      {Object.values(PAYMENT_METHODS).map((method) => (
+        <Button
+          key={method.key}
+          type={selectedMethod === method.key ? "primary" : "default"}
+          onClick={() => onMethodSelect(method.key)}
+          style={{
+            height: "auto",
+            padding: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+          }}
+        >
+          {method.icon}
+          {method.label}
+        </Button>
+      ))}
+    </div>
+  );
+};
 
 const PaymentPage = () => {
   const { id: courseId } = useParams();
@@ -26,6 +82,7 @@ const PaymentPage = () => {
   const [totalLessons, setTotalLessons] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState(null);
+  const [hasHandledPaymentCheck, setHasHandledPaymentCheck] = useState(false);
 
   // Responsive breakpoints
   const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -35,6 +92,27 @@ const PaymentPage = () => {
     const loadCourseData = async () => {
       try {
         setLoading(true);
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        if (user && !hasHandledPaymentCheck) {
+          const paymentStatus = await checkPaymentStatusAPI(user.id, courseId);
+
+          // Kiểm tra nếu người dùng đã mua khóa học và không quay lại từ trang chi tiết
+          const fromPaymentPage = new URLSearchParams(
+            window.location.search
+          ).get("fromPaymentPage");
+
+          if (paymentStatus.hasPaid && !fromPaymentPage) {
+            message.info("Bạn đã mua khóa học này trước đóô.");
+            navigate(`/courses/${courseId}?fromPaymentPage=true`, {
+              replace: true,
+            });
+            setHasHandledPaymentCheck(true); // Đánh dấu đã xử lý điều hướng
+            return;
+          }
+        }
+
+        // Nếu chưa xử lý hoặc không phải người dùng đã thanh toán, tải dữ liệu khóa học
         const courseData = await fetchCourseById(courseId);
         setCourse(courseData);
 
@@ -64,21 +142,9 @@ const PaymentPage = () => {
     };
 
     loadCourseData();
-  }, [courseId]);
+  }, [courseId, navigate, hasHandledPaymentCheck]);
 
-  const handlePaymentMethodSelect = (method) => {
-    setPaymentMethod(method);
-  };
-
-  const validateSelection = () => {
-    if (!paymentMethod) {
-      message.error("Vui lòng chọn phương thức thanh toán!");
-      return false;
-    }
-    return true;
-  };
-
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
     if (!validateSelection()) {
       return;
     }
@@ -89,15 +155,44 @@ const PaymentPage = () => {
       return;
     }
 
-    const paidCourses = JSON.parse(localStorage.getItem("paidCourses")) || {};
-    if (!paidCourses[user.id]) {
-      paidCourses[user.id] = [];
-    }
-    paidCourses[user.id].push(courseId);
-    localStorage.setItem("paidCourses", JSON.stringify(paidCourses));
+    try {
+      setLoading(true);
 
-    message.success("Thanh toán thành công!");
-    navigate(`/courses/${courseId}`);
+      const initiateResponse = await initiatePayment({
+        userId: user.id,
+        courseId,
+        amount: course.price,
+        paymentMethod: paymentMethod, // This now matches the ENUM in database
+      });
+
+      const mockTransactionId = `TRANS_${Date.now()}`;
+      await confirmPayment(initiateResponse.paymentId, mockTransactionId);
+
+      message.success("Thanh toán thành công!");
+      navigate(`/courses/${courseId}?fromPaymentPage=true`);
+    } catch (error) {
+      message.error(
+        error.message || "Có lỗi xảy ra trong quá trình thanh toán"
+      );
+      console.error("Payment error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaymentMethodSelect = (method) => {
+    setPaymentMethod(method);
+  };
+
+  const validateSelection = () => {
+    if (
+      !paymentMethod ||
+      !Object.keys(PAYMENT_METHODS).includes(paymentMethod)
+    ) {
+      message.error("Vui lòng chọn phương thức thanh toán hợp lệ!");
+      return false;
+    }
+    return true;
   };
 
   const convertMinutesToHMS = (totalMinutes) => {
@@ -281,7 +376,7 @@ const PaymentPage = () => {
                       fontSize: isMobile ? "14px" : "16px",
                     }}
                   >
-                    {course.price} VND
+                    {course.price.toLocaleString()} VND
                   </Text>
                 </Row>
                 <Row justify="space-between">
@@ -295,7 +390,7 @@ const PaymentPage = () => {
                       fontSize: isMobile ? "20px" : "24px",
                     }}
                   >
-                    {course.price} VND
+                    {course.price.toLocaleString()} VND
                   </Text>
                 </Row>
               </div>
@@ -319,11 +414,12 @@ const PaymentPage = () => {
                 level={2}
                 style={{ color: "#ff4d4f", marginBottom: "24px" }}
               >
-                {course.price} VND
+                {course.price.toLocaleString()} VND
               </Title>
 
               <PaymentMethodSelector
                 onMethodSelect={handlePaymentMethodSelect}
+                selectedMethod={paymentMethod}
               />
 
               <Button
@@ -345,6 +441,11 @@ const PaymentPage = () => {
       </Row>
     </div>
   );
+};
+
+PaymentMethodSelector.propTypes = {
+  onMethodSelect: PropTypes.func.isRequired, // Hàm callback bắt buộc
+  selectedMethod: PropTypes.string, // Phương thức thanh toán được chọn
 };
 
 export default PaymentPage;

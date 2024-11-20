@@ -69,7 +69,7 @@ const HomePage = () => {
   }, [location]);
 
   AOS.init({
-    duration: 800,
+    duration: 500,
     once: true,
     offset: 100,
     easing: "ease-out-cubic",
@@ -344,7 +344,7 @@ const HomePage = () => {
         </div>
       </Header>
 
-      <div style={{ height: "100vh" }} data-aos="fade-up" data-aos-delay="500">
+      <div style={{ height: "100vh" }} data-aos="fade-up" data-aos-delay="300">
         <FeaturedCourses
           courses={courses
             .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))

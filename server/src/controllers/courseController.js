@@ -231,18 +231,22 @@ exports.getProgress = async (req, res) => {
   const { userId, courseId } = req.params;
 
   try {
-    // Chỉ lấy các bài học đã xem của user trong khóa học
     const query = `
-      SELECT * FROM video_progress 
+      SELECT 
+        lesson_id, 
+        watched, 
+        watched_duration
+      FROM video_progress 
       WHERE user_id = ? AND course_id = ?
     `;
 
     const [progress] = await pool.query(query, [userId, courseId]);
 
-    // Format lại data trước khi trả về
+    // Format lại data
     const formattedProgress = progress.map((item) => ({
       lessonId: item.lesson_id,
       watched: item.watched === 1, // Convert 1/0 to true/false
+      watchedDuration: item.watched_duration || 0,
     }));
 
     res.json(formattedProgress);
@@ -254,85 +258,77 @@ exports.getProgress = async (req, res) => {
 
 exports.updateProgress = async (req, res) => {
   const { userId, lessonId, watched, watchedDuration } = req.body;
-  console.log(
-    `Yêu cầu cập nhật tiến độ cho userId: ${userId}, lessonId: ${lessonId}, watched: ${watched}, watchedDuration: ${watchedDuration}`
-  ); // Log dữ liệu yêu cầu
+
+  // Thêm validation
+  if (!userId || !lessonId || typeof watchedDuration !== "number") {
+    return res.status(400).json({ message: "Dữ liệu không hợp lệ" });
+  }
 
   try {
-    // Lấy thông tin course_id và module_id từ bảng lessons
-    const getCourseAndModuleQuery = `
-      SELECT course_id, module_id
-      FROM lessons
-      WHERE id = ?
-    `;
-    const [lessonInfo] = await pool.query(getCourseAndModuleQuery, [lessonId]);
+    // Thêm lock để tránh race condition
+    await pool.query("START TRANSACTION");
+
+    // Lấy thông tin course_id và module_id
+    const [lessonInfo] = await pool.query(
+      `SELECT course_id, module_id, duration FROM lessons WHERE id = ?`,
+      [lessonId]
+    );
 
     if (lessonInfo.length === 0) {
+      await pool.query("ROLLBACK");
       return res.status(400).json({ message: "Bài học không tồn tại" });
     }
 
-    const { course_id, module_id } = lessonInfo[0];
+    const { course_id, module_id, duration } = lessonInfo[0];
 
-    // Kiểm tra xem tiến độ của bài học này đã tồn tại hay chưa
-    const checkProgressQuery = `
-      SELECT * FROM video_progress
-      WHERE user_id = ? AND lesson_id = ?
-    `;
-    const [existingProgress] = await pool.query(checkProgressQuery, [
-      userId,
-      lessonId,
-    ]);
+    // Kiểm tra tiến độ hiện tại
+    const [currentProgress] = await pool.query(
+      `SELECT watched_duration, watched 
+       FROM video_progress 
+       WHERE user_id = ? AND lesson_id = ?`,
+      [userId, lessonId]
+    );
 
-    if (existingProgress.length > 0) {
-      // Nếu bản ghi tồn tại, kiểm tra nếu có thay đổi thì cập nhật
-      const currentProgress = existingProgress[0];
+    if (currentProgress.length > 0) {
+      // Cập nhật nếu có tiến độ mới cao hơn
+      const updateQuery = `
+        UPDATE video_progress 
+        SET 
+          watched_duration = GREATEST(?, COALESCE(watched_duration, 0)),
+          watched = GREATEST(?, COALESCE(watched, 0)),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ? AND lesson_id = ?
+      `;
 
-      // So sánh watched và watched_duration để quyết định có cập nhật không
-      if (
-        currentProgress.watched !== watched ||
-        currentProgress.watched_duration !== watchedDuration
-      ) {
-        const updateQuery = `
-          UPDATE video_progress
-          SET watched = ?, watched_duration = ?
-          WHERE user_id = ? AND lesson_id = ?
-        `;
-        await pool.query(updateQuery, [
-          watched,
-          watchedDuration,
-          userId,
-          lessonId,
-        ]);
-        console.log(
-          `Cập nhật tiến độ thành công cho userId: ${userId}, lessonId: ${lessonId}`
-        );
-      } else {
-        console.log(
-          `Không cần cập nhật tiến độ cho userId: ${userId}, lessonId: ${lessonId}`
-        );
-      }
+      await pool.query(updateQuery, [
+        watchedDuration,
+        watched ? 1 : 0,
+        userId,
+        lessonId,
+      ]);
     } else {
-      // Nếu chưa có tiến độ, chèn mới
+      // Thêm mới nếu chưa có tiến độ
       const insertQuery = `
-        INSERT INTO video_progress (user_id, lesson_id, watched, watched_duration, course_id, module_id)
+        INSERT INTO video_progress 
+          (user_id, lesson_id, watched, watched_duration, course_id, module_id)
         VALUES (?, ?, ?, ?, ?, ?)
       `;
+
       await pool.query(insertQuery, [
         userId,
         lessonId,
-        watched,
+        watched ? 1 : 0,
         watchedDuration,
         course_id,
         module_id,
       ]);
-      console.log(
-        `Thêm mới tiến độ thành công cho userId: ${userId}, lessonId: ${lessonId}`
-      );
     }
 
+    await pool.query("COMMIT");
     res.json({ message: "Cập nhật tiến độ thành công" });
   } catch (error) {
-    console.error("Lỗi khi cập nhật tiến độ:", error); // Log lỗi nếu có
+    await pool.query("ROLLBACK");
+    console.error("Lỗi khi cập nhật tiến độ:", error);
     res.status(500).json({ message: "Lỗi khi cập nhật tiến độ" });
   }
 };

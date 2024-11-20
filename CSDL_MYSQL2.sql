@@ -23,6 +23,8 @@ CREATE TABLE users (
   CONSTRAINT chk_locked CHECK (isLocked IN (0,1))
 );
 
+ALTER TABLE users MODIFY COLUMN avatar MEDIUMTEXT;
+
 -- Bảng lưu lịch sử khóa tài khoản người dùng (tùy chọn)
 CREATE TABLE user_lock_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -139,15 +141,16 @@ CREATE TABLE payments (
   user_id BIGINT UNSIGNED,
   course_id BIGINT UNSIGNED,
   amount DECIMAL(10, 2) NOT NULL,
-  status ENUM('pending', 'completed', 'failed', 'refunded') NOT NULL,
+ status ENUM('pending', 'completed', 'failed', 'refunded') NOT NULL,
   transaction_id VARCHAR(255),
-  payment_method ENUM('credit_card', 'paypal', 'bank_transfer') NOT NULL,
+   payment_method ENUM('credit_card', 'paypal', 'bank_transfer', 'ewallet') NOT NULL,
   transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
+
 
 -- Bảng BlogSection (Khu vực blog hoặc bài viết)
 CREATE TABLE blog_section (
@@ -183,5 +186,19 @@ CREATE TABLE certificate_requests (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS banners (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    image_url TEXT NOT NULL,
+    active BOOLEAN DEFAULT true,
+    order_num INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_banners_active ON banners(active);
+CREATE INDEX idx_banners_order ON banners(order_num);
 
 
