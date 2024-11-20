@@ -65,13 +65,14 @@ const CertificateNotification = ({ currentUser }) => {
           `http://localhost:9000/api/certificates?userId=${currentUser.id}`
         );
         const notifiedCertificates = JSON.parse(
-          localStorage.getItem("notifiedCertificates") || "[]"
+          localStorage.getItem(`notifiedCertificates_${currentUser.id}`) || "[]"
         );
         const newCerts = response.data.filter(
-          (cert) => !notifiedCertificates.includes(cert.id)
+          (cert) =>
+            cert.user_id === currentUser.id && // Chỉ lấy chứng chỉ của user hiện tại
+            !notifiedCertificates.includes(cert.id)
         );
 
-        // Nếu có chứng chỉ mới cho tài khoản hiện tại
         if (newCerts.length > 0) {
           setNewCertificates(newCerts);
           showNextCertificate(newCerts[0]);
@@ -80,11 +81,10 @@ const CertificateNotification = ({ currentUser }) => {
             ...newCerts.map((cert) => cert.id),
           ];
           localStorage.setItem(
-            "notifiedCertificates",
+            `notifiedCertificates_${currentUser.id}`,
             JSON.stringify(updatedNotifiedCerts)
           );
 
-          // Chỉ thông báo khi chứng chỉ đã được cấp
           notification.success({
             message: "Chứng chỉ mới",
             description: "Bạn đã nhận được chứng chỉ mới. Kiểm tra ngay!",
@@ -98,7 +98,10 @@ const CertificateNotification = ({ currentUser }) => {
       }
     };
 
-    fetchCertificates();
+    if (currentUser?.id) {
+      fetchCertificates();
+    }
+
     const interval = setInterval(fetchCertificates, 300000);
     return () => clearInterval(interval);
   }, [currentUser]);
