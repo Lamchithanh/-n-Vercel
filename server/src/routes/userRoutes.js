@@ -6,6 +6,9 @@ const { authMiddleware } = require("../middleware/auth");
 
 // Route để lấy danh sách người dùng (không cần xác thực nữa)
 router.get("/users", userController.getAllUsers);
+// tạo tài khoản
+router.get("/users", userController.createUser);
+
 // Route để đăng nhập
 router.post("/users/login", userController.login);
 

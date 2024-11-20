@@ -19,7 +19,7 @@ import Dashboard from "./Dashboard/Dashboard.jsx";
 const { Header, Content, Sider } = Layout;
 
 const AdminDashboard = () => {
-  const [selectedMenu, setSelectedMenu] = useState("users");
+  const [selectedMenu, setSelectedMenu] = useState("Dashboard");
 
   const fetchUsers = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -95,31 +95,31 @@ const AdminDashboard = () => {
             marginTop: 20,
           }}
         >
-          Admin Panel
+          Danh Mục
         </div>
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={["users"]}
+          defaultSelectedKeys={["Dashboard"]}
           onClick={({ key }) => setSelectedMenu(key)}
         >
-          <Menu.Item key="Dashboard" icon={<UserOutlined />}>
-            Dashboard
+          <Menu.Item key="Dashboard" icon={<AppstoreOutlined />}>
+            Tổng Quan
           </Menu.Item>
           <Menu.Item key="users" icon={<UserOutlined />}>
-            Users
+            Người Dùng
           </Menu.Item>
           <Menu.Item key="courses" icon={<BookOutlined />}>
-            Courses
+            Khóa Học
           </Menu.Item>
           <Menu.Item key="lessons" icon={<PlayCircleOutlined />}>
-            Lessons & Modules
+            Chương & Bài Học
           </Menu.Item>
           <Menu.Item key="certificates" icon={<TrophyOutlined />}>
-            Certificates
+            Chứng Chỉ
           </Menu.Item>
           <Menu.Item key="blog" icon={<FileTextOutlined />}>
-            Blog
+            Bài Viết
           </Menu.Item>
         </Menu>
       </Sider>
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
             alignItems: "center",
           }}
         >
-          <h2 style={{ margin: 20 }}>Admin Dashboard</h2>
+          <h2 style={{ margin: 20 }}>Quản Trị Viên</h2>
           <Button
             onClick={() => {
               localStorage.removeItem("token");

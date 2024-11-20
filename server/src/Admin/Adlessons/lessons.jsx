@@ -326,10 +326,10 @@ const Lessons = () => {
     }
 
     Modal.confirm({
-      title: "Are you sure you want to delete this module?",
-      content: "This will also delete all lessons associated with this module.",
-      okText: "Delete",
-      cancelText: "Cancel",
+      title: "Bạn có thật sự muốn xóa chương này?",
+      content: "Các bài học của chương sẽ được xóa theo và không thể hoàn tác.",
+      okText: "Xóa",
+      cancelText: "Hủy",
       onOk: async () => {
         try {
           setLoading(true);
@@ -383,7 +383,7 @@ const Lessons = () => {
             setModalVisible(true);
           }}
         >
-          Add New Lesson
+          Thêm bài học
         </Button>
 
         <Select
@@ -392,7 +392,7 @@ const Lessons = () => {
           onChange={handleModuleChange}
           placeholder="Select a module"
         >
-          <Select.Option value={null}>All Modules</Select.Option>
+          <Select.Option value={null}>Tất cả chương</Select.Option>
           {modules.map((module) => (
             <Select.Option key={module.id} value={module.id}>
               {module.title}
@@ -410,7 +410,7 @@ const Lessons = () => {
           }}
           danger
         >
-          Delete Module
+          Xóa chương
         </Button>
       </div>
 
@@ -424,7 +424,7 @@ const Lessons = () => {
             >
               {!initialLoading && !loading && lessons.length === 0 ? (
                 <Col span={24}>
-                  <Card>No lessons available</Card>
+                  <Card>Bài học không có sẳn</Card>
                 </Col>
               ) : (
                 lessons.map((lesson, index) => (
@@ -467,29 +467,29 @@ const Lessons = () => {
                                 }}
                                 style={{ marginRight: 8 }}
                               >
-                                Edit
+                                Sửa
                               </Button>
                               <Button
                                 onClick={() => handleDeleteLesson(lesson.id)}
                                 danger
                               >
-                                Delete
+                                Xóa
                               </Button>
                             </>
                           }
                         >
                           <p>
-                            <strong>Module:</strong> {lesson.module_name}
+                            <strong>Chương:</strong> {lesson.module_name}
                           </p>
                           <p>{lesson.description}</p>
                           <p>
-                            <strong>Content:</strong> {lesson.content}
+                            <strong>Nội dung:</strong> {lesson.content}
                           </p>
                           <p>
                             <strong>Video URL:</strong> {lesson.video_url}
                           </p>
                           <p>
-                            <strong>Order:</strong> {lesson.order_index}
+                            <strong>Thứ tự:</strong> {lesson.order_index}
                           </p>
                         </Card>
                       </Col>
@@ -504,7 +504,7 @@ const Lessons = () => {
       </DragDropContext>
 
       <Modal
-        title={editingLesson ? "Edit Lesson" : "Add New Lesson"}
+        title={editingLesson ? "Chỉnh sửa bài học" : "Thêm bài học"}
         visible={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -516,34 +516,46 @@ const Lessons = () => {
         <Form form={form} onFinish={handleAddOrUpdateLesson}>
           <Form.Item
             name="title"
-            label="Title"
+            label="Tiêu đề"
+            placeholder="Nhập tên bài học"
             rules={[
-              { required: true, message: "Please enter the lesson title" },
+              { required: true, message: "Vui lòng Nhập đầy đủ (bắt buộc)" },
             ]}
           >
             <Input />
           </Form.Item>
-          <Form.Item name="description" label="Description">
+          <Form.Item name="description" label="Miêu tả">
             <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="content" label="Content">
+          <Form.Item
+            name="content"
+            label="Nội dung"
+            placeholder="Thêm nội dung của bạn"
+          >
             <Input.TextArea rows={4} />
           </Form.Item>
-          <Form.Item name="video_url" label="Video URL">
+          <Form.Item
+            name="video_url"
+            label="Video URL"
+            placeholder="Thêm Video bạn vào đây"
+          >
             <Input />
           </Form.Item>
           <Form.Item
             name="order_index"
-            label="Order"
-            rules={[{ required: true, message: "Please enter the order" }]}
+            label="Thứ tự 0 - > N"
+            placeholder="..."
+            rules={[
+              { required: true, message: "Vui lòng thêm thứ tự (bắt buộc)" },
+            ]}
           >
             <Input type="number" />
           </Form.Item>
-          <Form.Item name="module_id" label="Select Module">
+          <Form.Item name="module_id" label="Chương">
             <Select
               value={selectedModule}
               onChange={setSelectedModule}
-              placeholder="Choose a module or add new"
+              placeholder="Chọn chương OR thêm mới"
             >
               {modules.map((module) => (
                 <Select.Option key={module.id} value={module.id}>
@@ -552,11 +564,11 @@ const Lessons = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label="New Module Name (Optional)">
+          <Form.Item label="Chương mới (nếu cần)">
             <Input
               value={newModuleName}
               onChange={(e) => setNewModuleName(e.target.value)}
-              placeholder="Enter a new module name"
+              placeholder="Nhập tên chương (không bắt buộc)"
             />
           </Form.Item>
         </Form>
@@ -571,15 +583,15 @@ const Lessons = () => {
         <Form form={moduleForm} onFinish={handleAddModule}>
           <Form.Item
             name="title"
-            label="Module Name"
+            label="Tên chương"
             rules={[
               { required: true, message: "Please enter the module name" },
             ]}
           >
             <Input />
           </Form.Item>
-          <Form.Item name="order_index" label="Order">
-            <Input type="number" placeholder="Enter order number (optional)" />
+          <Form.Item name="order_index" label="Thứ tự">
+            <Input type="number" placeholder="Số thứ tự (không bắt buộc)" />
           </Form.Item>
         </Form>
       </Modal>

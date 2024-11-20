@@ -126,13 +126,13 @@ const Dashboard = () => {
   return (
     <div style={{ padding: "24px" }}>
       <Title level={2} data-aos="fade-right">
-        Dashboard
+        Tổng Quan
       </Title>
 
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Total Students"
+            title="Tổng Học Viên"
             value={totals.users.toLocaleString()}
             icon={UserOutlined}
             color="#1890ff"
@@ -140,7 +140,7 @@ const Dashboard = () => {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Total Courses"
+            title="Tổng Khóa Học"
             value={totals.courses.toLocaleString()}
             icon={BookOutlined}
             color="#52c41a"
@@ -148,7 +148,7 @@ const Dashboard = () => {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Revenue (USD)"
+            title="Doanh Thu (VND)"
             value={`$${totals.revenue.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -159,7 +159,7 @@ const Dashboard = () => {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Certificates Issued"
+            title="Chứng Chỉ Đã Cấp"
             value={totals.certificates.toLocaleString()}
             icon={TrophyOutlined}
             color="#722ed1"
@@ -169,11 +169,7 @@ const Dashboard = () => {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card
-            title="Monthly Statistics"
-            data-aos="fade-up"
-            data-aos-delay="100"
-          >
+          <Card title="Thống Kê Tháng" data-aos="fade-up" data-aos-delay="100">
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -185,13 +181,13 @@ const Dashboard = () => {
                   type="monotone"
                   dataKey="students"
                   stroke="#1890ff"
-                  name="Students"
+                  name="Học Viên"
                 />
                 <Line
                   type="monotone"
                   dataKey="revenue"
                   stroke="#52c41a"
-                  name="Revenue"
+                  name="Doanh Thu"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -199,7 +195,11 @@ const Dashboard = () => {
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card title="Top Courses" data-aos="fade-up" data-aos-delay="200">
+          <Card
+            title="Khóa Học Bật Nhất"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={topCourses}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -207,8 +207,8 @@ const Dashboard = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="students" fill="#1890ff" name="Students" />
-                <Bar dataKey="revenue" fill="#52c41a" name="Revenue" />
+                <Bar dataKey="students" fill="#1890ff" name="Học Viên" />
+                <Bar dataKey="revenue" fill="#52c41a" name="Doanh Thu" />
               </BarChart>
             </ResponsiveContainer>
           </Card>

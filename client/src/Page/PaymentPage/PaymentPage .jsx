@@ -103,7 +103,7 @@ const PaymentPage = () => {
           ).get("fromPaymentPage");
 
           if (paymentStatus.hasPaid && !fromPaymentPage) {
-            message.info("Bạn đã mua khóa học này trước đóô.");
+            message.info("Quay lại khóa học sớm nhé.");
             navigate(`/courses/${courseId}?fromPaymentPage=true`, {
               replace: true,
             });

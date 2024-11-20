@@ -180,7 +180,16 @@ const Courses = () => {
             fallback={defaultimage} // Ảnh thay thế khi lỗi tải ảnh
           />
         ) : (
-          <span>Không có ảnh</span>
+          <Image
+            src={defaultimage} // Sử dụng ảnh mặc định khi không có ảnh
+            width={100}
+            height={100}
+            style={{
+              objectFit: "cover",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+            }}
+          />
         ),
     },
     {

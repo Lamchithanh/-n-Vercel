@@ -17,9 +17,9 @@ import styles from "./BlogManagement.module.scss";
 
 const { TextArea } = Input;
 
-// Custom error logger
+// Logger lỗi tùy chỉnh
 const logError = (error, context) => {
-  console.error(`[${context}] Error Details:`, {
+  console.error(`[${context}] Chi tiết lỗi:`, {
     message: error.message,
     stack: error.stack,
     response: error.response?.data,
@@ -34,19 +34,19 @@ const logError = (error, context) => {
 };
 
 const BlogManagement = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingPost, setEditingPost] = useState(null);
-  const [form] = Form.useForm();
-  const [submitLoading, setSubmitLoading] = useState(false);
+  const [posts, setPosts] = useState([]); // Danh sách bài viết
+  const [loading, setLoading] = useState(false); // Trạng thái tải dữ liệu
+  const [modalVisible, setModalVisible] = useState(false); // Trạng thái hiển thị modal
+  const [editingPost, setEditingPost] = useState(null); // Bài viết đang chỉnh sửa
+  const [form] = Form.useForm(); // Form sử dụng trong modal
+  const [submitLoading, setSubmitLoading] = useState(false); // Trạng thái khi gửi form
 
-  // Validate form data before submission
+  // Xác thực dữ liệu form trước khi gửi
   const validateFormData = (formData) => {
     const errors = [];
-    if (!formData.title?.trim()) errors.push("Title is required");
-    if (!formData.excerpt?.trim()) errors.push("Excerpt is required");
-    if (!formData.date) errors.push("Date is required");
+    if (!formData.title?.trim()) errors.push("Tiêu đề là bắt buộc");
+    if (!formData.excerpt?.trim()) errors.push("Tóm tắt là bắt buộc");
+    if (!formData.date) errors.push("Ngày là bắt buộc");
     return errors;
   };
 
@@ -55,8 +55,10 @@ const BlogManagement = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      if (!token) {
-        throw new Error("Authentication token not found");
+      // Kiểm tra token chi tiết hơn
+      if (!token || token.trim() === "") {
+        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        return;
       }
 
       const response = await axios.get("http://localhost:9000/api/posts", {
@@ -64,39 +66,42 @@ const BlogManagement = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        timeout: 5000, // 5 second timeout
+        timeout: 5000, // Giới hạn thời gian chờ
       });
 
-      console.log("Fetched posts response:", response.data);
-      setPosts(response.data);
+      // Kiểm tra dữ liệu trả về
+      if (response.data && Array.isArray(response.data)) {
+        console.log("Danh sách bài viết:", response.data);
+        setPosts(response.data);
+      } else {
+        throw new Error("Dữ liệu không hợp lệ");
+      }
     } catch (error) {
-      logError(error, "fetchPosts");
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const errorMap = {
+          401: "Truy cập không được ủy quyền. Vui lòng đăng nhập lại.",
+          403: "Bạn không có quyền truy cập các bài đăng này.",
+          404: "Không tìm thấy bài đăng.",
+          500: "Lỗi máy chủ. Vui lòng thử lại sau.",
+        };
 
-      let errorMessage = "Failed to fetch blog posts";
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            errorMessage = "Unauthorized access. Please login again.";
-            break;
-          case 403:
-            errorMessage = "You don't have permission to access these posts.";
-            break;
-          case 404:
-            errorMessage = "Blog posts not found.";
-            break;
-          case 500:
-            errorMessage = "Server error. Please try again later.";
-            break;
-          default:
-            errorMessage = `Error: ${
-              error.response.data.message || "Unknown error occurred"
-            }`;
-        }
+        const errorMessage =
+          errorMap[status] ||
+          `Lỗi: ${
+            error.response?.data?.message || "Đã xảy ra lỗi không xác định"
+          }`;
+
+        message.error(errorMessage);
       } else if (error.request) {
-        errorMessage = "No response from server. Please check your connection.";
+        message.error(
+          "Không có phản hồi từ máy chủ. Vui lòng kiểm tra kết nối."
+        );
+      } else {
+        message.error("Lỗi không xác định khi tải bài viết");
       }
 
-      message.error(errorMessage);
+      logError(error, "fetchPosts");
     } finally {
       setLoading(false);
     }
@@ -111,10 +116,10 @@ const BlogManagement = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error("Authentication token not found");
+        throw new Error("Token xác thực không tìm thấy");
       }
 
-      // Prepare form data
+      // Chuẩn bị dữ liệu form
       const formData = {
         title: values.title.trim(),
         excerpt: values.excerpt.trim(),
@@ -122,13 +127,15 @@ const BlogManagement = () => {
         image: values.image || editingPost?.image || null, // Giữ lại URL cũ nếu không có thay đổi
       };
 
-      // Validate form data
+      // Xác thực dữ liệu form
       const validationErrors = validateFormData(formData);
       if (validationErrors.length > 0) {
-        throw new Error(`Validation failed: ${validationErrors.join(", ")}`);
+        throw new Error(
+          `Xác thực không thành công: ${validationErrors.join(", ")}`
+        );
       }
 
-      console.log("Submitting form data:", formData);
+      console.log("Đang gửi dữ liệu form:", formData);
 
       const config = {
         headers: {
@@ -145,16 +152,16 @@ const BlogManagement = () => {
           formData,
           config
         );
-        console.log("Update response:", response.data);
-        message.success("Blog post updated successfully");
+        console.log("Phản hồi khi cập nhật:", response.data);
+        message.success("Cập nhật bài viết thành công");
       } else {
         response = await axios.post(
           "http://localhost:9000/api/posts",
           formData,
           config
         );
-        console.log("Create response:", response.data);
-        message.success("Blog post created successfully");
+        console.log("Phản hồi khi tạo mới:", response.data);
+        message.success("Tạo bài viết mới thành công");
       }
 
       setModalVisible(false);
@@ -164,10 +171,9 @@ const BlogManagement = () => {
     } catch (error) {
       logError(error, "handleSubmit");
 
-      let errorMessage = "Failed to save blog post";
+      let errorMessage = "Lỗi khi lưu bài viết";
       if (error.response) {
-        // Log detailed server response for debugging
-        console.error("Server Error Response:", {
+        console.error("Phản hồi lỗi từ server:", {
           status: error.response.status,
           data: error.response.data,
           headers: error.response.headers,
@@ -175,26 +181,29 @@ const BlogManagement = () => {
 
         switch (error.response.status) {
           case 400:
-            errorMessage = `Invalid data: ${
-              error.response.data.message || "Please check your input"
+            errorMessage = `Dữ liệu không hợp lệ: ${
+              error.response.data.message ||
+              "Vui lòng kiểm tra lại dữ liệu nhập"
             }`;
             break;
           case 401:
-            errorMessage = "Session expired. Please login again.";
+            errorMessage = "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.";
             break;
           case 413:
-            errorMessage = "Image size too large. Please use a smaller image.";
+            errorMessage =
+              "Kích thước ảnh quá lớn. Vui lòng sử dụng ảnh có kích thước nhỏ hơn.";
             break;
           case 500:
-            errorMessage = "Server error. Please try again later.";
+            errorMessage = "Lỗi máy chủ. Vui lòng thử lại sau.";
             break;
           default:
-            errorMessage = `Error: ${
-              error.response.data.message || "Unknown error occurred"
+            errorMessage = `Lỗi: ${
+              error.response.data.message || "Lỗi không xác định"
             }`;
         }
       } else if (error.request) {
-        errorMessage = "No response from server. Please check your connection.";
+        errorMessage =
+          "Không có phản hồi từ máy chủ. Vui lòng kiểm tra kết nối.";
       } else if (error.message.includes("Validation failed")) {
         errorMessage = error.message;
       }
@@ -209,10 +218,10 @@ const BlogManagement = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        throw new Error("Authentication token not found");
+        throw new Error("Token xác thực không tìm thấy");
       }
 
-      console.log("Deleting post:", id);
+      console.log("Đang xóa bài viết:", id);
 
       await axios.delete(`http://localhost:9000/api/posts/${id}`, {
         headers: {
@@ -222,26 +231,26 @@ const BlogManagement = () => {
         timeout: 5000,
       });
 
-      message.success("Blog post deleted successfully");
+      message.success("Xóa bài viết thành công");
       fetchPosts();
     } catch (error) {
       logError(error, "handleDelete");
 
-      let errorMessage = "Failed to delete blog post";
+      let errorMessage = "Lỗi khi xóa bài viết";
       if (error.response) {
         switch (error.response.status) {
           case 404:
-            errorMessage = "Blog post not found";
+            errorMessage = "Bài viết không tìm thấy";
             break;
           case 401:
-            errorMessage = "Unauthorized. Please login again.";
+            errorMessage = "Không có quyền truy cập. Vui lòng đăng nhập lại.";
             break;
           case 500:
-            errorMessage = "Server error. Please try again later.";
+            errorMessage = "Lỗi máy chủ. Vui lòng thử lại sau.";
             break;
           default:
-            errorMessage = `Error: ${
-              error.response.data.message || "Unknown error occurred"
+            errorMessage = `Lỗi: ${
+              error.response.data.message || "Lỗi không xác định"
             }`;
         }
       }
@@ -252,7 +261,7 @@ const BlogManagement = () => {
 
   const handleEdit = (record) => {
     try {
-      console.log("Editing post:", record);
+      console.log("Chỉnh sửa bài viết:", record);
       setEditingPost(record);
       form.setFieldsValue({
         ...record,
@@ -261,50 +270,49 @@ const BlogManagement = () => {
       setModalVisible(true);
     } catch (error) {
       logError(error, "handleEdit");
-      message.error("Error preparing post for edit");
+      message.error("Lỗi khi chuẩn bị bài viết để chỉnh sửa");
     }
   };
 
-  // Rest of your component remains the same
   const columns = [
     {
-      title: "Title",
+      title: "Tiêu đề",
       dataIndex: "title",
       key: "title",
       width: "30%",
     },
     {
-      title: "Excerpt",
+      title: "Tóm tắt",
       dataIndex: "excerpt",
       key: "excerpt",
       width: "40%",
       ellipsis: true,
     },
     {
-      title: "Date",
+      title: "Ngày",
       dataIndex: "date",
       key: "date",
       width: "15%",
       render: (date) => dayjs(date).format("DD/MM/YYYY"),
     },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       width: "15%",
       render: (_, record) => (
-        <Space>
+        <Space size="middle">
           <Button
-            type="primary"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
+            type="primary"
           />
           <Popconfirm
-            title="Are you sure you want to delete this post?"
+            title="Bạn có chắc chắn muốn xóa bài viết này?"
             onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
+            okText="Có"
+            cancelText="Không"
           >
-            <Button type="primary" danger icon={<DeleteOutlined />} />
+            <Button icon={<DeleteOutlined />} type="danger" />
           </Popconfirm>
         </Space>
       ),
@@ -312,103 +320,63 @@ const BlogManagement = () => {
   ];
 
   return (
-    <div className={styles.blogManagement}>
-      <div className={styles.header}>
-        <h2>Blog Management</h2>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditingPost(null);
-            form.resetFields();
-            setModalVisible(true);
-          }}
-        >
-          Add New Post
-        </Button>
-      </div>
-
+    <div className={styles.container}>
+      <Button
+        type="primary"
+        icon={<PlusOutlined />}
+        onClick={() => setModalVisible(true)}
+      >
+        Thêm mới bài viết
+      </Button>
       <Table
-        columns={columns}
         dataSource={posts}
+        columns={columns}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 10 }}
+        pagination={false}
       />
-
       <Modal
-        title={editingPost ? "Edit Blog Post" : "Create New Blog Post"}
-        open={modalVisible}
-        onCancel={() => {
-          setModalVisible(false);
-          form.resetFields();
-          setEditingPost(null);
-        }}
+        title={editingPost ? "Chỉnh sửa bài viết" : "Thêm bài viết mới"}
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
         footer={null}
-        width={800}
+        destroyOnClose
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ date: dayjs() }}
+          initialValues={editingPost || {}}
         >
-          <Form.Item
-            name="title"
-            label="Title"
-            rules={[{ required: true, message: "Please input the title!" }]}
-          >
-            <Input placeholder="Enter blog title" />
+          <Form.Item label="Tiêu đề" name="title" rules={[{ required: true }]}>
+            <Input placeholder="Nhập tiêu đề" />
           </Form.Item>
-
           <Form.Item
+            label="Tóm tắt"
             name="excerpt"
-            label="Excerpt"
-            rules={[{ required: true, message: "Please input the excerpt!" }]}
+            rules={[{ required: true }]}
           >
-            <TextArea
-              placeholder="Enter blog excerpt"
-              autoSize={{ minRows: 2, maxRows: 4 }}
+            <TextArea placeholder="Nhập tóm tắt" rows={4} />
+          </Form.Item>
+          <Form.Item label="Ngày" name="date" rules={[{ required: true }]}>
+            <DatePicker
+              style={{ width: "100%" }}
+              format="DD/MM/YYYY"
+              defaultValue={editingPost ? dayjs(editingPost.date) : undefined}
             />
           </Form.Item>
-
-          <Form.Item
-            name="date"
-            label="Publish Date"
-            rules={[{ required: true, message: "Please select the date!" }]}
-          >
-            <DatePicker style={{ width: "100%" }} />
+          <Form.Item label="Ảnh" name="image" rules={[{ required: false }]}>
+            <Input placeholder="Nhập URL ảnh" />
           </Form.Item>
-
-          <Form.Item
-            name="image"
-            label="Cover Image URL"
-            rules={[
-              {
-                type: "url",
-                message: "Please enter a valid URL!",
-                validateTrigger: "onChange",
-              },
-            ]}
-          >
-            <Input placeholder="Enter image URL" />
-          </Form.Item>
-
-          <Form.Item className={styles.formActions}>
-            <Space>
-              <Button
-                onClick={() => {
-                  setModalVisible(false);
-                  form.resetFields();
-                  setEditingPost(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="primary" htmlType="submit" loading={submitLoading}>
-                {editingPost ? "Update" : "Create"}
-              </Button>
-            </Space>
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              loading={submitLoading}
+            >
+              {editingPost ? "Cập nhật" : "Tạo mới"}
+            </Button>
           </Form.Item>
         </Form>
       </Modal>

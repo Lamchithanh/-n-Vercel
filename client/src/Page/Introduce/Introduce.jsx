@@ -35,7 +35,7 @@ const Introduce = () => {
       try {
         const token = getAuthHeader();
         const data = await fetchdashboardAPI(token);
-        setDashboardData(data); // Update the data if present
+        setDashboardData(data); // Update only the necessary data
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
         setDashboardData(null); // Ensure value is null if an error occurs
@@ -86,7 +86,7 @@ const Introduce = () => {
                 ) : (
                   <Statistic
                     title="Học viên"
-                    value={dashboardData?.total_users || 0}
+                    value={dashboardData?.totals.users || 0}
                     prefix={<TeamOutlined />}
                   />
                 )}
@@ -99,7 +99,7 @@ const Introduce = () => {
                 ) : (
                   <Statistic
                     title="Khóa học"
-                    value={dashboardData?.total_courses || 0}
+                    value={dashboardData?.totals.courses || 0}
                     prefix={<BookOutlined />}
                   />
                 )}
@@ -112,7 +112,7 @@ const Introduce = () => {
                 ) : (
                   <Statistic
                     title="Chứng chỉ"
-                    value={dashboardData?.total_certificates || 0}
+                    value={dashboardData?.totals.certificates || 0}
                     prefix={<TrophyOutlined />}
                   />
                 )}

@@ -33,8 +33,8 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
       setCourses(coursesData);
       setCertificates(certificatesData);
     } catch (error) {
-      message.error("Failed to fetch data");
-      console.error("Fetch error:", error);
+      message.error("Lấy dữ liệu thất bại");
+      console.error("Lỗi lấy dữ liệu:", error);
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
       );
       return response.data;
     } catch (error) {
-      console.error("Fetch certificates error:", error);
+      console.error("Lỗi lấy chứng chỉ:", error);
       throw error;
     }
   };
@@ -61,7 +61,7 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
       setSubmitLoading(true);
       const token = localStorage.getItem("token");
 
-      // Convert form values to correct format
+      // Chuyển đổi giá trị form sang định dạng đúng
       const formData = {
         user_id: values.user_id,
         course_id: values.course_id,
@@ -77,16 +77,14 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
       );
 
       if (response.data) {
-        message.success("Certificate created successfully");
+        message.success("Tạo chứng chỉ thành công");
         setIsModalVisible(false);
         form.resetFields();
         fetchData();
       }
     } catch (error) {
-      console.error("Create certificate error:", error);
-      message.error(
-        error.response?.data?.message || "Failed to create certificate"
-      );
+      console.error("Lỗi tạo chứng chỉ:", error);
+      message.error(error.response?.data?.message || "Tạo chứng chỉ thất bại");
     } finally {
       setSubmitLoading(false);
     }
@@ -96,7 +94,7 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
     try {
       setSubmitLoading(true);
       const token = localStorage.getItem("token");
-      console.log("Deleting certificate with ID:", selectedCertificate?.id);
+      console.log("Đang xóa chứng chỉ với ID:", selectedCertificate?.id);
 
       await axios.delete(
         `http://localhost:9000/api/certificates/${selectedCertificate.id}`,
@@ -105,15 +103,13 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
         }
       );
 
-      message.success("Certificate deleted successfully");
+      message.success("Xóa chứng chỉ thành công");
 
       setIsDeleteModalVisible(false);
       fetchData();
     } catch (error) {
-      console.error("Delete certificate error:", error);
-      message.error(
-        error.response?.data?.message || "Failed to delete certificate"
-      );
+      console.error("Lỗi xóa chứng chỉ:", error);
+      message.error(error.response?.data?.message || "Xóa chứng chỉ thất bại");
     } finally {
       setSubmitLoading(false);
     }
@@ -124,37 +120,37 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "Unknown";
+    if (!dateString) return "Chưa biết";
     try {
       return dayjs(dateString).format("DD/MM/YYYY HH:mm:ss");
     } catch (error) {
-      return "Invalid Date";
+      return "Ngày không hợp lệ";
     }
   };
 
   const columns = [
     {
-      title: "Student",
+      title: "Học viên",
       dataIndex: "user_id",
       key: "user_id",
       render: (userId) =>
-        users.find((u) => u.id === userId)?.username || "Unknown",
+        users.find((u) => u.id === userId)?.username || "Chưa biết",
     },
     {
-      title: "Course",
+      title: "Khóa học",
       dataIndex: "course_id",
       key: "course_id",
       render: (courseId) =>
-        courses.find((c) => c.id === courseId)?.title || "Unknown",
+        courses.find((c) => c.id === courseId)?.title || "Chưa biết",
     },
     {
-      title: "Issue Date",
+      title: "Ngày cấp",
       dataIndex: "issued_at",
       key: "issued_at",
       render: (date) => formatDate(date),
     },
     {
-      title: "Certificate URL",
+      title: "URL Chứng chỉ",
       dataIndex: "certificate_url",
       key: "certificate_url",
       render: (url) =>
@@ -165,14 +161,14 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800"
           >
-            View Certificate
+            Xem Chứng chỉ
           </a>
         ) : (
-          "N/A"
+          "Xem tại trang cá nhân của người ta"
         ),
     },
     {
-      title: "Actions",
+      title: "Hành động",
       key: "actions",
       render: (_, record) => (
         <div className="space-x-2">
@@ -183,7 +179,7 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
             }}
             className="bg-red-500 hover:bg-red-600"
           >
-            Delete
+            Xóa
           </Button>
         </div>
       ),
@@ -193,13 +189,13 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Certificate Management</h2>
+        <h2 className="text-2xl font-bold">Quản lý chứng chỉ</h2>
         <Button
           onClick={() => setIsModalVisible(true)}
           className="bg-green-500 hover:bg-green-600 text-black"
           style={{ marginBottom: 15 }}
         >
-          Issue New Certificate
+          Cấp chứng chỉ mới
         </Button>
         <Button onClick={handleViewRequests} style={{ marginLeft: 5 }}>
           Xem yêu cầu
@@ -215,7 +211,7 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
       />
 
       <Modal
-        title="Issue New Certificate"
+        title="Cấp chứng chỉ mới"
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
@@ -231,10 +227,10 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
         >
           <Form.Item
             name="user_id"
-            label="Student"
-            rules={[{ required: true, message: "Please select a student" }]}
+            label="Học viên"
+            rules={[{ required: true, message: "Vui lòng chọn học viên" }]}
           >
-            <Select placeholder="Select student">
+            <Select placeholder="Chọn học viên">
               {users.map((user) => (
                 <Select.Option key={user.id} value={user.id}>
                   {user.username}
@@ -245,10 +241,10 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
 
           <Form.Item
             name="course_id"
-            label="Course"
-            rules={[{ required: true, message: "Please select a course" }]}
+            label="Khóa học"
+            rules={[{ required: true, message: "Vui lòng chọn khóa học" }]}
           >
-            <Select placeholder="Select course">
+            <Select placeholder="Chọn khóa học">
               {courses.map((course) => (
                 <Select.Option key={course.id} value={course.id}>
                   {course.title}
@@ -259,13 +255,13 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
 
           <Form.Item
             name="issued_at"
-            label="Issue Date"
-            rules={[{ required: true, message: "Please select issue date" }]}
+            label="Ngày cấp"
+            rules={[{ required: true, message: "Vui lòng chọn ngày cấp" }]}
           >
             <DatePicker
               className="w-full"
-              showTime // Enable time selection
-              format="YYYY-MM-DD HH:mm:ss" // Display format
+              showTime
+              format="YYYY-MM-DD HH:mm:ss"
             />
           </Form.Item>
 
@@ -276,7 +272,7 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
                 form.resetFields();
               }}
             >
-              Cancel
+              Hủy
             </Button>
             <Button
               htmlType="submit"
@@ -289,18 +285,18 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
               loading={submitLoading}
               className="bg-green-500 hover:bg-blue-600 text-white"
             >
-              Create Certificate
+              Tạo chứng chỉ
             </Button>
           </div>
         </Form>
       </Modal>
       <Modal
-        title="Delete Certificate"
+        title="Xóa chứng chỉ"
         open={isDeleteModalVisible}
         onCancel={() => setIsDeleteModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setIsDeleteModalVisible(false)}>
-            Cancel
+            Hủy
           </Button>,
           <Button
             key="delete"
@@ -308,24 +304,24 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
             onClick={handleDeleteCertificate}
             loading={submitLoading}
           >
-            Delete
+            Xóa
           </Button>,
         ]}
       >
         <p>
-          Are you sure you want to delete the certificate for{" "}
+          Bạn có chắc chắn muốn xóa chứng chỉ của{" "}
           {selectedCertificate?.user_id
             ? users.find((u) => u.id === selectedCertificate.user_id)?.username
-            : "Unknown"}{" "}
-          in the{" "}
+            : "Chưa biết"}{" "}
+          trong{" "}
           {selectedCertificate?.course_id
             ? courses.find((c) => c.id === selectedCertificate.course_id)?.title
-            : "Unknown"}{" "}
-          course?
+            : "Chưa biết"}{" "}
+          khóa học này không?
         </p>
       </Modal>
       <Modal
-        title="Certificate Requests"
+        title="Yêu cầu chứng chỉ"
         open={isRequestModalVisible}
         onCancel={() => setIsRequestModalVisible(false)}
         footer={null}

@@ -137,6 +137,7 @@ const getDashboardData = async (req, res) => {
     res.status(500).json({ error: "Error querying the database" });
   }
 };
+
 module.exports = {
   getDashboardData,
 };

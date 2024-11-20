@@ -154,28 +154,32 @@ const Users = () => {
           `http://localhost:9000/api/users/${editingUser.id}`,
           values
         );
-        message.success("User updated successfully");
+        message.success(
+          `Cập nhật thông tin người dùng "${values.username}" thành công!`
+        );
       } else {
         await axios.post("http://localhost:9000/api/users", values);
-        message.success("User added successfully");
+        message.success(`Thêm mới người dùng "${values.username}" thành công!`);
       }
       setModalVisible(false);
       form.resetFields();
-      fetchUsers(); // Fetch lại sau khi thêm/sửa
+      fetchUsers(); // Fetch lại danh sách sau khi thêm/sửa
     } catch (error) {
-      console.error("Error adding/updating user:", error);
-      message.error(
+      console.error("Lỗi khi thêm/cập nhật người dùng:", error);
+      const errorMessage =
         error.response?.data?.message ||
-          "Unable to add/update user. Please try again."
-      );
+        (editingUser
+          ? `Không thể cập nhật người dùng "${values.username}". Vui lòng thử lại!`
+          : `Không thể thêm người dùng "${values.username}". Vui lòng thử lại!`);
+      message.error(errorMessage);
     }
   };
 
   const handleDeleteUser = (userId) => {
     Modal.confirm({
-      title: "Are you sure you want to delete this user?",
-      content: "This action cannot be undone!",
-      okText: "Yes",
+      title: "Bạn có chắc muốn xóa tài khoản này?",
+      content: "Hành động này không thể hoàn tác.",
+      okText: "OK",
       okType: "danger",
       cancelText: "No",
       onOk: async () => {
@@ -312,11 +316,11 @@ const Users = () => {
 
   const columns = [
     { title: "ID", dataIndex: "id", key: "id" },
-    { title: "Username", dataIndex: "username", key: "username" },
+    { title: "Danh tính", dataIndex: "username", key: "username" },
     { title: "Email", dataIndex: "email", key: "email" },
-    { title: "Role", dataIndex: "role", key: "role" },
+    { title: "Vai Trò", dataIndex: "role", key: "role" },
     {
-      title: "Account Locked",
+      title: "Khóa Tài Khoản",
       dataIndex: "isLocked",
       key: "isLocked",
       render: (_, record) => {
@@ -330,7 +334,7 @@ const Users = () => {
       },
     },
     {
-      title: "Lock Status",
+      title: "Trạng Thái Khóa",
       key: "lockStatus",
       render: (_, record) => {
         const lockStatus = getLockStatus(record);
@@ -338,7 +342,7 @@ const Users = () => {
       },
     },
     {
-      title: "Action",
+      title: "Hành Động",
       key: "action",
       render: (_, record) => (
         <>
@@ -349,13 +353,13 @@ const Users = () => {
               setModalVisible(true);
             }}
           >
-            Edit
+            Sửa
           </Button>
           <Button
             onClick={() => handleDeleteUser(record.id)}
             style={{ marginLeft: 8 }}
           >
-            Delete
+            Xóa
           </Button>
         </>
       ),
@@ -372,18 +376,18 @@ const Users = () => {
         }}
         style={{ marginBottom: 16 }}
       >
-        Add New User
+        Thêm Người Dùng
       </Button>
 
       <Tabs defaultActiveKey="1">
-        <TabPane tab="Students" key="1">
+        <TabPane tab="Học Viên" key="1">
           <Table
             columns={columns}
             dataSource={users.filter((user) => user.role === "student")}
             rowKey="id"
           />
         </TabPane>
-        <TabPane tab="Instructors" key="2">
+        <TabPane tab="Giảng Viên" key="2">
           <Table
             columns={columns}
             dataSource={users.filter((user) => user.role === "instructor")}
@@ -393,7 +397,7 @@ const Users = () => {
       </Tabs>
 
       <Modal
-        title={editingUser ? "Edit User" : "Add New User"}
+        title={editingUser ? "Chỉnh sửa người dùng" : "Thêm người dùng"}
         open={modalVisible}
         onOk={() => form.submit()}
         onCancel={() => {
@@ -404,15 +408,15 @@ const Users = () => {
         <Form form={form} layout="vertical" onFinish={handleAddOrUpdateUser}>
           <Form.Item
             name="username"
-            label="Username"
-            rules={[{ required: true, message: "Please input the username!" }]}
+            label="Họ & Tên"
+            rules={[{ required: true, message: "Vui lòng Nhập tên đầy đủ!" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="email"
             label="Email"
-            rules={[{ required: true, message: "Please input the email!" }]}
+            rules={[{ required: true, message: "Vui lòng nhập email!" }]}
           >
             <Input />
           </Form.Item>
@@ -420,17 +424,15 @@ const Users = () => {
             <Form.Item
               name="password"
               label="Password"
-              rules={[
-                { required: true, message: "Please input the password!" },
-              ]}
+              rules={[{ required: true, message: "Vui lòng nhập password!" }]}
             >
               <Input.Password />
             </Form.Item>
           )}
           <Form.Item
             name="role"
-            label="Role"
-            rules={[{ required: true, message: "Please select the role!" }]}
+            label="Vai Trò"
+            rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
           >
             <Select>
               <Option value="student">Student</Option>

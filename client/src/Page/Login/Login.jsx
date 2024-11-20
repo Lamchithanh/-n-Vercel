@@ -240,7 +240,9 @@ const Login = () => {
             <Form.Item name="role" initialValue="student">
               <Select className="login-input">
                 <Option value="student">Học viên</Option>
-                <Option value="instructor">Giảng viên</Option>
+                <Option value="instructor" disabled>
+                  Giảng viên
+                </Option>
               </Select>
             </Form.Item>
 

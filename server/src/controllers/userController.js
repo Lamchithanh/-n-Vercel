@@ -190,30 +190,26 @@ exports.createUser = async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
 
-    // Kiểm tra xem tất cả các trường có giá trị không
-    if (!username || !email || !password || !role) {
-      return res.status(400).json({ error: "All fields are required." });
+    // Kiểm tra email đã tồn tại hay chưa
+    const [existingEmail] = await pool.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (existingEmail.length > 0) {
+      return res.status(400).json({ error: "Email đã được sử dụng!" });
     }
 
-    // Tạo người dùng mới
-    const newUser = {
-      username,
-      email,
-      password_hash: password, // Không băm mật khẩu
-      role,
-    };
+    // Tạo người dùng mới (cho phép username trùng)
+    const [result] = await pool.query(
+      "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)",
+      [username, email, password, role]
+    );
 
-    // Lưu người dùng vào cơ sở dữ liệu
-    // Giả sử bạn có một hàm để thêm người dùng vào cơ sở dữ liệu
-    await pool.query("INSERT INTO users SET ?", newUser);
-
-    res.status(201).json({
-      message: "User created successfully",
-      user: newUser,
-    });
+    res.status(201).json({ message: "Tạo người dùng thành công!" });
   } catch (error) {
-    console.error("Error creating user:", error);
-    res.status(500).json({ error: "Unable to create user" });
+    console.error("Lỗi khi tạo người dùng:", error);
+    res.status(500).json({ error: "Không thể tạo người dùng." });
   }
 };
 
