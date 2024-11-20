@@ -1,15 +1,16 @@
 const pool = require("../config/pool"); // Kết nối tới cơ sở dữ liệu
 
-// Đăng ký khóa học
+// đăng ký khóa học
 const enrollCourse = async (req, res) => {
-  const { userId, courseId } = req.body; // Sử dụng tên thuộc tính từ frontend
+  const { userId, courseId, status = "enrolled" } = req.body; // Lấy status từ body, mặc định là 'enrolled'
 
-  console.log("userId:", userId, "courseId:", courseId); // Thêm log
+  console.log("userId:", userId, "courseId:", courseId, "status:", status); // Thêm log
 
   try {
+    // Insert vào bảng enrollments, lưu ý thêm cột status và mặc định là 'enrolled'
     const result = await pool.query(
-      "INSERT INTO enrollments (user_id, course_id) VALUES (?, ?)",
-      [userId, courseId] // Đảm bảo sử dụng đúng tên ở đây
+      "INSERT INTO enrollments (user_id, course_id, status) VALUES (?, ?, ?)",
+      [userId, courseId, status] // Đảm bảo truyền vào đúng tham số
     );
     res
       .status(201)
@@ -203,10 +204,35 @@ const getTopEnrolledCourses = async (req, res) => {
   }
 };
 
+const getEnrollmentStatus = async (req, res) => {
+  const { userId, courseId } = req.params; // Lấy userId và courseId từ tham số đường dẫn
+
+  console.log("userId:", userId, "courseId:", courseId); // Thêm log kiểm tra
+
+  try {
+    // Truy vấn bảng enrollments để lấy status của người dùng đối với khóa học
+    const [rows] = await pool.query(
+      "SELECT status FROM enrollments WHERE user_id = ? AND course_id = ?",
+      [userId, courseId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Đăng ký không tồn tại!" });
+    }
+
+    // Trả về status của người dùng đối với khóa học
+    res.status(200).json({ status: rows[0].status });
+  } catch (error) {
+    console.error(error); // In ra lỗi
+    res.status(500).json({ error: "Lỗi khi lấy trạng thái đăng ký." });
+  }
+};
+
 module.exports = {
   getTopEnrolledCourses,
   enrollCourse,
   getEnrollments,
   completeCourse,
   getMyCourses,
+  getEnrollmentStatus,
 };

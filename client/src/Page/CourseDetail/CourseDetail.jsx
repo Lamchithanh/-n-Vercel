@@ -15,7 +15,10 @@ import {
   getProgressAPI,
   updateProgressAPI,
 } from "../../../../server/src/Api/courseApi";
-import { enrollCourseAPI } from "../../../../server/src/Api/enrollmentApi";
+import {
+  enrollCourseAPI,
+  getEnrollmentStatusAPI,
+} from "../../../../server/src/Api/enrollmentApi";
 import {
   fetchLessonsAPI,
   getCourseDurationAPI,
@@ -64,20 +67,21 @@ const CourseDetail = () => {
   }, [location]);
 
   useEffect(() => {
-    // Kiểm tra trạng thái đăng ký của người dùng hiện tại
-    const checkEnrollmentStatus = () => {
+    const checkEnrollmentStatus = async () => {
       const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) return false;
+      if (!user) return;
 
-      const enrolledCoursesData =
-        JSON.parse(localStorage.getItem("enrolledCourses")) || {};
-      const userEnrolledCourses = enrolledCoursesData[user.id] || [];
-
-      return userEnrolledCourses.includes(courseId);
+      try {
+        const status = await getEnrollmentStatusAPI(user.id, courseId);
+        setIsEnrolled(status === "enrolled");
+      } catch (error) {
+        console.error("Error checking enrollment status:", error);
+        setIsEnrolled(false); // Mặc định là chưa đăng ký nếu API lỗi
+      }
     };
 
-    // Khởi tạo trạng thái đăng ký của người dùng
-    setIsEnrolled(checkEnrollmentStatus());
+    // Kiểm tra trạng thái đăng ký
+    checkEnrollmentStatus();
 
     // Hàm tải dữ liệu khóa học
     const fetchCourseData = async () => {

@@ -25,6 +25,26 @@ export const getEnrollmentsAPI = async (userId) => {
   }
 };
 
+// API lấy status đăng ký
+export const getEnrollmentStatusAPI = async (userId, courseId) => {
+  const token = localStorage.getItem("token"); // Lấy token từ localStorage
+
+  try {
+    const response = await axios.get(
+      `${API_URL}enrollments/status/${userId}/${courseId}`, // Gọi API với userId và courseId
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Gửi token trong header để xác thực
+        },
+      }
+    );
+    return response.data.status; // Trả về status đăng ký
+  } catch (error) {
+    console.error("Error fetching enrollment status:", error);
+    throw new Error("Không thể lấy trạng thái đăng ký.");
+  }
+};
+
 export const getEnrolledCoursesAPI = async (userId) => {
   const token = localStorage.getItem("token");
   const response = await axios.get(

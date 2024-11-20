@@ -6,10 +6,14 @@ const pool = require("../config/pool"); // Import promise pool
 
 // Các routes khác giữ nguyên...
 router.post("/enrollments", enrollmentController.enrollCourse);
-router.get("/enrollments/:user_id", enrollmentController.getEnrollments);
+router.get("/enrollments/:userId", enrollmentController.getEnrollments);
 router.get(
   "/enrollments/my-courses/:userId",
   enrollmentController.getMyCourses
+);
+router.get(
+  "/enrollments/status/:userId/:courseId",
+  enrollmentController.getEnrollmentStatus
 );
 router.patch("/complete/:id", enrollmentController.completeCourse);
 router.get("/top-enrolled-courses", enrollmentController.getTopEnrolledCourses);

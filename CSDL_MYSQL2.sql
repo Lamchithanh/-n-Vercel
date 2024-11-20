@@ -91,10 +91,13 @@ CREATE TABLE enrollments (
   user_id BIGINT UNSIGNED,
   course_id BIGINT UNSIGNED,
   enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status ENUM('enrolled', 'completed', 'dropped') DEFAULT 'enrolled',
   completed_at TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
+
+
 
 -- Bảng Progress (Theo dõi tiến độ học tập)
 CREATE TABLE progress (
