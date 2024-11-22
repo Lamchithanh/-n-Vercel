@@ -14,5 +14,7 @@ router.get(
   "/payments/details/:paymentId",
   paymentApicontroller.getPaymentDetails
 );
+router.post("/coupons/validate", paymentApicontroller.validateCoupon);
+router.post("/coupons/check-coupon", paymentApicontroller.checkCoupon);
 
 module.exports = router;

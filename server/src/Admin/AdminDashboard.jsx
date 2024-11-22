@@ -15,6 +15,7 @@ import Lessons from "./Adlessons/lessons.jsx";
 import Certificates from "./AdCertificates/Certificates.jsx";
 import BlogManagement from "./BlogManagement/BlogManagement.jsx";
 import Dashboard from "./Dashboard/Dashboard.jsx";
+import AdminAddCoupon from "./Adcoupon/Adcoupon.jsx";
 
 const { Header, Content, Sider } = Layout;
 
@@ -78,6 +79,8 @@ const AdminDashboard = () => {
         return <BlogManagement />;
       case "Dashboard":
         return <Dashboard />;
+      case "AdminAddCoupon":
+        return <AdminAddCoupon />;
       default:
         return null;
     }
@@ -120,6 +123,9 @@ const AdminDashboard = () => {
           </Menu.Item>
           <Menu.Item key="blog" icon={<FileTextOutlined />}>
             Bài Viết
+          </Menu.Item>
+          <Menu.Item key="AdminAddCoupon" icon={<FileTextOutlined />}>
+            Mã Giảm Giá
           </Menu.Item>
         </Menu>
       </Sider>

@@ -18,6 +18,12 @@ const CourseCard = ({ course, newlyAddedCourses = [] }) => {
     navigate(`/courses/${course.id}`);
   };
 
+  const formatPrice = (price) => {
+    return parseFloat(price)
+      .toLocaleString("vi-VN", { style: "currency", currency: "VND" })
+      .replace("₫", "VND");
+  };
+
   const isNewCourse = newlyAddedCourses.includes(course.id);
   const isFree = course.price === "0" || course.price === "0.00";
 
@@ -48,7 +54,7 @@ const CourseCard = ({ course, newlyAddedCourses = [] }) => {
 
           <div className="course-metadata">
             <span className="course-price">
-              {isFree ? "Miễn phí" : `${course.price} vnd`}
+              {isFree ? "Miễn phí" : formatPrice(course.price)}
             </span>
 
             <span className="course-level"> {course.level}</span>

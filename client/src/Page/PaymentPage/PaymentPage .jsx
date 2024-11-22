@@ -22,6 +22,8 @@ import {
   initiatePayment,
 } from "../../../../server/src/Api/paymentApi";
 import PropTypes from "prop-types";
+import CouponInput from "./CouponInput";
+
 const { Title, Text } = Typography;
 
 // Define valid payment methods according to database schema
@@ -83,6 +85,9 @@ const PaymentPage = () => {
   const [totalDuration, setTotalDuration] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [hasHandledPaymentCheck, setHasHandledPaymentCheck] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [finalPrice, setFinalPrice] = useState(0);
+  const [discount, setDiscount] = useState(0);
 
   // Responsive breakpoints
   const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -96,8 +101,6 @@ const PaymentPage = () => {
 
         if (user && !hasHandledPaymentCheck) {
           const paymentStatus = await checkPaymentStatusAPI(user.id, courseId);
-
-          // Kiểm tra nếu người dùng đã mua khóa học và không quay lại từ trang chi tiết
           const fromPaymentPage = new URLSearchParams(
             window.location.search
           ).get("fromPaymentPage");
@@ -107,14 +110,16 @@ const PaymentPage = () => {
             navigate(`/courses/${courseId}?fromPaymentPage=true`, {
               replace: true,
             });
-            setHasHandledPaymentCheck(true); // Đánh dấu đã xử lý điều hướng
+            setHasHandledPaymentCheck(true);
             return;
           }
         }
 
-        // Nếu chưa xử lý hoặc không phải người dùng đã thanh toán, tải dữ liệu khóa học
         const courseData = await fetchCourseById(courseId);
         setCourse(courseData);
+        // Initialize prices with proper number conversion
+        const initialPrice = Number(courseData.price) || 0;
+        setFinalPrice(initialPrice);
 
         const modulesData = await fetchModulesAPI(courseId);
         setModules(modulesData);
@@ -144,6 +149,56 @@ const PaymentPage = () => {
     loadCourseData();
   }, [courseId, navigate, hasHandledPaymentCheck]);
 
+  useEffect(() => {
+    console.log("Base Price:", course?.price);
+    console.log("Applied Coupon:", appliedCoupon);
+
+    const basePrice = parseFloat(course?.price || 0);
+
+    if (appliedCoupon) {
+      const discountValue = parseFloat(appliedCoupon.discount || 0);
+      const discountAmount =
+        appliedCoupon.type === "percentage"
+          ? (basePrice * discountValue) / 100
+          : discountValue;
+
+      const calculatedFinalPrice = Math.max(0, basePrice - discountAmount);
+
+      console.log("Discount Details:", {
+        basePrice,
+        discountValue,
+        discountType: appliedCoupon.type,
+        discountAmount,
+        calculatedFinalPrice,
+      });
+
+      setFinalPrice(calculatedFinalPrice);
+      setDiscount(discountAmount);
+    } else {
+      setFinalPrice(basePrice);
+      setDiscount(0);
+    }
+  }, [course?.price, appliedCoupon]);
+
+  const handleApplyCoupon = (couponData) => {
+    if (!couponData) {
+      setAppliedCoupon(null);
+      setDiscount(0);
+      setFinalPrice(parseFloat(course?.price) || 0);
+      return;
+    }
+
+    setAppliedCoupon({
+      code: couponData.code,
+      discount: parseFloat(couponData.discount),
+      type: couponData.type,
+    });
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+  };
+
   const handleConfirmPayment = async () => {
     if (!validateSelection()) {
       return;
@@ -158,12 +213,23 @@ const PaymentPage = () => {
     try {
       setLoading(true);
 
+      console.log("Initiating Payment with:", {
+        userId: user.id,
+        courseId,
+        amount: finalPrice,
+        paymentMethod,
+        couponCode: appliedCoupon?.code,
+      });
+
       const initiateResponse = await initiatePayment({
         userId: user.id,
         courseId,
-        amount: course.price,
-        paymentMethod: paymentMethod, // This now matches the ENUM in database
+        amount: finalPrice,
+        paymentMethod,
+        couponCode: appliedCoupon?.code,
       });
+
+      console.log("Initiate Payment Response:", initiateResponse);
 
       const mockTransactionId = `TRANS_${Date.now()}`;
       await confirmPayment(initiateResponse.paymentId, mockTransactionId);
@@ -216,6 +282,58 @@ const PaymentPage = () => {
   };
 
   const layout = getResponsiveLayout();
+
+  const PriceBreakdown = () => (
+    <div
+      style={{ background: "#fafafa", padding: "20px", borderRadius: "8px" }}
+    >
+      <CouponInput
+        onApplyCoupon={handleApplyCoupon}
+        onRemoveCoupon={handleRemoveCoupon}
+        coursePrice={Number(course?.price) || 0}
+      />
+
+      <Row justify="space-between" style={{ marginBottom: "12px" }}>
+        <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
+          Giá khóa học:
+        </Text>
+        <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
+          {(Number(course?.price) || 0).toLocaleString()}.000 VND
+        </Text>
+      </Row>
+
+      {discount > 0 && (
+        <Row justify="space-between" style={{ marginBottom: "12px" }}>
+          <Text
+            strong
+            style={{ fontSize: isMobile ? "14px" : "16px", color: "#52c41a" }}
+          >
+            Giảm giá:
+          </Text>
+          <Text
+            strong
+            style={{ fontSize: isMobile ? "14px" : "16px", color: "#52c41a" }}
+          >
+            -{Number(discount).toLocaleString()}.000 VND
+          </Text>
+        </Row>
+      )}
+
+      <Divider style={{ margin: "12px 0" }} />
+
+      <Row justify="space-between">
+        <Text strong style={{ fontSize: isMobile ? "16px" : "18px" }}>
+          Tổng thanh toán:
+        </Text>
+        <Text
+          strong
+          style={{ color: "#ff4d4f", fontSize: isMobile ? "20px" : "24px" }}
+        >
+          {Number(finalPrice).toLocaleString()}.000 VND
+        </Text>
+      </Row>
+    </div>
+  );
 
   return (
     <div
@@ -357,43 +475,7 @@ const PaymentPage = () => {
               </Row>
 
               <Divider style={{ margin: "24px 0" }} />
-
-              <div
-                style={{
-                  background: "#fafafa",
-                  padding: "20px",
-                  borderRadius: "8px",
-                }}
-              >
-                <Row justify="space-between" style={{ marginBottom: "12px" }}>
-                  <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
-                    Giá khóa học:
-                  </Text>
-                  <Text
-                    strong
-                    style={{
-                      color: "#ff4d4f",
-                      fontSize: isMobile ? "14px" : "16px",
-                    }}
-                  >
-                    {course.price.toLocaleString()} VND
-                  </Text>
-                </Row>
-                <Row justify="space-between">
-                  <Text strong style={{ fontSize: isMobile ? "16px" : "18px" }}>
-                    Tổng thanh toán:
-                  </Text>
-                  <Text
-                    strong
-                    style={{
-                      color: "#ff4d4f",
-                      fontSize: isMobile ? "20px" : "24px",
-                    }}
-                  >
-                    {course.price.toLocaleString()} VND
-                  </Text>
-                </Row>
-              </div>
+              <PriceBreakdown />
             </div>
           </Card>
         </Col>
@@ -414,7 +496,7 @@ const PaymentPage = () => {
                 level={2}
                 style={{ color: "#ff4d4f", marginBottom: "24px" }}
               >
-                {course.price.toLocaleString()} VND
+                {Number(finalPrice).toLocaleString()}.000 VND
               </Title>
 
               <PaymentMethodSelector

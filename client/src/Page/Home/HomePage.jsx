@@ -33,6 +33,7 @@ import Testimonials from "./Testimonials/Testimonials";
 import LatestBlog from "./LatestBlog/LatestBlog";
 import CourseCard from "../../components/Card/Card";
 import BackToTop from "./BacktoTop";
+// import RandomCoupon from "../../components/Coupon/Coupon";
 // import CertificateNotification from "../CertificatesPage/CertificateNotification";
 
 const { Header, Content } = Layout;
@@ -461,6 +462,7 @@ const HomePage = () => {
           locale={{ emptyText: "Không có thông báo mới" }}
         />
       </Drawer>
+      {/* <RandomCoupon /> */}
     </Layout>
   );
 };

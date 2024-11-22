@@ -2,16 +2,23 @@ const pool = require("../config/pool");
 
 // Khởi tạo thanh toán
 exports.initiatePayment = async (req, res) => {
-  const { userId, courseId, amount, paymentMethod } = req.body;
+  const { userId, courseId, amount, paymentMethod, couponCode } = req.body;
+
+  const connection = await pool.getConnection();
 
   try {
-    // Kiểm tra xem khóa học đã được mua chưa
+    await connection.beginTransaction();
+
+    // Check if course exists and user hasn't already bought it
     const checkQuery = `
       SELECT id FROM payments 
       WHERE user_id = ? AND course_id = ? AND status = 'completed'
       LIMIT 1
     `;
-    const [existingPayment] = await pool.query(checkQuery, [userId, courseId]);
+    const [existingPayment] = await connection.query(checkQuery, [
+      userId,
+      courseId,
+    ]);
 
     if (existingPayment.length > 0) {
       return res.status(400).json({
@@ -19,25 +26,61 @@ exports.initiatePayment = async (req, res) => {
       });
     }
 
-    // Tạo payment mới
+    // If coupon code is provided, validate and apply discount
+    let finalAmount = amount;
+    if (couponCode) {
+      const [couponResult] = await connection.query(
+        "SELECT discount_amount, discount_type FROM coupons WHERE code = ?",
+        [couponCode]
+      );
+
+      if (couponResult.length > 0) {
+        const { discount_amount, discount_type } = couponResult[0];
+
+        // Calculate discounted price
+        if (discount_type === "percentage") {
+          finalAmount = amount - (amount * discount_amount) / 100;
+        } else if (discount_type === "fixed") {
+          finalAmount = Math.max(0, amount - discount_amount);
+        }
+      }
+    }
+
+    // Create payment record
     const insertQuery = `
-      INSERT INTO payments (user_id, course_id, amount, payment_method, status)
-      VALUES (?, ?, ?, ?, 'pending')
+      INSERT INTO payments (
+        user_id, 
+        course_id, 
+        amount, 
+        payment_method, 
+        status, 
+        coupon_code
+      ) VALUES (?, ?, ?, ?, 'pending', ?)
     `;
-    const [result] = await pool.query(insertQuery, [
+    const [result] = await connection.query(insertQuery, [
       userId,
       courseId,
-      amount,
+      finalAmount, // Use calculated amount
       paymentMethod,
+      couponCode || null,
     ]);
+
+    await connection.commit();
 
     res.status(201).json({
       paymentId: result.insertId,
+      amount: finalAmount,
       message: "Đã khởi tạo thanh toán thành công.",
     });
   } catch (error) {
+    await connection.rollback();
     console.error("Error initiating payment:", error);
-    res.status(500).json({ message: "Không thể khởi tạo thanh toán." });
+    res.status(500).json({
+      message: "Không thể khởi tạo thanh toán.",
+      error: error.message,
+    });
+  } finally {
+    connection.release();
   }
 };
 
@@ -172,5 +215,78 @@ exports.getPaymentDetails = async (req, res) => {
   } catch (error) {
     console.error("Error fetching payment details:", error);
     res.status(500).json({ message: "Không thể tải thông tin thanh toán." });
+  }
+};
+// couponController.js
+// In PaymentController.js
+exports.validateCoupon = async (req, res) => {
+  const { code } = req.body;
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM coupons 
+       WHERE code = ? 
+       AND discount_amount > 0`,
+      [code]
+    );
+
+    // Check if coupon exists and is valid
+    if (result.length === 0) {
+      return res.status(400).json({
+        valid: false,
+        message: "Mã giảm giá không hợp lệ",
+      });
+    }
+
+    const coupon = result[0];
+
+    // Return coupon details
+    res.json({
+      valid: true,
+      discount: coupon.discount_amount,
+      type: coupon.discount_type, // 'percentage' or 'fixed'
+      code: coupon.code,
+    });
+  } catch (error) {
+    // Error handling
+  }
+};
+
+exports.checkCoupon = async (req, res) => {
+  try {
+    const { code, totalAmount } = req.body;
+
+    // Kiểm tra mã giảm giá trong database
+    const [result] = await pool.query(
+      "SELECT discount_amount, discount_type FROM coupons WHERE code = ?",
+      [code]
+    );
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "Mã giảm giá không tồn tại!" });
+    }
+
+    const { discount_amount, discount_type } = result[0];
+
+    // Tính toán giá sau khi áp dụng mã giảm giá
+    let discountedPrice;
+    if (discount_type === "percentage") {
+      discountedPrice = totalAmount - (totalAmount * discount_amount) / 100;
+    } else if (discount_type === "fixed") {
+      discountedPrice = totalAmount - discount_amount;
+    }
+
+    // Đảm bảo giá không âm
+    discountedPrice = Math.max(discountedPrice, 0);
+
+    return res.json({
+      code,
+      discountType: discount_type,
+      discountAmount: discount_amount,
+      discountedPrice,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Lỗi server!" });
   }
 };

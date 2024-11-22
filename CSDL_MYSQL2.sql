@@ -20,6 +20,11 @@ CREATE TABLE users (
   lockReason VARCHAR(255) DEFAULT NULL,
   lockedAt TIMESTAMP DEFAULT NULL,
   lockedUntil TIMESTAMP DEFAULT NULL,
+  total_coupon_used INT DEFAULT 0,
+  last_coupon_used_at TIMESTAMP,
+  favorite_coupons JSON,
+  coupon_notification_enabled BOOLEAN DEFAULT TRUE,
+  total_savings DECIMAL(10,2) DEFAULT 0.00,
   CONSTRAINT chk_locked CHECK (isLocked IN (0,1))
 );
 
@@ -48,10 +53,15 @@ CREATE TABLE courses (
   image VARCHAR(255),
   intro_video_url VARCHAR(255),
   duration INT,
+  coupon_code VARCHAR(50) DEFAULT NULL AFTER status,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (instructor_id) REFERENCES users(id) ON DELETE SET NULL
+  
 );
+
+ALTER TABLE payments
+ADD COLUMN coupon_code VARCHAR(50) DEFAULT NULL AFTER status;
 
 -- Bảng Modules (Phân mục trong khóa học)
 CREATE TABLE modules (
@@ -202,7 +212,23 @@ CREATE TABLE IF NOT EXISTS banners (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_banners_active ON banners(active);
-CREATE INDEX idx_banners_order ON banners(order_num);
+CREATE TABLE coupons (
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(50) UNIQUE NOT NULL,
+  discount_amount DECIMAL(10,2) NOT NULL,
+  max_usage INT DEFAULT 1,
+  discount_type ENUM('percentage', 'fixed') NOT NULL
+);
+
+-- Bảng trung gian để lưu các mã giảm giá yêu thích của user
+CREATE TABLE user_favorite_coupons (
+    id SERIAL PRIMARY KEY,
+    user_id BIGINT UNSIGNED,
+    coupon_id BIGINT UNSIGNED,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_coupon (user_id, coupon_id)
+);
 
 

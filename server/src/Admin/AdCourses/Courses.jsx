@@ -209,7 +209,13 @@ const Courses = () => {
       title: "Giá",
       dataIndex: "price",
       key: "price",
-      render: (text) => (text === "0" ? "Miễn Phí" : `${text} VND`),
+      render: (text) => {
+        if (text === "0") {
+          return "Miễn Phí";
+        }
+        const formattedPrice = new Intl.NumberFormat("vi-VN").format(text);
+        return `${formattedPrice} VND`;
+      },
     },
     {
       title: "Cấp Độ",
@@ -281,6 +287,19 @@ const Courses = () => {
         {uploadProgress > 0 && <Progress percent={uploadProgress} />}
       </Form.Item>
     );
+  };
+  const [price, setPrice] = useState("");
+  const handlePriceChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "");
+    const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    setPrice(formattedValue);
+  };
+  const validatePrice = (_, value) => {
+    const rawValue = value ? value.replace(/\./g, "") : ""; // Loại bỏ dấu chấm để kiểm tra
+    if (!rawValue || rawValue.length < 4) {
+      return Promise.reject(new Error("Giá phải có ít nhất 4 chữ số!"));
+    }
+    return Promise.resolve();
   };
 
   return (
@@ -363,12 +382,20 @@ const Courses = () => {
             label="Giá"
             rules={[
               {
-                required: priceRequired,
+                required: true,
                 message: "Vui lòng nhập giá khóa học!",
+              },
+              {
+                validator: validatePrice,
               },
             ]}
           >
-            <Input type="number" min={0} disabled={!priceRequired} />
+            <Input
+              type="text"
+              value={price}
+              onChange={handlePriceChange}
+              placeholder="Nhập giá khóa học"
+            />
           </Form.Item>
           <Form.Item
             name="level"

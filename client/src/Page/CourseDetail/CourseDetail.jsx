@@ -35,6 +35,7 @@ import CourseProgress from "./CourseProgress";
 import VideoProgressTracker from "./VideoProgressTracker";
 import CertificateNotification from "../CertificatesPage/CertificateNotification";
 import { checkPaymentStatusAPI } from "../../../../server/src/Api/paymentApi";
+// import RandomCoupon from "../../components/Coupon/Coupon";
 // import CourseReviews from "./CourseReviews ";
 const { Title, Paragraph } = Typography;
 
@@ -1046,6 +1047,7 @@ const CourseDetail = () => {
             </div>
           )}
         </Modal>
+        {/* <RandomCoupon /> */}
       </>
     </div>
   );
