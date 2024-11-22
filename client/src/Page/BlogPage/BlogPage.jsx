@@ -8,11 +8,12 @@ import {
   Modal,
   Typography,
   Empty,
+  Button,
 } from "antd";
 import styled from "styled-components";
 // Import the CSS module here
 import styles from "./BlogPage.module.scss";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -89,6 +90,7 @@ const BlogPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [fullContent, setFullContent] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
   const pageSize = 4;
 
   useEffect(() => {
@@ -156,108 +158,119 @@ const BlogPage = () => {
   };
 
   return (
-    <Container>
-      <Spin spinning={loading}>
-        {posts.length === 0 ? (
-          <Empty description="Không có bài viết nào" />
-        ) : (
-          <>
-            <Row gutter={[24, 24]}>
-              {currentPosts.map((post, index) => (
-                <Col
-                  xs={24} // Chiếm toàn bộ chiều rộng trên màn hình nhỏ
-                  sm={24} // Tương tự màn hình nhỏ
-                  md={12} // Chia làm 2 cột trên màn hình trung bình
-                  lg={12} // Tương tự màn hình lớn
-                  key={post.id}
-                >
-                  <CardWrapper alignRight={index % 2 !== 0}>
-                    <StyledCard
-                      onClick={() => handleCardClick(post)}
-                      cover={
-                        post.image && (
-                          <img
-                            alt={post.title}
-                            src={post.image}
-                            style={{
-                              height: 200,
-                              objectFit: "cover",
-                              objectPosition: "center",
-                            }}
-                          />
-                        )
-                      }
-                    >
-                      <Card.Meta
-                        title={post.title}
-                        description={
-                          <>
-                            <Paragraph className={styles.excerpt}>
-                              {post.excerpt}
-                            </Paragraph>
-                            <Text type="secondary">
-                              {formatDate(post.date)}
-                            </Text>
-                          </>
-                        }
-                      />
-                    </StyledCard>
-                  </CardWrapper>
-                </Col>
-              ))}
-            </Row>
-
-            <Row justify="center" style={{ marginTop: 24 }}>
-              <Pagination
-                current={currentPage}
-                total={posts.length}
-                pageSize={pageSize}
-                onChange={handlePageChange}
-                responsive // Ant Design tự động làm responsive cho Pagination
-              />
-            </Row>
-          </>
-        )}
-
-        <StyledModal
-          title={selectedPost?.title}
-          open={modalVisible}
-          onCancel={handleModalClose}
-          footer={null}
-          width={800}
+    <>
+      <div>
+        <Button
+          className="btn-back"
+          onClick={() => navigate(-1)}
+          style={{ margin: 10, marginLeft: 100 }}
         >
-          <Spin spinning={loading}>
-            {selectedPost && (
-              <ContentContainer>
-                {selectedPost.image && (
-                  <img
-                    src={selectedPost.image}
-                    alt={selectedPost.title}
-                    style={{
-                      width: "100%",
-                      maxHeight: "400px",
-                      objectFit: "cover",
-                      marginBottom: "24px",
-                      borderRadius: "8px",
-                    }}
-                  />
-                )}
-                <Title level={4}>{selectedPost.title}</Title>
+          ← Quay lại
+        </Button>
+      </div>
+      <Container>
+        <Spin spinning={loading}>
+          {posts.length === 0 ? (
+            <Empty description="Không có bài viết nào" />
+          ) : (
+            <>
+              <Row gutter={[24, 24]}>
+                {currentPosts.map((post, index) => (
+                  <Col
+                    xs={24} // Chiếm toàn bộ chiều rộng trên màn hình nhỏ
+                    sm={24} // Tương tự màn hình nhỏ
+                    md={12} // Chia làm 2 cột trên màn hình trung bình
+                    lg={12} // Tương tự màn hình lớn
+                    key={post.id}
+                  >
+                    <CardWrapper alignRight={index % 2 !== 0}>
+                      <StyledCard
+                        onClick={() => handleCardClick(post)}
+                        cover={
+                          post.image && (
+                            <img
+                              alt={post.title}
+                              src={post.image}
+                              style={{
+                                height: 200,
+                                objectFit: "cover",
+                                objectPosition: "center",
+                              }}
+                            />
+                          )
+                        }
+                      >
+                        <Card.Meta
+                          title={post.title}
+                          description={
+                            <>
+                              <Paragraph className={styles.excerpt}>
+                                {post.excerpt}
+                              </Paragraph>
+                              <Text type="secondary">
+                                {formatDate(post.date)}
+                              </Text>
+                            </>
+                          }
+                        />
+                      </StyledCard>
+                    </CardWrapper>
+                  </Col>
+                ))}
+              </Row>
 
-                <Text
-                  type="secondary"
-                  style={{ display: "block", marginBottom: "16px" }}
-                >
-                  {formatDate(selectedPost.date)}
-                </Text>
-                <div dangerouslySetInnerHTML={{ __html: fullContent }} />
-                <Paragraph>{selectedPost.excerpt}</Paragraph>
-              </ContentContainer>
-            )}
-          </Spin>
-        </StyledModal>
-      </Spin>
-    </Container>
+              <Row justify="center" style={{ marginTop: 24 }}>
+                <Pagination
+                  current={currentPage}
+                  total={posts.length}
+                  pageSize={pageSize}
+                  onChange={handlePageChange}
+                  responsive // Ant Design tự động làm responsive cho Pagination
+                />
+              </Row>
+            </>
+          )}
+
+          <StyledModal
+            title={selectedPost?.title}
+            open={modalVisible}
+            onCancel={handleModalClose}
+            footer={null}
+            width={800}
+          >
+            <Spin spinning={loading}>
+              {selectedPost && (
+                <ContentContainer>
+                  {selectedPost.image && (
+                    <img
+                      src={selectedPost.image}
+                      alt={selectedPost.title}
+                      style={{
+                        width: "100%",
+                        maxHeight: "400px",
+                        objectFit: "cover",
+                        marginBottom: "24px",
+                        borderRadius: "8px",
+                      }}
+                    />
+                  )}
+                  <Title level={4}>{selectedPost.title}</Title>
+
+                  <Text
+                    type="secondary"
+                    style={{ display: "block", marginBottom: "16px" }}
+                  >
+                    {formatDate(selectedPost.date)}
+                  </Text>
+                  <div dangerouslySetInnerHTML={{ __html: fullContent }} />
+                  <Paragraph>{selectedPost.excerpt}</Paragraph>
+                </ContentContainer>
+              )}
+            </Spin>
+          </StyledModal>
+        </Spin>
+      </Container>
+    </>
   );
 };
 

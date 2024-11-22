@@ -174,6 +174,7 @@ CREATE TABLE video_progress (
   watched BOOLEAN DEFAULT false,
   watched_duration INT DEFAULT 0,  -- Thêm cột watched_duration ở đây
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (lesson_id) REFERENCES lessons(id),
   FOREIGN KEY (course_id) REFERENCES courses(id),

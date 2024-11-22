@@ -50,7 +50,7 @@ const VideoProgressTracker = ({
     const percentage = (currentTime / videoDuration) * 100;
 
     if (percentage >= 90 && !hasNotifiedCompletion) {
-      message.success("Bạn đã hoàn thành 90% thời lượng bài học! 🎉");
+      // message.success("Bạn đã hoàn thành 90% thời lượng bài học! 🎉");
       setHasNotifiedCompletion(true);
 
       const user = JSON.parse(localStorage.getItem("user"));

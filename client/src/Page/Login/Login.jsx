@@ -34,7 +34,6 @@ const Login = () => {
       const response = await login(values.email, values.password);
 
       if (response && response.user && response.token) {
-        // Lưu thông tin người dùng và token vào localStorage
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.setItem("user", JSON.stringify(response.user));
@@ -42,7 +41,6 @@ const Login = () => {
 
         toast.success(`Chào mừng ${response.user.username || "bạn"}!`);
 
-        // Điều hướng dựa trên vai trò của người dùng
         if (response.user.role === "instructor") {
           navigate("/instructor");
         } else if (response.user.role === "student") {
@@ -55,7 +53,6 @@ const Login = () => {
       }
     } catch (error) {
       if (error.response?.status === 403 && error.response?.data?.lockInfo) {
-        // Xử lý trường hợp tài khoản bị khóa
         const { lockInfo } = error.response.data;
         const formatDateTime = (dateString) => {
           if (!dateString) return "Vĩnh viễn";
@@ -150,6 +147,7 @@ const Login = () => {
             onFinish={handleLogin}
             layout="vertical"
             className="login-form"
+            data-aos="fade-up"
           >
             <Form.Item
               name="email"
@@ -211,6 +209,7 @@ const Login = () => {
             onFinish={handleRegister}
             layout="vertical"
             className="login-form"
+            data-aos="fade-up"
           >
             <Form.Item
               name="username"

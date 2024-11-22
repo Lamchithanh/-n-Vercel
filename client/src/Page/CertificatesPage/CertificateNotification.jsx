@@ -27,7 +27,7 @@ const CertificateNotification = ({ currentUser }) => {
       type: "certificate",
       courseId: cert.course_id,
       title: "Chứng chỉ mới",
-      message: `Chúc mừng bạn đã nhận được chứng chỉ khóa học ${cert.course_title}`,
+      message: `Đã có học viên nhận được chứng chỉ mới khóa học ${cert.course_title}`,
       timestamp: new Date().toISOString(),
       read: false,
       important: true,

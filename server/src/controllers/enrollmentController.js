@@ -205,26 +205,26 @@ const getTopEnrolledCourses = async (req, res) => {
 };
 
 const getEnrollmentStatus = async (req, res) => {
-  const { userId, courseId } = req.params; // Lấy userId và courseId từ tham số đường dẫn
-
-  console.log("userId:", userId, "courseId:", courseId); // Thêm log kiểm tra
+  const { userId, courseId } = req.params;
 
   try {
-    // Truy vấn bảng enrollments để lấy status của người dùng đối với khóa học
     const [rows] = await pool.query(
       "SELECT status FROM enrollments WHERE user_id = ? AND course_id = ?",
       [userId, courseId]
     );
 
-    if (rows.length === 0) {
-      return res.status(404).json({ message: "Đăng ký không tồn tại!" });
+    if (rows.length > 0) {
+      // Return a clear, consistent status
+      return res
+        .status(200)
+        .json(rows[0].status === "active" ? "enrolled" : "not_enrolled");
     }
 
-    // Trả về status của người dùng đối với khóa học
-    res.status(200).json({ status: rows[0].status });
+    // If no enrollment found
+    return res.status(200).json("not_enrolled");
   } catch (error) {
-    console.error(error); // In ra lỗi
-    res.status(500).json({ error: "Lỗi khi lấy trạng thái đăng ký." });
+    console.error(error);
+    res.status(500).json({ error: "Error checking enrollment status" });
   }
 };
 

@@ -29,6 +29,10 @@ $box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 
+.login-form {
+  animation-duration: 0.5s;
+  animation-timing-function: ease-out;
+}
 // Back Button
 .back-button {
   position: absolute;

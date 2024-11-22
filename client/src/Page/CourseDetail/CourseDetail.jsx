@@ -72,15 +72,26 @@ const CourseDetail = () => {
       if (!user) return;
 
       try {
+        // First, check localStorage for enrolled courses
+        const enrolledCoursesData =
+          JSON.parse(localStorage.getItem("enrolledCourses")) || {};
+        const userEnrolledCourses = enrolledCoursesData[user.id] || [];
+
+        if (userEnrolledCourses.includes(courseId)) {
+          setIsEnrolled(true);
+          return;
+        }
+
+        // If not in localStorage, check API
         const status = await getEnrollmentStatusAPI(user.id, courseId);
-        setIsEnrolled(status === "enrolled");
+        setIsEnrolled(
+          status === "enrolled" || status === true || status === "active"
+        );
       } catch (error) {
         console.error("Error checking enrollment status:", error);
-        setIsEnrolled(false); // Mặc định là chưa đăng ký nếu API lỗi
       }
     };
 
-    // Kiểm tra trạng thái đăng ký
     checkEnrollmentStatus();
 
     // Hàm tải dữ liệu khóa học
@@ -353,41 +364,44 @@ const CourseDetail = () => {
     }
 
     try {
-      const response = await enrollCourseAPI({ userId: user.id, courseId });
+      const response = await enrollCourseAPI({
+        userId: user.id,
+        courseId,
+      });
 
-      // Cập nhật trạng thái isEnrolled mà không cần tải lại
-      setIsEnrolled(true);
+      console.log("API Enrollment Response:", response);
 
-      // Lưu vào localStorage
-      let enrolledCoursesData;
-      try {
-        enrolledCoursesData =
+      // Check if response contains a success message
+      if (
+        response &&
+        (response.success || response.message === "Đăng ký thành công!")
+      ) {
+        setIsEnrolled(true);
+
+        let enrolledCoursesData =
           JSON.parse(localStorage.getItem("enrolledCourses")) || {};
-      } catch {
-        enrolledCoursesData = {};
-      }
+        enrolledCoursesData[user.id] = enrolledCoursesData[user.id] || [];
 
-      // Đảm bảo mảng khóa học của user tồn tại
-      if (!Array.isArray(enrolledCoursesData[user.id])) {
-        enrolledCoursesData[user.id] = [];
-      }
+        if (!enrolledCoursesData[user.id].includes(courseId)) {
+          enrolledCoursesData[user.id].push(courseId);
+          localStorage.setItem(
+            "enrolledCourses",
+            JSON.stringify(enrolledCoursesData)
+          );
+        }
 
-      // Thêm khóa học mới nếu chưa tồn tại
-      if (!enrolledCoursesData[user.id].includes(courseId)) {
-        enrolledCoursesData[user.id].push(courseId);
-        localStorage.setItem(
-          "enrolledCourses",
-          JSON.stringify(enrolledCoursesData)
+        message.success(response.message || "Đăng ký khóa học thành công!");
+      } else {
+        // If the response doesn't indicate success, show an error
+        message.error(
+          response?.message || "Đăng ký khóa học thất bại. Vui lòng thử lại."
         );
       }
-
-      message.success(response.message || "Đăng ký khóa học thành công!");
-    } catch (err) {
-      console.error("[Debug] Error in handleEnroll:", err);
-      message.error("Đăng ký khóa học thất bại. Vui lòng thử lại sau.");
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      message.error("Có lỗi xảy ra trong quá trình đăng ký.");
     }
   };
-
   const loadLessons = async (moduleId) => {
     try {
       const lessonsData = await fetchLessonsAPI(moduleId);
@@ -682,16 +696,11 @@ const CourseDetail = () => {
       )}
 
       <p style={{ marginTop: 10 }}>
-        <strong>Thời gian tổng:</strong>
+        <strong>Thời gian tổng: </strong>
         <span
           className="course-detail-min"
-          style={{
-            color: "#a7aeae",
-            fontFamily: "monospace",
-            fontSize: 15,
-          }}
+          style={{ color: "#a7aeae", fontFamily: "monospace", fontSize: 15 }}
         >
-          {" "}
           {convertMinutesToHMS(totalCourseDuration)}
         </span>
       </p>
