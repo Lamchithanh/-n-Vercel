@@ -180,25 +180,6 @@ const PaymentPage = () => {
     }
   }, [course?.price, appliedCoupon]);
 
-  const handleApplyCoupon = (couponData) => {
-    if (!couponData) {
-      setAppliedCoupon(null);
-      setDiscount(0);
-      setFinalPrice(parseFloat(course?.price) || 0);
-      return;
-    }
-
-    setAppliedCoupon({
-      code: couponData.code,
-      discount: parseFloat(couponData.discount),
-      type: couponData.type,
-    });
-  };
-
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-  };
-
   const handleConfirmPayment = async () => {
     if (!validateSelection()) {
       return;
@@ -282,59 +263,74 @@ const PaymentPage = () => {
   };
 
   const layout = getResponsiveLayout();
+  const handleCouponApply = (couponData) => {
+    if (!couponData) {
+      setAppliedCoupon(null);
+      setDiscount(0);
+      setFinalPrice(parseFloat(course?.price) || 0);
+      return;
+    }
 
-  const PriceBreakdown = () => (
-    <div
-      style={{ background: "#fafafa", padding: "20px", borderRadius: "8px" }}
-    >
-      <CouponInput
-        onApplyCoupon={handleApplyCoupon}
-        onRemoveCoupon={handleRemoveCoupon}
-        coursePrice={Number(course?.price) || 0}
-      />
+    setAppliedCoupon({
+      code: couponData.code,
+      discount: parseFloat(couponData.discount),
+      type: couponData.type,
+    });
+  };
 
-      <Row justify="space-between" style={{ marginBottom: "12px" }}>
-        <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
-          Giá khóa học:
-        </Text>
-        <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
-          {(Number(course?.price) || 0).toLocaleString()}.000 VND
-        </Text>
-      </Row>
-
-      {discount > 0 && (
+  const PriceBreakdown = () => {
+    const coursePrice = parseFloat(course?.price || 0);
+    return (
+      <div
+        style={{ background: "#fafafa", padding: "20px", borderRadius: "8px" }}
+      >
+        <CouponInput
+          onApplyCoupon={handleCouponApply}
+          onRemoveCoupon={() => handleCouponApply(null)}
+          coursePrice={coursePrice}
+        />
         <Row justify="space-between" style={{ marginBottom: "12px" }}>
-          <Text
-            strong
-            style={{ fontSize: isMobile ? "14px" : "16px", color: "#52c41a" }}
-          >
-            Giảm giá:
+          <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
+            Giá khóa học:
           </Text>
-          <Text
-            strong
-            style={{ fontSize: isMobile ? "14px" : "16px", color: "#52c41a" }}
-          >
-            -{Number(discount).toLocaleString()}.000 VND
+          <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
+            {(Number(course?.price) || 0).toLocaleString()}.000 VND
           </Text>
         </Row>
-      )}
 
-      <Divider style={{ margin: "12px 0" }} />
+        {discount > 0 && (
+          <Row justify="space-between" style={{ marginBottom: "12px" }}>
+            <Text
+              strong
+              style={{ fontSize: isMobile ? "14px" : "16px", color: "#52c41a" }}
+            >
+              Giảm giá:
+            </Text>
+            <Text
+              strong
+              style={{ fontSize: isMobile ? "14px" : "16px", color: "#52c41a" }}
+            >
+              -{Number(discount).toLocaleString()}.000 VND
+            </Text>
+          </Row>
+        )}
 
-      <Row justify="space-between">
-        <Text strong style={{ fontSize: isMobile ? "16px" : "18px" }}>
-          Tổng thanh toán:
-        </Text>
-        <Text
-          strong
-          style={{ color: "#ff4d4f", fontSize: isMobile ? "20px" : "24px" }}
-        >
-          {Number(finalPrice).toLocaleString()}.000 VND
-        </Text>
-      </Row>
-    </div>
-  );
+        <Divider style={{ margin: "12px 0" }} />
 
+        <Row justify="space-between">
+          <Text strong style={{ fontSize: isMobile ? "16px" : "18px" }}>
+            Tổng thanh toán:
+          </Text>
+          <Text
+            strong
+            style={{ color: "#ff4d4f", fontSize: isMobile ? "20px" : "24px" }}
+          >
+            {Number(finalPrice).toLocaleString()}.000 VND
+          </Text>
+        </Row>
+      </div>
+    );
+  };
   return (
     <div
       className="container"

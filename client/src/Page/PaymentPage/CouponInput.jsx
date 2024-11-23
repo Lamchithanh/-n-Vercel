@@ -9,25 +9,43 @@ const CouponInput = ({ onApplyCoupon, onRemoveCoupon, coursePrice }) => {
   const [loading, setLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
-  const checkCoupon = async (code) => {
-    const response = await fetch(`${API_URL}/coupons/check-coupon`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        code,
-        totalAmount: coursePrice,
-      }),
-    });
+  const validateCoupon = async (code) => {
+    try {
+      const response = await fetch(`${API_URL}/coupons/check-coupon`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code: code.trim(),
+          totalAmount: coursePrice,
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      throw new Error(error.message || "Không thể kiểm tra mã giảm giá");
+    }
+  };
+
+  const calculateDiscount = (couponData) => {
+    const { discountType, discountAmount } = couponData;
+    let calculatedDiscount = 0;
+
+    if (discountType === "percentage") {
+      calculatedDiscount = (coursePrice * discountAmount) / 100;
+    } else if (discountType === "fixed") {
+      calculatedDiscount = discountAmount;
     }
 
-    const couponData = await response.json();
-    return couponData;
+    // Ensure discount doesn't exceed course price
+    return Math.min(calculatedDiscount, coursePrice);
   };
 
   const handleApplyCoupon = async () => {
@@ -38,21 +56,25 @@ const CouponInput = ({ onApplyCoupon, onRemoveCoupon, coursePrice }) => {
 
     try {
       setLoading(true);
-      const couponData = await checkCoupon(couponCode);
+      const couponData = await validateCoupon(couponCode);
+      const calculatedDiscount = calculateDiscount(couponData);
 
-      setAppliedCoupon({
+      const finalCouponData = {
         code: couponData.code,
         type: couponData.discountType,
         discount: couponData.discountAmount,
-      });
+        calculatedDiscount,
+      };
+
+      setAppliedCoupon(finalCouponData);
 
       const discountText =
-        couponData.discountType === "percentage"
-          ? `${couponData.discountAmount}%`
-          : `${couponData.discountAmount.toLocaleString()}.000 VND`;
+        finalCouponData.type === "percentage"
+          ? `${finalCouponData.discount}%`
+          : `${finalCouponData.discount.toLocaleString()}0 VND`;
 
       message.success(`Áp dụng mã giảm giá thành công: ${discountText}`);
-      onApplyCoupon(couponData);
+      onApplyCoupon(finalCouponData);
       setCouponCode("");
     } catch (error) {
       message.error(error.message || "Không thể áp dụng mã giảm giá");
@@ -78,6 +100,7 @@ const CouponInput = ({ onApplyCoupon, onRemoveCoupon, coursePrice }) => {
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
             onPressEnter={handleApplyCoupon}
+            maxLength={20}
           />
           <Button type="primary" onClick={handleApplyCoupon} loading={loading}>
             Áp dụng
