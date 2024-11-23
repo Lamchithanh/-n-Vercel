@@ -280,6 +280,16 @@ const PaymentPage = () => {
 
   const PriceBreakdown = () => {
     const coursePrice = parseFloat(course?.price || 0);
+    const user = JSON.parse(localStorage.getItem("user")); // Lấy thông tin người dùng
+    const userId = user?.id; // Lấy userId từ localStorage
+
+    if (!userId) {
+      message.error(
+        "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại."
+      );
+      return null; // Hoặc trả về một fallback UI phù hợp
+    }
+
     return (
       <div
         style={{ background: "#fafafa", padding: "20px", borderRadius: "8px" }}
@@ -288,6 +298,8 @@ const PaymentPage = () => {
           onApplyCoupon={handleCouponApply}
           onRemoveCoupon={() => handleCouponApply(null)}
           coursePrice={coursePrice}
+          courseId={courseId}
+          userId={userId} // Truyền userId chính xác vào CouponInput
         />
         <Row justify="space-between" style={{ marginBottom: "12px" }}>
           <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
@@ -331,6 +343,7 @@ const PaymentPage = () => {
       </div>
     );
   };
+
   return (
     <div
       className="container"

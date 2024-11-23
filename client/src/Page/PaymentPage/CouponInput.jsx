@@ -1,13 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Input, Button, message, Space, Tag } from "antd";
 import { TagOutlined, CloseOutlined } from "@ant-design/icons";
 import { API_URL } from "../../../../server/src/config/config";
 
-const CouponInput = ({ onApplyCoupon, onRemoveCoupon, coursePrice }) => {
+const CouponInput = ({
+  onApplyCoupon,
+  onRemoveCoupon,
+  coursePrice,
+  courseId,
+  userId,
+}) => {
   const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+
+  // Tạo key riêng cho từng user và từng khóa học
+  const storageKey = `applied_coupon_${userId}_${courseId}`;
+
+  // Kiểm tra mã giảm giá đã lưu trong localStorage khi component mount
+  useEffect(() => {
+    const savedCoupon = localStorage.getItem(storageKey);
+    if (savedCoupon) {
+      const couponData = JSON.parse(savedCoupon);
+      setAppliedCoupon(couponData);
+      onApplyCoupon(couponData);
+    }
+  }, [storageKey, onApplyCoupon]);
 
   const validateCoupon = async (code) => {
     try {
@@ -19,6 +38,8 @@ const CouponInput = ({ onApplyCoupon, onRemoveCoupon, coursePrice }) => {
         body: JSON.stringify({
           code: code.trim(),
           totalAmount: coursePrice,
+          userId,
+          courseId,
         }),
       });
 
@@ -44,7 +65,6 @@ const CouponInput = ({ onApplyCoupon, onRemoveCoupon, coursePrice }) => {
       calculatedDiscount = discountAmount;
     }
 
-    // Ensure discount doesn't exceed course price
     return Math.min(calculatedDiscount, coursePrice);
   };
 
@@ -64,7 +84,11 @@ const CouponInput = ({ onApplyCoupon, onRemoveCoupon, coursePrice }) => {
         type: couponData.discountType,
         discount: couponData.discountAmount,
         calculatedDiscount,
+        couponId: couponData.couponId,
       };
+
+      // Lưu vào localStorage với key riêng cho user
+      localStorage.setItem(storageKey, JSON.stringify(finalCouponData));
 
       setAppliedCoupon(finalCouponData);
 
@@ -85,6 +109,9 @@ const CouponInput = ({ onApplyCoupon, onRemoveCoupon, coursePrice }) => {
   };
 
   const handleRemoveCoupon = () => {
+    // Xóa khỏi localStorage với key riêng cho user
+    localStorage.removeItem(storageKey);
+
     setAppliedCoupon(null);
     onRemoveCoupon();
     setCouponCode("");
@@ -135,6 +162,8 @@ CouponInput.propTypes = {
   onApplyCoupon: PropTypes.func.isRequired,
   onRemoveCoupon: PropTypes.func.isRequired,
   coursePrice: PropTypes.number.isRequired,
+  courseId: PropTypes.number.isRequired,
+  userId: PropTypes.number.isRequired,
 };
 
 export default CouponInput;

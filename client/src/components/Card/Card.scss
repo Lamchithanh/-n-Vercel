@@ -1,5 +1,10 @@
 .form_card {
   transition: transform 0.3s ease-in-out, transform 0.3s ease;
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #41a5db;
+  }
 
   .course-card-container {
     width: 380px;
@@ -17,7 +22,6 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       border-color: #41a5db;
     }
-
     .course-image-wrapper {
       position: relative;
       width: 100%;
