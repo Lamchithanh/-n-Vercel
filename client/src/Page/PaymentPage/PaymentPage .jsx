@@ -1,6 +1,6 @@
 import { Card, Button, Row, Col, Typography, message, Divider } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchCourseById } from "../../../../server/src/Api/courseApi";
 import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { fetchLessonsAPI } from "../../../../server/src/Api/lessonApi";
@@ -93,6 +93,26 @@ const PaymentPage = () => {
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const isTablet = useMediaQuery({ minWidth: 768, maxWidth: 991 });
 
+  const calculatePrices = useCallback((basePrice, couponData) => {
+    if (!couponData) {
+      return {
+        finalPrice: basePrice,
+        discount: 0,
+      };
+    }
+
+    const discountValue = parseFloat(couponData.discount || 0);
+    const discountAmount =
+      couponData.type === "percentage"
+        ? (basePrice * discountValue) / 100
+        : discountValue;
+
+    return {
+      finalPrice: Math.max(0, basePrice - discountAmount),
+      discount: discountAmount,
+    };
+  }, []);
+
   useEffect(() => {
     const loadCourseData = async () => {
       try {
@@ -117,9 +137,14 @@ const PaymentPage = () => {
 
         const courseData = await fetchCourseById(courseId);
         setCourse(courseData);
-        // Initialize prices with proper number conversion
+
         const initialPrice = Number(courseData.price) || 0;
-        setFinalPrice(initialPrice);
+        const {
+          finalPrice: calculatedFinalPrice,
+          discount: calculatedDiscount,
+        } = calculatePrices(initialPrice, null);
+        setFinalPrice(calculatedFinalPrice);
+        setDiscount(calculatedDiscount);
 
         const modulesData = await fetchModulesAPI(courseId);
         setModules(modulesData);
@@ -147,43 +172,21 @@ const PaymentPage = () => {
     };
 
     loadCourseData();
-  }, [courseId, navigate, hasHandledPaymentCheck]);
+  }, [courseId, navigate, hasHandledPaymentCheck, calculatePrices]);
 
   useEffect(() => {
-    console.log("Base Price:", course?.price);
-    console.log("Applied Coupon:", appliedCoupon);
+    if (!course?.price) return;
 
-    const basePrice = parseFloat(course?.price || 0);
+    const basePrice = parseFloat(course.price);
+    const { finalPrice: newFinalPrice, discount: newDiscount } =
+      calculatePrices(basePrice, appliedCoupon);
 
-    if (appliedCoupon) {
-      const discountValue = parseFloat(appliedCoupon.discount || 0);
-      const discountAmount =
-        appliedCoupon.type === "percentage"
-          ? (basePrice * discountValue) / 100
-          : discountValue;
-
-      const calculatedFinalPrice = Math.max(0, basePrice - discountAmount);
-
-      console.log("Discount Details:", {
-        basePrice,
-        discountValue,
-        discountType: appliedCoupon.type,
-        discountAmount,
-        calculatedFinalPrice,
-      });
-
-      setFinalPrice(calculatedFinalPrice);
-      setDiscount(discountAmount);
-    } else {
-      setFinalPrice(basePrice);
-      setDiscount(0);
-    }
-  }, [course?.price, appliedCoupon]);
+    setFinalPrice(newFinalPrice);
+    setDiscount(newDiscount);
+  }, [course?.price, appliedCoupon, calculatePrices]);
 
   const handleConfirmPayment = async () => {
-    if (!validateSelection()) {
-      return;
-    }
+    if (!validateSelection()) return;
 
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
@@ -193,15 +196,6 @@ const PaymentPage = () => {
 
     try {
       setLoading(true);
-
-      console.log("Initiating Payment with:", {
-        userId: user.id,
-        courseId,
-        amount: finalPrice,
-        paymentMethod,
-        couponCode: appliedCoupon?.code,
-      });
-
       const initiateResponse = await initiatePayment({
         userId: user.id,
         courseId,
@@ -209,8 +203,6 @@ const PaymentPage = () => {
         paymentMethod,
         couponCode: appliedCoupon?.code,
       });
-
-      console.log("Initiate Payment Response:", initiateResponse);
 
       const mockTransactionId = `TRANS_${Date.now()}`;
       await confirmPayment(initiateResponse.paymentId, mockTransactionId);
@@ -263,31 +255,17 @@ const PaymentPage = () => {
   };
 
   const layout = getResponsiveLayout();
-  const handleCouponApply = (couponData) => {
-    if (!couponData) {
-      setAppliedCoupon(null);
-      setDiscount(0);
-      setFinalPrice(parseFloat(course?.price) || 0);
-      return;
-    }
-
-    setAppliedCoupon({
-      code: couponData.code,
-      discount: parseFloat(couponData.discount),
-      type: couponData.type,
-    });
-  };
 
   const PriceBreakdown = () => {
     const coursePrice = parseFloat(course?.price || 0);
-    const user = JSON.parse(localStorage.getItem("user")); // Lấy thông tin người dùng
-    const userId = user?.id; // Lấy userId từ localStorage
+    const user = JSON.parse(localStorage.getItem("user"));
+    const userId = user?.id;
 
     if (!userId) {
       message.error(
         "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại."
       );
-      return null; // Hoặc trả về một fallback UI phù hợp
+      return null;
     }
 
     return (
@@ -295,11 +273,11 @@ const PaymentPage = () => {
         style={{ background: "#fafafa", padding: "20px", borderRadius: "8px" }}
       >
         <CouponInput
-          onApplyCoupon={handleCouponApply}
-          onRemoveCoupon={() => handleCouponApply(null)}
+          onApplyCoupon={setAppliedCoupon}
+          onRemoveCoupon={() => setAppliedCoupon(null)}
           coursePrice={coursePrice}
           courseId={courseId}
-          userId={userId} // Truyền userId chính xác vào CouponInput
+          userId={userId}
         />
         <Row justify="space-between" style={{ marginBottom: "12px" }}>
           <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
@@ -535,8 +513,8 @@ const PaymentPage = () => {
 };
 
 PaymentMethodSelector.propTypes = {
-  onMethodSelect: PropTypes.func.isRequired, // Hàm callback bắt buộc
-  selectedMethod: PropTypes.string, // Phương thức thanh toán được chọn
+  onMethodSelect: PropTypes.func.isRequired,
+  selectedMethod: PropTypes.string,
 };
 
 export default PaymentPage;

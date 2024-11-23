@@ -21,6 +21,7 @@ const StyledCard = styled(Card)`
   width: 100%;
   margin-bottom: 24px;
   cursor: pointer;
+  border: 1px solid #ccc;
   transition: all 0.3s ease;
 
   &:hover {

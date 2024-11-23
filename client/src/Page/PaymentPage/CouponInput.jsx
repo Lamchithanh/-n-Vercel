@@ -14,22 +14,28 @@ const CouponInput = ({
   const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [isValidating, setIsValidating] = useState(false);
 
-  // Tạo key riêng cho từng user và từng khóa học
   const storageKey = `applied_coupon_${userId}_${courseId}`;
 
-  // Kiểm tra mã giảm giá đã lưu trong localStorage khi component mount
   useEffect(() => {
     const savedCoupon = localStorage.getItem(storageKey);
-    if (savedCoupon) {
-      const couponData = JSON.parse(savedCoupon);
-      setAppliedCoupon(couponData);
-      onApplyCoupon(couponData);
+    if (savedCoupon && !appliedCoupon) {
+      try {
+        const couponData = JSON.parse(savedCoupon);
+        setAppliedCoupon(couponData);
+        onApplyCoupon(couponData);
+      } catch {
+        localStorage.removeItem(storageKey);
+      }
     }
   }, [storageKey, onApplyCoupon]);
 
   const validateCoupon = async (code) => {
+    if (isValidating) return null;
+
     try {
+      setIsValidating(true);
       const response = await fetch(`${API_URL}/coupons/check-coupon`, {
         method: "POST",
         headers: {
@@ -48,10 +54,11 @@ const CouponInput = ({
         throw new Error(error.message);
       }
 
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
       throw new Error(error.message || "Không thể kiểm tra mã giảm giá");
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -74,9 +81,21 @@ const CouponInput = ({
       return;
     }
 
+    // Prevent duplicate API calls if already loading or if coupon is already applied
+    if (
+      loading ||
+      isValidating ||
+      (appliedCoupon && appliedCoupon.code === couponCode.trim())
+    ) {
+      return;
+    }
+
     try {
       setLoading(true);
       const couponData = await validateCoupon(couponCode);
+
+      if (!couponData) return;
+
       const calculatedDiscount = calculateDiscount(couponData);
 
       const finalCouponData = {
@@ -87,18 +106,10 @@ const CouponInput = ({
         couponId: couponData.couponId,
       };
 
-      // Lưu vào localStorage với key riêng cho user
       localStorage.setItem(storageKey, JSON.stringify(finalCouponData));
-
       setAppliedCoupon(finalCouponData);
-
-      const discountText =
-        finalCouponData.type === "percentage"
-          ? `${finalCouponData.discount}%`
-          : `${finalCouponData.discount.toLocaleString()}0 VND`;
-
-      message.success(`Áp dụng mã giảm giá thành công: ${discountText}`);
       onApplyCoupon(finalCouponData);
+      message.success(`Áp dụng mã giảm giá thành công: ${couponData.code}`);
       setCouponCode("");
     } catch (error) {
       message.error(error.message || "Không thể áp dụng mã giảm giá");
@@ -109,9 +120,7 @@ const CouponInput = ({
   };
 
   const handleRemoveCoupon = () => {
-    // Xóa khỏi localStorage với key riêng cho user
     localStorage.removeItem(storageKey);
-
     setAppliedCoupon(null);
     onRemoveCoupon();
     setCouponCode("");
@@ -128,8 +137,14 @@ const CouponInput = ({
             onChange={(e) => setCouponCode(e.target.value)}
             onPressEnter={handleApplyCoupon}
             maxLength={20}
+            disabled={loading || isValidating}
           />
-          <Button type="primary" onClick={handleApplyCoupon} loading={loading}>
+          <Button
+            type="primary"
+            onClick={handleApplyCoupon}
+            loading={loading || isValidating}
+            disabled={loading || isValidating}
+          >
             Áp dụng
           </Button>
         </Space.Compact>

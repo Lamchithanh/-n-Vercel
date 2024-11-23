@@ -117,7 +117,7 @@ const CourseReview = ({ courseId, isEnrolled }) => {
     const averageRating = Number(stats.averageRating || 0).toFixed(1);
 
     return (
-      <Card className="mb-4">
+      <Card className="mb-4" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
         <div className="flex items-center gap-4">
           <Rate
             style={{ fontSize: 15 }}
@@ -197,7 +197,12 @@ const CourseReview = ({ courseId, isEnrolled }) => {
             {review.review_text}
           </List.Item>
         )}
-        style={{ maxHeight: "300px", overflowY: "auto" }}
+        style={{
+          maxHeight: "300px",
+          overflowY: "auto",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          padding: 10,
+        }}
       />
 
       <Modal

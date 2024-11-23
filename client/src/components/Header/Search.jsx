@@ -132,7 +132,7 @@ const CourseSearch = () => {
             position: "absolute",
             zIndex: 100,
             marginTop: 20,
-            background: "#8C42F6",
+            background: "#e2ebeb",
             padding: 20,
             borderRadius: 8,
             left: 0,

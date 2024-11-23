@@ -680,7 +680,7 @@ const CourseDetail = () => {
             <span style={{ color: "orange" }}>
               {course.price === "0" || course.price === "0.00"
                 ? "Miễn phí"
-                : `${course.price} vnd`}
+                : `${new Intl.NumberFormat("vi-VN").format(course.price)} VND`}
             </span>
           </strong>
         </div>
@@ -838,7 +838,9 @@ const CourseDetail = () => {
           xs={24}
           sm={24}
           md={18}
-          style={{ padding: isMobile ? "0 8px" : "0 16px" }}
+          style={{
+            padding: isMobile ? "0 8px" : "0 16px",
+          }}
         >
           <Card
             title={course.title}
@@ -857,6 +859,7 @@ const CourseDetail = () => {
                     margin: "10px",
                     maxWidth: "100%",
                   }),
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             }}
           >
             <div style={{ borderRadius: 8 }} className="video-section">

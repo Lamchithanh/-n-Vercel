@@ -153,7 +153,7 @@ const BlogSection = () => {
   const styles = {
     blogSection: {
       padding: "60px 0",
-      backgroundColor: "#f5f5f5",
+      backgroundColor: "#E2EBEB",
     },
     container: {
       maxWidth: "1200px",
@@ -227,6 +227,7 @@ const BlogSection = () => {
           <div style={styles.grid}>
             {posts.map((post) => (
               <StyledCard
+                style={{ border: " 1px #d4d4d4 solid" }}
                 key={post.id}
                 hoverable
                 cover={

@@ -224,8 +224,8 @@ exports.validateCoupon = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT * FROM coupons 
-       WHERE code = ? 
+      `SELECT * FROM coupons
+       WHERE code = ?
        AND discount_amount > 0`,
       [code]
     );
@@ -265,9 +265,9 @@ exports.checkCoupon = async (req, res) => {
       const [couponResult] = await connection.query(
         `SELECT c.id, c.discount_amount, c.discount_type, c.max_usage,
          (SELECT COUNT(*) FROM coupon_usage cu WHERE cu.coupon_id = c.id) as total_usage,
-         (SELECT COUNT(*) FROM coupon_usage cu 
-          WHERE cu.coupon_id = c.id 
-          AND cu.user_id = ? 
+         (SELECT COUNT(*) FROM coupon_usage cu
+          WHERE cu.coupon_id = c.id
+          AND cu.user_id = ?
           AND cu.course_id = ?) as user_course_usage
         FROM coupons c
         WHERE c.code = ?`,
@@ -309,7 +309,7 @@ exports.checkCoupon = async (req, res) => {
 
       // Record coupon usage
       await connection.query(
-        `INSERT INTO coupon_usage (user_id, course_id, coupon_id) 
+        `INSERT INTO coupon_usage (user_id, course_id, coupon_id)
          VALUES (?, ?, ?)`,
         [userId, courseId, coupon.id]
       );

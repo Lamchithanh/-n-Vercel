@@ -80,20 +80,24 @@ const Introduce = () => {
         <section className={styles.stats}>
           <Row gutter={[32, 32]} justify="center">
             <Col xs={24} sm={12} md={6}>
-              <Card data-aos="zoom-in">
+              <Card style={{ border: "#9c9b9b solid 1px" }} data-aos="zoom-in">
                 {loading ? (
                   <Spin size="small" />
                 ) : (
                   <Statistic
                     title="Học viên"
                     value={dashboardData?.totals.users || 0}
-                    prefix={<TeamOutlined />}
+                    prefix={<TeamOutlined color="#1890ff" />}
                   />
                 )}
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Card data-aos="zoom-in" data-aos-delay="100">
+              <Card
+                style={{ border: "#9c9b9b solid 1px" }}
+                data-aos="zoom-in"
+                data-aos-delay="100"
+              >
                 {loading ? (
                   <Spin size="small" />
                 ) : (
@@ -106,7 +110,11 @@ const Introduce = () => {
               </Card>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Card data-aos="zoom-in" data-aos-delay="200">
+              <Card
+                style={{ border: "#9c9b9b solid 1px" }}
+                data-aos="zoom-in"
+                data-aos-delay="200"
+              >
                 {loading ? (
                   <Spin size="small" />
                 ) : (

@@ -7,6 +7,7 @@ import {
   AppstoreOutlined,
   TrophyOutlined,
   FileTextOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import Courses from "./AdCourses/Courses.jsx";
@@ -124,7 +125,7 @@ const AdminDashboard = () => {
           <Menu.Item key="blog" icon={<FileTextOutlined />}>
             Bài Viết
           </Menu.Item>
-          <Menu.Item key="AdminAddCoupon" icon={<FileTextOutlined />}>
+          <Menu.Item key="AdminAddCoupon" icon={<TagOutlined />}>
             Mã Giảm Giá
           </Menu.Item>
         </Menu>

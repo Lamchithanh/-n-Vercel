@@ -201,23 +201,31 @@ CREATE TABLE certificate_requests (
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS banners (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    image_url TEXT NOT NULL,
-    active BOOLEAN DEFAULT true,
-    order_num INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
 CREATE TABLE coupons (
   id SERIAL PRIMARY KEY,
   code VARCHAR(50) UNIQUE NOT NULL,
   discount_amount DECIMAL(10,2) NOT NULL,
   max_usage INT DEFAULT 1,
-  discount_type ENUM('percentage', 'fixed') NOT NULL
+  discount_type ENUM('percentage', 'fixed') NOT NULL,
+  start_date DATE,
+end_date DATE
+);
+
+
+
+CREATE TABLE coupon_usages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    course_id INT NOT NULL, 
+    coupon_id INT NOT NULL,
+    original_price DECIMAL(10,2) NOT NULL,
+    discount_amount DECIMAL(10,2) NOT NULL,
+    final_price DECIMAL(10,2) NOT NULL,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (course_id) REFERENCES courses(id),
+    FOREIGN KEY (coupon_id) REFERENCES coupons(id),
+    UNIQUE KEY unique_usage (user_id, course_id) -- Đảm bảo 1 user chỉ dùng 1 mã cho 1 khóa học
 );
 
 -- Bảng trung gian để lưu các mã giảm giá yêu thích của user
