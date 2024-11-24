@@ -14,28 +14,71 @@ const CouponInput = ({
   const [couponCode, setCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [isValidating, setIsValidating] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const storageKey = `applied_coupon_${userId}_${courseId}`;
-
-  useEffect(() => {
-    const savedCoupon = localStorage.getItem(storageKey);
-    if (savedCoupon && !appliedCoupon) {
-      try {
-        const couponData = JSON.parse(savedCoupon);
-        setAppliedCoupon(couponData);
-        onApplyCoupon(couponData);
-      } catch {
-        localStorage.removeItem(storageKey);
-      }
-    }
-  }, [storageKey, onApplyCoupon]);
-
-  const validateCoupon = async (code) => {
-    if (isValidating) return null;
-
+  // Hàm gửi coupon đã áp dụng lên backend để lưu
+  const applyCouponToBackend = async (couponData) => {
     try {
-      setIsValidating(true);
+      const response = await fetch(`${API_URL}/coupons/apply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          couponCode: couponData.code,
+          userId,
+          courseId,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw new Error(error.message || "Không thể áp dụng mã giảm giá");
+    }
+  };
+
+  // Lấy thông tin mã giảm giá đã áp dụng
+  useEffect(() => {
+    const fetchAppliedCoupon = async () => {
+      if (!userId || !courseId || isFetching || isInitialized) return;
+      setIsFetching(true);
+      try {
+        const response = await fetch(`${API_URL}/coupons/get-applied`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Không thể lấy thông tin mã giảm giá");
+        }
+
+        const couponData = await response.json();
+        if (couponData) {
+          setAppliedCoupon(couponData);
+          onApplyCoupon(couponData);
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy mã giảm giá: ", error.message);
+      } finally {
+        setIsFetching(false);
+        setIsInitialized(true);
+      }
+    };
+
+    fetchAppliedCoupon();
+  }, [userId, courseId, isInitialized]);
+
+  // Kiểm tra tính hợp lệ của mã giảm giá
+  const validateCoupon = async (code) => {
+    try {
       const response = await fetch(`${API_URL}/coupons/check-coupon`, {
         method: "POST",
         headers: {
@@ -57,34 +100,26 @@ const CouponInput = ({
       return await response.json();
     } catch (error) {
       throw new Error(error.message || "Không thể kiểm tra mã giảm giá");
-    } finally {
-      setIsValidating(false);
     }
   };
 
+  // Tính toán mức giảm giá
   const calculateDiscount = (couponData) => {
     const { discountType, discountAmount } = couponData;
-    let calculatedDiscount = 0;
-
-    if (discountType === "percentage") {
-      calculatedDiscount = (coursePrice * discountAmount) / 100;
-    } else if (discountType === "fixed") {
-      calculatedDiscount = discountAmount;
-    }
-
-    return Math.min(calculatedDiscount, coursePrice);
+    return discountType === "percentage"
+      ? Math.min((coursePrice * discountAmount) / 100, coursePrice)
+      : Math.min(discountAmount, coursePrice);
   };
 
+  // Áp dụng mã giảm giá
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
       message.warning("Vui lòng nhập mã giảm giá");
       return;
     }
 
-    // Prevent duplicate API calls if already loading or if coupon is already applied
     if (
       loading ||
-      isValidating ||
       (appliedCoupon && appliedCoupon.code === couponCode.trim())
     ) {
       return;
@@ -94,10 +129,7 @@ const CouponInput = ({
       setLoading(true);
       const couponData = await validateCoupon(couponCode);
 
-      if (!couponData) return;
-
       const calculatedDiscount = calculateDiscount(couponData);
-
       const finalCouponData = {
         code: couponData.code,
         type: couponData.discountType,
@@ -106,7 +138,8 @@ const CouponInput = ({
         couponId: couponData.couponId,
       };
 
-      localStorage.setItem(storageKey, JSON.stringify(finalCouponData));
+      await applyCouponToBackend(finalCouponData);
+
       setAppliedCoupon(finalCouponData);
       onApplyCoupon(finalCouponData);
       message.success(`Áp dụng mã giảm giá thành công: ${couponData.code}`);
@@ -119,11 +152,32 @@ const CouponInput = ({
     }
   };
 
-  const handleRemoveCoupon = () => {
-    localStorage.removeItem(storageKey);
-    setAppliedCoupon(null);
-    onRemoveCoupon();
-    setCouponCode("");
+  // Gỡ bỏ mã giảm giá
+  const handleRemoveCoupon = async () => {
+    try {
+      const response = await fetch(`${API_URL}/coupons/remove-coupon`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          courseId,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
+      setAppliedCoupon(null);
+      onRemoveCoupon();
+      setCouponCode("");
+      message.success("Mã giảm giá đã được gỡ bỏ");
+    } catch {
+      message.error("Lỗi khi gỡ bỏ mã giảm giá");
+    }
   };
 
   return (
@@ -131,19 +185,23 @@ const CouponInput = ({
       {!appliedCoupon ? (
         <Space.Compact style={{ width: "100%", marginBottom: "16px" }}>
           <Input
+            id="coupon-input"
+            name="coupon-input"
+            aria-label="Nhập mã giảm giá"
             prefix={<TagOutlined className="text-gray-400" />}
             placeholder="Nhập mã giảm giá"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
             onPressEnter={handleApplyCoupon}
             maxLength={20}
-            disabled={loading || isValidating}
+            disabled={loading}
           />
           <Button
             type="primary"
             onClick={handleApplyCoupon}
-            loading={loading || isValidating}
-            disabled={loading || isValidating}
+            loading={loading}
+            disabled={loading}
+            aria-label="Áp dụng mã giảm giá"
           >
             Áp dụng
           </Button>
@@ -166,6 +224,7 @@ const CouponInput = ({
             icon={<CloseOutlined />}
             onClick={handleRemoveCoupon}
             className="text-gray-500 hover:text-red-500"
+            aria-label="Gỡ bỏ mã giảm giá"
           />
         </div>
       )}

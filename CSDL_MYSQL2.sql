@@ -47,6 +47,7 @@ CREATE TABLE courses (
   description TEXT,
   instructor_id BIGINT UNSIGNED,
   price DECIMAL(10, 2) NOT NULL,
+  discount_price DECIMAL(10, 2) DEFAULT NULL,
   level ENUM('beginner', 'intermediate', 'advanced') NOT NULL,
   category VARCHAR(100) NOT NULL,
   total_lessons INT DEFAULT 0,
@@ -57,8 +58,8 @@ CREATE TABLE courses (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (instructor_id) REFERENCES users(id) ON DELETE SET NULL
-  
 );
+
 
 ALTER TABLE payments
 ADD COLUMN coupon_code VARCHAR(50) DEFAULT NULL AFTER status;
@@ -91,8 +92,7 @@ CREATE TABLE lessons (
   FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 );
 
-ALTER TABLE lessons
-MODIFY COLUMN duration FLOAT;
+
 
 
 -- Bảng Enrollments (Đăng ký khóa học)
@@ -202,33 +202,40 @@ CREATE TABLE certificate_requests (
 );
 
 CREATE TABLE coupons (
-  id SERIAL PRIMARY KEY,
-  code VARCHAR(50) UNIQUE NOT NULL,
-  discount_amount DECIMAL(10,2) NOT NULL,
-  max_usage INT DEFAULT 1,
-  discount_type ENUM('percentage', 'fixed') NOT NULL
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    discount_type ENUM('percentage', 'fixed') NOT NULL,
+    discount_amount DECIMAL(10,2) NOT NULL,
+    max_usage INT NOT NULL DEFAULT 1,
+    min_purchase_amount DECIMAL(10,2),
+    expiration_date DATETIME,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE coupon_usage (
-  id SERIAL PRIMARY KEY, -- Alias của BIGINT UNSIGNED NOT NULL AUTO_INCREMENT
-  user_id INT NOT NULL, -- ID người dùng
-  course_id INT NOT NULL, -- ID khóa học
-  coupon_id BIGINT UNSIGNED NOT NULL, -- Khớp với kiểu của coupons.id
-  used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời điểm sử dụng
-  UNIQUE (user_id, course_id, coupon_id), -- Đảm bảo mã chỉ được dùng 1 lần trên mỗi khóa học
-  FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE -- Ràng buộc khóa ngoại
-);
-
-
--- Bảng trung gian để lưu các mã giảm giá yêu thích của user
-CREATE TABLE user_favorite_coupons (
-    id SERIAL PRIMARY KEY,
-    user_id BIGINT UNSIGNED,
-    coupon_id BIGINT UNSIGNED,
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    course_id INT NOT NULL,
+    coupon_id INT NOT NULL,
+    discount_amount DECIMAL(10,2) NOT NULL,
+    original_amount DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_coupon (user_id, coupon_id)
+    UNIQUE KEY unique_usage (user_id, course_id, coupon_id)
 );
+
+CREATE TABLE user_favorite_coupons (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, -- ID tự động tăng
+    user_id BIGINT UNSIGNED NOT NULL, -- Khớp với kiểu dữ liệu của users.id
+    coupon_id BIGINT UNSIGNED NOT NULL, -- Khớp với kiểu dữ liệu của coupons.id
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian thêm coupon
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, -- Liên kết với bảng users
+    FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE, -- Liên kết với bảng coupons
+    UNIQUE KEY unique_user_coupon (user_id, coupon_id) -- Đảm bảo mỗi user chỉ lưu 1 coupon
+);
+
+
 
 

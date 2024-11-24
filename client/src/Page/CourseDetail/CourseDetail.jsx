@@ -36,7 +36,6 @@ import VideoProgressTracker from "./VideoProgressTracker";
 import CertificateNotification from "../CertificatesPage/CertificateNotification";
 import { checkPaymentStatusAPI } from "../../../../server/src/Api/paymentApi";
 // import RandomCoupon from "../../components/Coupon/Coupon";
-// import CourseReviews from "./CourseReviews ";
 const { Title, Paragraph } = Typography;
 
 const CourseDetail = () => {
@@ -59,13 +58,9 @@ const CourseDetail = () => {
   const [selectedLockedLesson, setSelectedLockedLesson] = useState(null);
   const [newLessonDetails, setNewLessonDetails] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [progressUpdateTrigger, setProgressUpdateTrigger] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Cuộn lên đầu trang mỗi khi URL thay đổi
-    window.scrollTo(0, 0);
-  }, [location]);
 
   useEffect(() => {
     const checkEnrollmentStatus = async () => {
@@ -99,36 +94,27 @@ const CourseDetail = () => {
     const fetchCourseData = async () => {
       try {
         setLoading(true);
-
-        // Tải thông tin khóa học từ API
-        const data = await fetchCourseById(courseId);
+        const [data, modulesData] = await Promise.all([
+          fetchCourseById(courseId),
+          fetchModulesAPI(courseId),
+        ]);
         setCourse(data);
 
-        // Tải danh sách chương của khóa học
-        const modulesData = await fetchModulesAPI(courseId);
-        const allLessons = {};
+        const allLessonsPromises = modulesData.map((module) =>
+          loadLessons(module.id)
+        );
+        const allLessons = await Promise.all(allLessonsPromises);
 
-        // Tải bài học cho từng chương và gán vào `allLessons`
-        for (const module of modulesData) {
-          const moduleLessons = await loadLessons(module.id);
-          allLessons[module.id] = moduleLessons;
-        }
-
-        // Cập nhật thứ tự bài học cho từng chương
         const updatedModulesWithOrder = updateLessonOrder(
-          modulesData.map((module) => ({
+          modulesData.map((module, index) => ({
             ...module,
-            lessons: allLessons[module.id] || [],
+            lessons: allLessons[index] || [],
           }))
         );
 
-        // Cập nhật danh sách chương với thứ tự bài học đã sắp xếp
         setModules(updatedModulesWithOrder);
-
         await fetchModuleDurations(modulesData.map((module) => module.id));
         await fetchCourseDuration();
-
-        // Tính tổng số bài học
         setTotalLessons(
           updatedModulesWithOrder.reduce(
             (total, module) => total + module.lessons.length,
@@ -171,7 +157,7 @@ const CourseDetail = () => {
       let newOnes = [];
       let lastWatchedOrder = 0;
 
-      // Tìm bài học có order cao nhất đã xem (đã hoàn thành 90%)
+      // Tìm bài học có order cao nhất đã xem
       modules.forEach((module) => {
         module.lessons.forEach((lesson) => {
           if (watchedLessons.includes(lesson.id)) {
@@ -187,7 +173,7 @@ const CourseDetail = () => {
           if (lesson.order === 1) {
             available.push(lesson.id);
           }
-          // Các bài học tiếp theo chỉ khả dụng nếu bài học trước đã hoàn thành 90%
+          // Các bài học tiếp theo chỉ khả dụng nếu bài học trước đã hoàn thành
           else if (lesson.order <= lastWatchedOrder + 1) {
             available.push(lesson.id);
             if (
@@ -205,11 +191,10 @@ const CourseDetail = () => {
     };
 
     calculateAvailableLessons();
-  }, [modules, watchedLessons]);
+  }, [modules, watchedLessons, progressUpdateTrigger]);
 
   const handleVideoProgress = async (lessonId, progress) => {
     if (progress >= 90) {
-      // Only mark as watched when progress reaches 90%
       const user = JSON.parse(localStorage.getItem("user"));
       if (user) {
         try {
@@ -222,24 +207,39 @@ const CourseDetail = () => {
 
           if (response.success) {
             message.success("Tiến độ đã được cập nhật!");
+
+            // Cập nhật danh sách bài học đã xem
+            setWatchedLessons((prev) => {
+              if (!prev.includes(lessonId)) {
+                return [...prev, lessonId];
+              }
+              return prev;
+            });
+
+            // Trigger useEffect để tính toán lại availableLessons
+            setProgressUpdateTrigger((prev) => prev + 1);
+
+            // Tính toán tổng tiến độ
+            const totalProgress =
+              ((watchedLessons.length + 1) / totalLessons) * 100;
+            setProgress(totalProgress);
+
+            // Tự động mở rộng danh sách bài học khả dụng
+            const currentLesson = modules
+              .flatMap((m) => m.lessons)
+              .find((l) => l.id === lessonId);
+            if (currentLesson) {
+              const nextLesson = modules
+                .flatMap((m) => m.lessons)
+                .find((l) => l.order === currentLesson.order + 1);
+
+              if (nextLesson) {
+                setAvailableLessons((prev) => [...prev, nextLesson.id]);
+              }
+            }
           } else {
             message.error("Cập nhật tiến độ thất bại.");
           }
-
-          // Update the watched lessons list
-          setWatchedLessons((prev) => {
-            if (!prev.includes(lessonId)) {
-              return [...prev, lessonId];
-            }
-            return prev;
-          });
-
-          // Optional: Trigger course progress recalculation
-          const totalProgress =
-            ((watchedLessons.length + 1) / modules.length) * 100;
-
-          // You might want to update course progress state here
-          setProgress(totalProgress);
         } catch (error) {
           console.error("Error updating progress:", error);
           message.error("Không thể cập nhật tiến độ");
@@ -247,48 +247,6 @@ const CourseDetail = () => {
       }
     }
   };
-
-  useEffect(() => {
-    const calculateAvailableLessons = () => {
-      let available = [];
-      let newOnes = [];
-      let lastWatchedOrder = 0;
-
-      // Find the highest order lesson that has been watched (at least 90%)
-      modules.forEach((module) => {
-        module.lessons.forEach((lesson) => {
-          if (watchedLessons.includes(lesson.id)) {
-            lastWatchedOrder = Math.max(lastWatchedOrder, lesson.order);
-          }
-        });
-      });
-
-      // Determine available lessons and new ones
-      modules.forEach((module) => {
-        module.lessons.forEach((lesson) => {
-          // The first lesson is always available
-          if (lesson.order === 1) {
-            available.push(lesson.id);
-          }
-          // Subsequent lessons are available if the previous lesson is watched (90% or more)
-          else if (lesson.order <= lastWatchedOrder + 1) {
-            available.push(lesson.id);
-            if (
-              lesson.order <= lastWatchedOrder &&
-              !watchedLessons.includes(lesson.id)
-            ) {
-              newOnes.push(lesson.id);
-            }
-          }
-        });
-      });
-
-      setAvailableLessons(available);
-      setNewLessons(newOnes);
-    };
-
-    calculateAvailableLessons();
-  }, [modules, watchedLessons]);
 
   useEffect(() => {
     const checkNewLessons = () => {
@@ -421,16 +379,6 @@ const CourseDetail = () => {
       message.error(`Không thể tải bài học cho module ${moduleId}.`);
       return [];
     }
-  };
-
-  const getYoutubeEmbedUrl = (url) => {
-    if (!url) return null;
-    const match = url.match(
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-    );
-    return match && match[2].length === 11
-      ? `https://www.youtube.com/embed/${match[2]}`
-      : null;
   };
 
   const handleLessonClick = async (lesson) => {
@@ -811,10 +759,15 @@ const CourseDetail = () => {
   // Add this state
   const [hasPaid, setHasPaid] = useState(false);
 
-  // Add this to your useEffect
-  useEffect(() => {
-    setHasPaid(checkPaymentStatus());
-  }, [courseId]);
+  const getYoutubeEmbedUrl = (url) => {
+    if (!url) return null;
+    const match = url.match(
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    );
+    return match && match[2].length === 11
+      ? `https://www.youtube.com/embed/${match[2]}`
+      : null;
+  };
 
   if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
@@ -866,9 +819,6 @@ const CourseDetail = () => {
               {selectedLesson ? (
                 isEnrolled ? (
                   <>
-                    <Title level={4} style={{ fontSize: 25 }}>
-                      {selectedLesson.title}
-                    </Title>
                     <VideoProgressTracker
                       lessonId={selectedLesson.id}
                       videoUrl={selectedLesson.video_url}
@@ -877,7 +827,20 @@ const CourseDetail = () => {
                       onProgressUpdate={handleVideoProgress} // Cập nhật handler mới
                       requiredProgress={90}
                     />
-                    <Paragraph style={{ marginTop: "16px", fontWeight: 600 }}>
+                    <Title
+                      level={4}
+                      style={{ fontSize: 25, marginTop: 20, marginLeft: 10 }}
+                    >
+                      {selectedLesson.title}
+                    </Title>
+                    <Paragraph
+                      style={{
+                        marginTop: "16px",
+                        marginLeft: 10,
+                        fontWeight: 600,
+                        color: "#666",
+                      }}
+                    >
                       {selectedLesson.description ||
                         "Chưa có mô tả cho bài học này."}
                     </Paragraph>

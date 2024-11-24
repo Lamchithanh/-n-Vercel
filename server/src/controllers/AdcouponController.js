@@ -117,6 +117,83 @@ const createCoupon = async (req, res) => {
   }
 };
 
+const updateCoupon = async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const { id } = req.params; // Lấy ID coupon từ tham số URL
+    const {
+      code,
+      discount_amount,
+      discount_type,
+      max_usage,
+      min_purchase_amount,
+      expiration_date,
+      is_active,
+    } = req.body;
+
+    // Validate input data
+    const validationErrors = validateCouponData({
+      code,
+      discount_amount,
+      discount_type,
+    });
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        message: "Dữ liệu không hợp lệ",
+        errors: validationErrors,
+      });
+    }
+
+    await connection.beginTransaction();
+
+    // Cập nhật coupon
+    const [result] = await connection.query(
+      "UPDATE coupons SET code = ?, discount_amount = ?, discount_type = ?, min_purchase_amount = ?, expiration_date = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+      [
+        code,
+        discount_amount,
+        discount_type,
+        min_purchase_amount,
+        expiration_date,
+        is_active,
+        id,
+      ]
+    );
+
+    // Kiểm tra xem có coupon nào bị ảnh hưởng không
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: "Coupon không tồn tại",
+      });
+    }
+
+    await connection.commit();
+
+    res.status(200).json({
+      message: "Coupon đã được cập nhật thành công",
+      id,
+      code,
+      discount_amount,
+      discount_type,
+      max_usage,
+      min_purchase_amount,
+      expiration_date,
+      is_active,
+    });
+  } catch (error) {
+    await connection.rollback();
+    logError(error, "updateCoupon");
+
+    res.status(500).json({
+      message: "Lỗi khi cập nhật coupon",
+      error: error.message,
+    });
+  } finally {
+    connection.release();
+  }
+};
+
 // Delete coupon
 const deleteCoupon = async (req, res) => {
   const { id } = req.params;
@@ -158,4 +235,5 @@ module.exports = {
   getAllCoupons,
   createCoupon,
   deleteCoupon,
+  updateCoupon,
 };

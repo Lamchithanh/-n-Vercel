@@ -22,7 +22,7 @@ import {
   initiatePayment,
 } from "../../../../server/src/Api/paymentApi";
 import PropTypes from "prop-types";
-import CouponInput from "./CouponInput";
+// import CouponInput from "./CouponInput";
 
 const { Title, Text } = Typography;
 
@@ -272,13 +272,13 @@ const PaymentPage = () => {
       <div
         style={{ background: "#fafafa", padding: "20px", borderRadius: "8px" }}
       >
-        <CouponInput
+        {/* <CouponInput
           onApplyCoupon={setAppliedCoupon}
           onRemoveCoupon={() => setAppliedCoupon(null)}
           coursePrice={coursePrice}
           courseId={courseId}
           userId={userId}
-        />
+        /> */}
         <Row justify="space-between" style={{ marginBottom: "12px" }}>
           <Text strong style={{ fontSize: isMobile ? "14px" : "16px" }}>
             Giá khóa học:

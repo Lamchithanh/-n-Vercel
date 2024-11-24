@@ -5,6 +5,7 @@ const paymentApicontroller = require("../controllers/PaymentController");
 
 router.get("/coupons", couponController.getAllCoupons);
 router.post("/addcoupons", couponController.createCoupon);
+router.put("/updatecoupons/:id", couponController.updateCoupon);
 router.delete("/coupons/:id", couponController.deleteCoupon);
 router.post("/coupons/validate", paymentApicontroller.validateCoupon);
 

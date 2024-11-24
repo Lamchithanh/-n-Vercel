@@ -217,120 +217,377 @@ exports.getPaymentDetails = async (req, res) => {
     res.status(500).json({ message: "Không thể tải thông tin thanh toán." });
   }
 };
-// couponController.js
-// In PaymentController.js
+
 exports.validateCoupon = async (req, res) => {
-  const { code } = req.body;
+  const { code, totalAmount, userId, courseId } = req.body;
+
+  if (!code || !totalAmount || !userId || !courseId) {
+    return res.status(400).json({
+      success: false,
+      message: "Thiếu thông tin cần thiết",
+    });
+  }
+
+  const connection = await pool.getConnection();
 
   try {
-    const result = await pool.query(
-      `SELECT * FROM coupons
-       WHERE code = ?
-       AND discount_amount > 0`,
-      [code]
+    await connection.beginTransaction();
+
+    // Check coupon existence and validity
+    const [couponResults] = await connection.query(
+      `
+      SELECT 
+        c.id,
+        c.code,
+        c.discount_type,
+        c.discount_amount,
+        c.max_usage,
+        c.min_purchase_amount,
+        c.expiration_date,
+        c.is_active,
+        COUNT(cu.id) as usage_count,
+        (
+          SELECT COUNT(*) 
+          FROM coupon_usage cu2 
+          WHERE cu2.coupon_id = c.id 
+          AND cu2.user_id = ? 
+          AND cu2.course_id = ?
+        ) as user_course_usage
+      FROM coupons c
+      LEFT JOIN coupon_usage cu ON c.id = cu.coupon_id
+      WHERE c.code = ?
+      GROUP BY c.id
+    `,
+      [userId, courseId, code]
     );
 
-    // Check if coupon exists and is valid
-    if (result.length === 0) {
-      return res.status(400).json({
-        valid: false,
-        message: "Mã giảm giá không hợp lệ",
-      });
+    if (couponResults.length === 0) {
+      await connection.rollback();
+      throw createError(404, "Mã giảm giá không tồn tại");
     }
 
-    const coupon = result[0];
+    const coupon = couponResults[0];
 
-    // Return coupon details
-    res.json({
-      valid: true,
-      discount: coupon.discount_amount,
-      type: coupon.discount_type, // 'percentage' or 'fixed'
-      code: coupon.code,
+    // Validate coupon status
+    if (!coupon.is_active) {
+      throw createError(400, "Mã giảm giá đã bị vô hiệu hóa");
+    }
+
+    // Check expiration
+    if (
+      coupon.expiration_date &&
+      new Date(coupon.expiration_date) < new Date()
+    ) {
+      throw createError(400, "Mã giảm giá đã hết hạn");
+    }
+
+    // Check minimum purchase amount
+    if (
+      coupon.min_purchase_amount &&
+      totalAmount < coupon.min_purchase_amount
+    ) {
+      throw createError(
+        400,
+        `Giá trị đơn hàng tối thiểu ${coupon.min_purchase_amount.toLocaleString()} VND`
+      );
+    }
+
+    // Check maximum usage
+    if (coupon.usage_count >= coupon.max_usage) {
+      throw createError(400, "Mã giảm giá đã hết lượt sử dụng");
+    }
+
+    // Check if user has already used this coupon for this course
+    if (coupon.user_course_usage > 0) {
+      throw createError(400, "Bạn đã sử dụng mã giảm giá này cho khóa học này");
+    }
+
+    // Calculate discount
+    let discountAmount;
+    if (coupon.discount_type === "percentage") {
+      discountAmount = (totalAmount * coupon.discount_amount) / 100;
+    } else {
+      discountAmount = coupon.discount_amount;
+    }
+
+    // Ensure discount doesn't exceed total amount
+    discountAmount = Math.min(discountAmount, totalAmount);
+
+    // Record coupon usage
+    await connection.query(
+      `
+      INSERT INTO coupon_usage (
+        user_id,
+        course_id,
+        coupon_id,
+        discount_amount,
+        original_amount
+      ) VALUES (?, ?, ?, ?, ?)
+    `,
+      [userId, courseId, coupon.id, discountAmount, totalAmount]
+    );
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      data: {
+        couponId: coupon.id,
+        code: coupon.code,
+        discountType: coupon.discount_type,
+        discountAmount: coupon.discount_amount,
+        calculatedDiscount: discountAmount,
+        finalPrice: totalAmount - discountAmount,
+      },
     });
   } catch (error) {
-    // Error handling
+    await connection.rollback();
+
+    const statusCode = error.status || 500;
+    const message = error.message || "Lỗi server";
+
+    return res.status(statusCode).json({
+      success: false,
+      message,
+    });
+  } finally {
+    connection.release();
   }
 };
 
-exports.checkCoupon = async (req, res) => {
-  try {
-    const { code, totalAmount, userId, courseId } = req.body;
+exports.removeCouponUsage = async (req, res) => {
+  const { userId, courseId, couponId } = req.body;
 
-    // Begin transaction
-    const connection = await pool.getConnection();
+  if (!userId || !courseId || !couponId) {
+    return res.status(400).json({
+      success: false,
+      message: "Thiếu thông tin cần thiết",
+    });
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
     await connection.beginTransaction();
 
-    try {
-      // Check if coupon exists and get its details
-      const [couponResult] = await connection.query(
-        `SELECT c.id, c.discount_amount, c.discount_type, c.max_usage,
-         (SELECT COUNT(*) FROM coupon_usage cu WHERE cu.coupon_id = c.id) as total_usage,
-         (SELECT COUNT(*) FROM coupon_usage cu
-          WHERE cu.coupon_id = c.id
-          AND cu.user_id = ?
-          AND cu.course_id = ?) as user_course_usage
-        FROM coupons c
-        WHERE c.code = ?`,
-        [userId, courseId, code]
-      );
+    // Remove coupon usage record
+    const [result] = await connection.query(
+      `
+      DELETE FROM coupon_usage 
+      WHERE user_id = ? 
+      AND course_id = ? 
+      AND coupon_id = ?
+    `,
+      [userId, courseId, couponId]
+    );
 
-      if (couponResult.length === 0) {
-        await connection.rollback();
-        return res.status(404).json({ message: "Mã giảm giá không tồn tại!" });
-      }
-
-      const coupon = couponResult[0];
-
-      // Check if coupon has reached max usage
-      if (coupon.total_usage >= coupon.max_usage) {
-        await connection.rollback();
-        return res
-          .status(400)
-          .json({ message: "Mã giảm giá đã hết lượt sử dụng!" });
-      }
-
-      // Check if user has already used this coupon for this course
-      if (coupon.user_course_usage > 0) {
-        await connection.rollback();
-        return res.status(400).json({
-          message: "Bạn đã sử dụng mã giảm giá này cho khóa học này rồi!",
-        });
-      }
-
-      // Calculate discounted price
-      let discountedPrice;
-      if (coupon.discount_type === "percentage") {
-        discountedPrice =
-          totalAmount - (totalAmount * coupon.discount_amount) / 100;
-      } else {
-        discountedPrice = totalAmount - coupon.discount_amount;
-      }
-      discountedPrice = Math.max(discountedPrice, 0);
-
-      // Record coupon usage
-      await connection.query(
-        `INSERT INTO coupon_usage (user_id, course_id, coupon_id)
-         VALUES (?, ?, ?)`,
-        [userId, courseId, coupon.id]
-      );
-
-      await connection.commit();
-
-      return res.json({
-        code,
-        discountType: coupon.discount_type,
-        discountAmount: coupon.discount_amount,
-        discountedPrice,
-        couponId: coupon.id,
-      });
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
+    if (result.affectedRows === 0) {
+      throw createError(404, "Không tìm thấy lượt sử dụng mã giảm giá");
     }
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      message: "Đã xóa lượt sử dụng mã giảm giá",
+    });
   } catch (error) {
-    console.error("Coupon validation error:", error);
-    res.status(500).json({ message: "Lỗi server!" });
+    await connection.rollback();
+
+    const statusCode = error.status || 500;
+    const message = error.message || "Lỗi server";
+
+    return res.status(statusCode).json({
+      success: false,
+      message,
+    });
+  } finally {
+    connection.release();
+  }
+};
+
+exports.checkCouponStatus = async (req, res) => {
+  const { userId, courseId, couponId } = req.query;
+
+  if (!userId || !courseId || !couponId) {
+    return res.status(400).json({
+      success: false,
+      message: "Thiếu thông tin cần thiết",
+    });
+  }
+
+  try {
+    // Check if coupon still exists and is valid
+    const [couponResults] = await pool.query(
+      `
+      SELECT 
+        c.id,
+        c.is_active,
+        c.expiration_date,
+        c.max_usage,
+        COUNT(cu.id) as usage_count
+      FROM coupons c
+      LEFT JOIN coupon_usage cu ON c.id = cu.coupon_id
+      WHERE c.id = ?
+      GROUP BY c.id
+    `,
+      [couponId]
+    );
+
+    if (couponResults.length === 0) {
+      return res.json({
+        success: true,
+        isValid: false,
+        reason: "deleted",
+      });
+    }
+
+    const coupon = couponResults[0];
+
+    // Check various invalidation conditions
+    if (!coupon.is_active) {
+      return res.json({
+        success: true,
+        isValid: false,
+        reason: "inactive",
+      });
+    }
+
+    if (
+      coupon.expiration_date &&
+      new Date(coupon.expiration_date) < new Date()
+    ) {
+      return res.json({
+        success: true,
+        isValid: false,
+        reason: "expired",
+      });
+    }
+
+    if (coupon.usage_count >= coupon.max_usage) {
+      return res.json({
+        success: true,
+        isValid: false,
+        reason: "maxUsageReached",
+      });
+    }
+
+    // Check if this specific usage still exists
+    const [usageResults] = await pool.query(
+      `
+      SELECT id 
+      FROM coupon_usage 
+      WHERE user_id = ? 
+      AND course_id = ? 
+      AND coupon_id = ?
+    `,
+      [userId, courseId, couponId]
+    );
+
+    if (usageResults.length === 0) {
+      return res.json({
+        success: true,
+        isValid: false,
+        reason: "usageDeleted",
+      });
+    }
+
+    return res.json({
+      success: true,
+      isValid: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
+  }
+};
+
+// Áp dụng mã giảm giá
+exports.applyCoupon = async (req, res) => {
+  const { userId, courseId, couponCode, coursePrice } = req.body;
+
+  try {
+    // Kiểm tra coupon có hợp lệ không
+    const [coupon] = await pool.query(
+      "SELECT * FROM coupons WHERE code = ? AND is_active = TRUE AND expiration_date > NOW()",
+      [couponCode]
+    );
+
+    if (!coupon) {
+      return res
+        .status(400)
+        .json({ message: "Mã giảm giá không hợp lệ hoặc đã hết hạn." });
+    }
+
+    // Kiểm tra điều kiện mua hàng tối thiểu
+    if (
+      coupon.min_purchase_amount &&
+      coursePrice < coupon.min_purchase_amount
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Mã giảm giá không áp dụng cho đơn hàng này." });
+    }
+
+    // Kiểm tra số lần sử dụng tối đa
+    const [usageCount] = await pool.query(
+      "SELECT COUNT(*) as usage_count FROM coupon_usage WHERE coupon_id = ?",
+      [coupon.id]
+    );
+    if (usageCount[0].usage_count >= coupon.max_usage) {
+      return res
+        .status(400)
+        .json({ message: "Mã giảm giá đã hết lượt sử dụng." });
+    }
+
+    // Tính toán mức giảm giá
+    const discountAmount =
+      coupon.discount_type === "percentage"
+        ? (coursePrice * coupon.discount_amount) / 100
+        : coupon.discount_amount;
+
+    // Lưu thông tin sử dụng coupon vào bảng coupon_usage
+    await pool.query(
+      "INSERT INTO coupon_usage (user_id, course_id, coupon_id, discount_amount, original_amount) VALUES (?, ?, ?, ?, ?)",
+      [userId, courseId, coupon.id, discountAmount, coursePrice]
+    );
+
+    res.status(200).json({
+      code: coupon.code,
+      discountAmount,
+      discountType: coupon.discount_type,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Lỗi server, vui lòng thử lại sau." });
+  }
+};
+
+// Lấy mã giảm giá đã áp dụng
+exports.getAppliedCoupon = async (req, res) => {
+  const { userId, courseId } = req.query;
+
+  try {
+    const [couponUsage] = await pool.query(
+      `
+      SELECT c.code, cu.discount_amount, c.discount_type
+      FROM coupon_usage cu
+      JOIN coupons c ON cu.coupon_id = c.id
+      WHERE cu.user_id = ? AND cu.course_id = ?`,
+      [userId, courseId]
+    );
+
+    if (!couponUsage) {
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy mã giảm giá đã áp dụng." });
+    }
+
+    res.status(200).json(couponUsage);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Lỗi server, vui lòng thử lại sau." });
   }
 };

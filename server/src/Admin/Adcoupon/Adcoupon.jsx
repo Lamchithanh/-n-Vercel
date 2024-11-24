@@ -52,7 +52,7 @@ const AdminAddCoupon = () => {
     try {
       if (editingCoupon) {
         // Update existing coupon
-        await axios.put(`${API_URL}/coupons/${editingCoupon.id}`, values);
+        await axios.put(`${API_URL}/updatecoupons/${editingCoupon.id}`, values);
         message.success("Cập nhật mã giảm giá thành công");
       } else {
         // Create new coupon
@@ -68,16 +68,24 @@ const AdminAddCoupon = () => {
   };
 
   // Handle delete
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/coupons/${id}`);
-      message.success("Xóa mã giảm giá thành công");
-      fetchCoupons();
-    } catch (error) {
-      message.error("Không thể xóa mã giảm giá");
-    }
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: "Xác nhận xóa",
+      content: "Bạn chắc chắn muốn xóa mã giảm giá này?",
+      okText: "Xóa",
+      okType: "danger",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          await axios.delete(`${API_URL}/coupons/${id}`);
+          message.success("Xóa mã giảm giá thành công");
+          fetchCoupons();
+        } catch (error) {
+          message.error("Không thể xóa mã giảm giá");
+        }
+      },
+    });
   };
-
   // Handle edit
   const handleEdit = (record) => {
     setEditingCoupon(record);
