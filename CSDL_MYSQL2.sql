@@ -206,27 +206,19 @@ CREATE TABLE coupons (
   code VARCHAR(50) UNIQUE NOT NULL,
   discount_amount DECIMAL(10,2) NOT NULL,
   max_usage INT DEFAULT 1,
-  discount_type ENUM('percentage', 'fixed') NOT NULL,
-  start_date DATE,
-end_date DATE
+  discount_type ENUM('percentage', 'fixed') NOT NULL
 );
 
-
-
-CREATE TABLE coupon_usages (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    course_id INT NOT NULL, 
-    coupon_id INT NOT NULL,
-    original_price DECIMAL(10,2) NOT NULL,
-    discount_amount DECIMAL(10,2) NOT NULL,
-    final_price DECIMAL(10,2) NOT NULL,
-    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (course_id) REFERENCES courses(id),
-    FOREIGN KEY (coupon_id) REFERENCES coupons(id),
-    UNIQUE KEY unique_usage (user_id, course_id) -- Đảm bảo 1 user chỉ dùng 1 mã cho 1 khóa học
+CREATE TABLE coupon_usage (
+  id SERIAL PRIMARY KEY, -- Alias của BIGINT UNSIGNED NOT NULL AUTO_INCREMENT
+  user_id INT NOT NULL, -- ID người dùng
+  course_id INT NOT NULL, -- ID khóa học
+  coupon_id BIGINT UNSIGNED NOT NULL, -- Khớp với kiểu của coupons.id
+  used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời điểm sử dụng
+  UNIQUE (user_id, course_id, coupon_id), -- Đảm bảo mã chỉ được dùng 1 lần trên mỗi khóa học
+  FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE -- Ràng buộc khóa ngoại
 );
+
 
 -- Bảng trung gian để lưu các mã giảm giá yêu thích của user
 CREATE TABLE user_favorite_coupons (

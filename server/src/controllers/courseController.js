@@ -332,3 +332,70 @@ exports.updateProgress = async (req, res) => {
     res.status(500).json({ message: "Lỗi khi cập nhật tiến độ" });
   }
 };
+
+exports.getCourseProgress = async (req, res) => {
+  const { userId, courseId } = req.params;
+
+  try {
+    // Lấy danh sách tất cả các bài học trong khóa học
+    const [lessons] = await pool.query(
+      `SELECT l.id
+       FROM lessons l
+       JOIN modules m ON l.module_id = m.id
+       WHERE m.course_id = ?`,
+      [courseId]
+    );
+
+    const lessonCount = lessons.length;
+
+    if (lessonCount === 0) {
+      return res.json({
+        completedLessons: 0,
+        lessonCount: 0,
+        progress: "0.00",
+      });
+    }
+
+    // Lấy số bài học đã hoàn thành
+    const [completedLessons] = await pool.query(
+      `SELECT COUNT(DISTINCT l.id) as completedCount
+       FROM lessons l
+       JOIN modules m ON l.module_id = m.id
+       JOIN video_progress vp ON l.id = vp.lesson_id
+       WHERE m.course_id = ? 
+       AND vp.user_id = ?
+       AND vp.watched = 1`,
+      [courseId, userId]
+    );
+
+    const completedCount = completedLessons[0].completedCount;
+
+    // Tính phần trăm hoàn thành
+    const progress = ((completedCount / lessonCount) * 100).toFixed(2);
+
+    // Log để debug
+    console.log("Progress calculation:", {
+      userId,
+      courseId,
+      completedCount,
+      lessonCount,
+      progress,
+    });
+
+    res.json({
+      completedLessons: completedCount,
+      lessonCount,
+      progress,
+    });
+  } catch (error) {
+    console.error("Lỗi khi tính toán tiến độ khóa học:", error);
+    console.error("Chi tiết lỗi:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      message: "Lỗi server",
+      error: error.message,
+    });
+  }
+};

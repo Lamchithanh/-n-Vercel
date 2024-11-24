@@ -229,11 +229,7 @@ const HomePage = () => {
       key: "1",
       icon: <LaptopOutlined style={{ fontSize: "18px", color: "#1890ff" }} />,
       label: "Khóa học",
-      children: [
-        { label: "Khóa học của tôi", path: "/my-courses" },
-        // { label: "Khóa học mới", path: "/" },
-        { label: "Khóa học yêu thích", path: "/" },
-      ],
+      children: [{ label: "Khóa học của tôi", path: "/my-courses" }],
     },
     {
       key: "2",
@@ -251,11 +247,7 @@ const HomePage = () => {
         </Badge>
       ),
       label: "Thông báo",
-      children: [
-        { label: "Thông báo mới", path: "notifications" },
-        { label: "Thông báo quan trọng", path: "/" },
-        { label: "Thông báo khác", path: "/" },
-      ],
+      children: [{ label: "Thông báo mới", path: "notifications" }],
     },
     {
       key: "4",

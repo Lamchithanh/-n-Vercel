@@ -15,6 +15,10 @@ router.get("/search", courseController.searchCourses); // Route tìm kiếm
 
 router.get("/progress/:userId/:courseId", courseController.getProgress);
 router.post("/progress/update", courseController.updateProgress);
+router.get(
+  "/mycourses/progress/:userId/:courseId",
+  courseController.getCourseProgress
+);
 
 // Cấu hình multer
 const storage = multer.diskStorage({
