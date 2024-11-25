@@ -23,6 +23,7 @@ import CertificatesPage from "./Page/CertificatesPage/CertificatesPage";
 import BlogPage from "./Page/BlogPage/BlogPage";
 import Introduce from "./Page/Introduce/Introduce";
 import CertificateNotification from "./Page/CertificatesPage/CertificateNotification";
+import MyCoupons from "./components/Coupon/MyCouponsPage";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -71,6 +72,7 @@ const App = () => {
               <Route path="account-settings" element={<AccountSettings />} />
               <Route path="courses/:id" element={<CourseDetail />} />
               <Route path="/blogpage" element={<BlogPage />} />
+              <Route path="/MyCoupons" element={<MyCoupons />} />
             </Route>
 
             <Route path="/login" element={<Login />} />

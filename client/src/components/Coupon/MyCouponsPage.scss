@@ -1,0 +1,229 @@
+.voucher-container {
+  $primary-color: #ff3b30;
+  $white: #ffffff;
+  $black: #000000;
+
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 2rem auto;
+  font-family: "Arial", sans-serif;
+
+  // Jagged edges
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 20px;
+    height: 100%;
+    background: $white;
+  }
+
+  &::before {
+    left: 0;
+    clip-path: polygon(
+      0 5%,
+      100% 0,
+      100% 100%,
+      0 95%,
+      0 5%,
+      100% 10%,
+      100% 90%,
+      0 95%
+    );
+  }
+
+  &::after {
+    right: 0;
+    clip-path: polygon(
+      0 0,
+      100% 5%,
+      100% 95%,
+      0 100%,
+      0 90%,
+      100% 95%,
+      100% 5%,
+      0 10%
+    );
+  }
+
+  .voucher-content {
+    background-color: $primary-color;
+    padding: 2rem;
+    margin: 1rem;
+    color: $white;
+
+    // Header section
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &-logo {
+          width: 2rem;
+          height: 2rem;
+          background: $white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          span {
+            color: $primary-color;
+            font-weight: bold;
+          }
+        }
+
+        &-info {
+          .name {
+            font-weight: bold;
+            font-size: 0.875rem;
+          }
+
+          .tagline {
+            font-size: 0.75rem;
+          }
+        }
+      }
+
+      .validity {
+        font-size: 0.875rem;
+      }
+    }
+
+    // Title section
+    .title-section {
+      position: relative;
+      text-align: center;
+      margin: 3rem 0;
+
+      .voucher-text {
+        font-size: 3rem;
+        font-weight: bold;
+        color: $black;
+        position: relative;
+        z-index: 1;
+      }
+
+      .gift-text {
+        position: absolute;
+        top: -1rem;
+        left: 50%;
+        transform: translateX(-50%) rotate(-10deg);
+        font-size: 4rem;
+        font-family: "Brush Script MT", cursive;
+        color: $white;
+        z-index: 2;
+      }
+    }
+
+    // Value section
+    .value-section {
+      text-align: center;
+      margin: 2rem 0;
+
+      .value-container {
+        display: inline-block;
+        border: 2px solid $white;
+        padding: 0.75rem 3rem;
+
+        .value {
+          font-size: 1.5rem;
+          font-weight: bold;
+        }
+      }
+    }
+
+    // Description
+    .description {
+      text-align: center;
+      font-size: 0.75rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      line-height: 1.5;
+      opacity: 0.9;
+    }
+
+    // Contact information
+    .contact-info {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      font-size: 0.875rem;
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        svg {
+          width: 1rem;
+          height: 1rem;
+        }
+
+        &:hover {
+          opacity: 0.8;
+          transition: opacity 0.2s ease;
+        }
+      }
+    }
+  }
+
+  // Hover effects
+  &:hover {
+    .voucher-content {
+      transform: scale(1.005);
+      transition: transform 0.3s ease;
+    }
+  }
+
+  // Responsive styles
+  @media (max-width: 768px) {
+    margin: 1rem;
+
+    .voucher-content {
+      padding: 1.5rem;
+
+      .title-section {
+        .voucher-text {
+          font-size: 2.5rem;
+        }
+
+        .gift-text {
+          font-size: 3rem;
+        }
+      }
+
+      .contact-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+    }
+  }
+
+  // Print styles
+  @media print {
+    &::before,
+    &::after {
+      display: none;
+    }
+
+    .voucher-content {
+      border: 2px dashed $primary-color;
+      background-color: transparent;
+      color: $primary-color;
+
+      .value-container {
+        border-color: $primary-color;
+      }
+    }
+  }
+}

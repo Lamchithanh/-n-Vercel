@@ -226,16 +226,16 @@ CREATE TABLE coupon_usage (
     UNIQUE KEY unique_usage (user_id, course_id, coupon_id)
 );
 
-CREATE TABLE user_favorite_coupons (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, -- ID tự động tăng
-    user_id BIGINT UNSIGNED NOT NULL, -- Khớp với kiểu dữ liệu của users.id
-    coupon_id BIGINT UNSIGNED NOT NULL, -- Khớp với kiểu dữ liệu của coupons.id
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian thêm coupon
+CREATE TABLE mycoupons (
+    id INT PRIMARY KEY AUTO_INCREMENT, -- ID tự tăng của bảng
+    user_id BIGINT UNSIGNED NOT NULL, -- BIGINT UNSIGNED để tương thích với users.id
+    coupon_id INT NOT NULL, -- ID mã giảm giá liên kết
+    course_id INT, -- ID khóa học nếu mã giảm giá chỉ áp dụng cho khóa học cụ thể (có thể NULL nếu áp dụng toàn bộ)
+    is_used BOOLEAN DEFAULT FALSE, -- Trạng thái sử dụng (đã dùng hay chưa)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Ngày mã được thêm vào
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, -- Liên kết với bảng users
-    FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE, -- Liên kết với bảng coupons
-    UNIQUE KEY unique_user_coupon (user_id, coupon_id) -- Đảm bảo mỗi user chỉ lưu 1 coupon
+    FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE -- Liên kết với bảng coupons
 );
-
 
 
 

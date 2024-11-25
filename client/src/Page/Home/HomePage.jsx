@@ -1,4 +1,3 @@
-// page cũ
 import { useState, useEffect } from "react";
 import {
   Layout,
@@ -33,10 +32,18 @@ import Testimonials from "./Testimonials/Testimonials";
 import LatestBlog from "./LatestBlog/LatestBlog";
 import CourseCard from "../../components/Card/Card";
 import BackToTop from "./BacktoTop";
-// import RandomCoupon from "../../components/Coupon/Coupon";
-// import CertificateNotification from "../CertificatesPage/CertificateNotification";
 
 const { Header, Content } = Layout;
+
+const filterExpiredNotifications = (notifications) => {
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 ngày tính bằng milliseconds
+  const currentTime = new Date().getTime();
+
+  return notifications.filter((notification) => {
+    const notificationTime = new Date(notification.timestamp).getTime();
+    return currentTime - notificationTime < SEVEN_DAYS_MS;
+  });
+};
 
 const HomePage = () => {
   const [courses, setCourses] = useState([]);
@@ -47,10 +54,44 @@ const HomePage = () => {
   const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [pageSize] = useState(6);
+
   const [notifications, setNotifications] = useState(() => {
     const savedNotifications = localStorage.getItem("courseNotifications");
-    return savedNotifications ? JSON.parse(savedNotifications) : [];
+    if (savedNotifications) {
+      const parsedNotifications = JSON.parse(savedNotifications);
+      // Khi khởi tạo, lọc ra các thông báo chưa quá hạn
+      return filterExpiredNotifications(parsedNotifications);
+    }
+    return [];
   });
+
+  useEffect(() => {
+    const cleanupNotifications = () => {
+      const updatedNotifications = filterExpiredNotifications(notifications);
+
+      if (updatedNotifications.length !== notifications.length) {
+        setNotifications(updatedNotifications);
+        localStorage.setItem(
+          "courseNotifications",
+          JSON.stringify(updatedNotifications)
+        );
+
+        // Cập nhật lại số lượng thông báo chưa đọc
+        const unreadCount = updatedNotifications.filter(
+          (notification) => !notification.read
+        ).length;
+        setUnreadCount(unreadCount);
+      }
+    };
+
+    // Chạy cleanup ngay khi component mount
+    cleanupNotifications();
+
+    // Thiết lập interval để kiểm tra mỗi giờ
+    const interval = setInterval(cleanupNotifications, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [notifications]);
 
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] =
@@ -142,6 +183,8 @@ const HomePage = () => {
             );
           }
 
+          updatedNotifications =
+            filterExpiredNotifications(updatedNotifications);
           // Cập nhật notifications và localStorage
           setNotifications(updatedNotifications);
           localStorage.setItem(
@@ -161,16 +204,14 @@ const HomePage = () => {
         }
       } catch (err) {
         console.error("Lỗi khi tải danh sách khóa học:", err);
-        // setError("Lỗi khi tải danh sách khóa học. Vui lòng thử lại sau.");
-        // message.error("Lỗi khi tải danh sách khóa học. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchCoursesData();
-    // Kiểm tra khóa học mới mỗi 30 giây
-    const interval = setInterval(fetchCoursesData, 30000);
+    // Kiểm tra khóa học mới mỗi 10 phut
+    const interval = setInterval(fetchCoursesData, 100000);
 
     return () => clearInterval(interval);
   }, [lastKnownCourses, notifications]);
@@ -229,7 +270,10 @@ const HomePage = () => {
       key: "1",
       icon: <LaptopOutlined style={{ fontSize: "18px", color: "#1890ff" }} />,
       label: "Khóa học",
-      children: [{ label: "Khóa học của tôi", path: "/my-courses" }],
+      children: [
+        { label: "Khóa học của tôi", path: "/my-courses" },
+        { label: "VOUCHER", path: "/Mycoupons" },
+      ],
     },
     {
       key: "2",
@@ -312,7 +356,14 @@ const HomePage = () => {
   return (
     <Layout className="">
       <Header
-        style={{ background: colorBgContainer, padding: "0 16px" }}
+        style={{
+          background: colorBgContainer,
+          padding: "0 16px",
+          // position: "fixed",
+          width: "100%" /* Đảm bảo header trải dài toàn bộ chiều ngang */,
+          zindex: 1001,
+          boxshadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+        }}
         className="header"
         data-aos="fade-down"
         data-aos-duration="500"
@@ -398,9 +449,7 @@ const HomePage = () => {
           className="mobile-menu"
         />
       </Drawer>
-      {/* <CertificateNotification
-        currentUser={JSON.parse(localStorage.getItem("user"))}
-      /> */}
+
       <Drawer
         title="Thông báo mới"
         placement="right"

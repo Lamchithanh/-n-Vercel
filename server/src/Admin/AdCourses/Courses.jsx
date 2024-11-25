@@ -295,6 +295,11 @@ const Courses = () => {
     setPrice(formattedValue);
   };
   const validatePrice = (_, value) => {
+    // Kiểm tra nếu đang ở chế độ miễn phí thì không cần validate
+    if (form.getFieldValue("priceOption") === "free") {
+      return Promise.resolve();
+    }
+
     const rawValue = value ? value.replace(/\./g, "") : ""; // Loại bỏ dấu chấm để kiểm tra
     if (!rawValue || rawValue.length < 4) {
       return Promise.reject(new Error("Giá phải có ít nhất 4 chữ số!"));
@@ -377,6 +382,7 @@ const Courses = () => {
               <Option value="paid">Có Phí</Option>
             </Select>
           </Form.Item>
+
           <Form.Item
             name="price"
             label="Giá"
@@ -395,6 +401,7 @@ const Courses = () => {
               value={price}
               onChange={handlePriceChange}
               placeholder="Nhập giá khóa học"
+              disabled={form.getFieldValue("priceOption") === "free"}
             />
           </Form.Item>
           <Form.Item

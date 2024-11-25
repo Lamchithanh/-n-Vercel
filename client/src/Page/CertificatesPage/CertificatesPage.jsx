@@ -123,7 +123,7 @@ const CertificatesPage = () => {
           <div className="no-certificates">
             <p>Bạn chưa ghi danh hoàn thành khóa học nào! </p>
             <p>
-              Hãy tham gia khóa học năng tầm cuộc sống cũng cố kiến thức, kinh
+              Hãy tham gia khóa học năng tầm cuộc sống củng cố kiến thức, kinh
               nghiệm và trãi nghiệm ngay nào.
             </p>
             <Button
