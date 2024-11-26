@@ -13,8 +13,13 @@ import {
   LoginOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
-import { login, register } from "../../../../server/src/Api/authAPI";
+import {
+  login,
+  register,
+  // updateFirstLogin,
+} from "../../../../server/src/Api/authAPI";
 import "./Login.scss";
+import FirstLoginHandler from "./NewMemberWelcomeModal";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -22,11 +27,53 @@ const { Option } = Select;
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     AOS.init({ duration: 800, once: false });
   }, []);
+
+  const handleRegister = async (values) => {
+    if (values.password !== values.confirmPassword) {
+      toast.error("Mật khẩu không khớp!");
+      return;
+    }
+
+    let formattedEmail = values.email.trim();
+    if (!formattedEmail.includes("@")) {
+      formattedEmail += "@gmail.com";
+    }
+
+    setIsLoading(true);
+    try {
+      await register({
+        username: values.username,
+        email: formattedEmail,
+        password: values.password,
+        role: values.role || "student",
+      });
+      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+      setIsLogin(true);
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Đăng ký thất bại");
+    }
+    setIsLoading(false);
+  };
+
+  // const updateFirstLoginStatus = async (userId) => {
+  //   try {
+  //     await updateFirstLogin(userId);
+  //     setShowFirstLoginModal(false);
+
+  //     // Chuyển hướng sau khi cập nhật trạng thái first login
+  //     navigateBasedOnRole(user);
+  //   } catch (error) {
+  //     console.error("Error updating first login status:", error);
+  //     toast.error("Có lỗi xảy ra khi cập nhật trạng thái đăng nhập đầu tiên");
+  //   }
+  // };
 
   const handleLogin = async (values) => {
     setIsLoading(true);
@@ -34,24 +81,22 @@ const Login = () => {
       const response = await login(values.email, values.password);
 
       if (response && response.user && response.token) {
+        // Lưu thông tin vào localStorage
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("token", response.token);
 
-        toast.success(`Chào mừng ${response.user.username || "bạn"}!`);
+        // Hiển thị modal cho tất cả tài khoản
+        setUser(response.user);
+        setShowFirstLoginModal(true);
 
-        if (response.user.role === "instructor") {
-          navigate("/instructor");
-        } else if (response.user.role === "student") {
-          navigate("/");
-        } else {
-          navigate("/");
-        }
+        toast.success(`Chào mừng ${response.user.username || "bạn"}!`);
       } else {
         toast.error("Dữ liệu phản hồi không hợp lệ từ máy chủ.");
       }
     } catch (error) {
+      // Xử lý lỗi tài khoản bị khóa hoặc lỗi khác
       if (error.response?.status === 403 && error.response?.data?.lockInfo) {
         const { lockInfo } = error.response.data;
         const formatDateTime = (dateString) => {
@@ -85,35 +130,28 @@ const Login = () => {
     setIsLoading(false);
   };
 
-  const handleRegister = async (values) => {
-    if (values.password !== values.confirmPassword) {
-      toast.error("Mật khẩu không khớp!");
-      return;
+  const navigateBasedOnRole = (user) => {
+    if (user.role === "instructor") {
+      navigate("/instructor");
+    } else if (user.role === "student") {
+      navigate("/");
+    } else {
+      navigate("/");
     }
-
-    let formattedEmail = values.email.trim();
-    if (!formattedEmail.includes("@")) {
-      formattedEmail += "@gmail.com";
-    }
-
-    setIsLoading(true);
-    try {
-      await register({
-        username: values.username,
-        email: formattedEmail,
-        password: values.password,
-        role: values.role || "student",
-      });
-      toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
-      setIsLogin(true);
-    } catch (error) {
-      toast.error(error.response?.data?.error || "Đăng ký thất bại");
-    }
-    setIsLoading(false);
   };
 
   return (
     <div className="login-container">
+      {showFirstLoginModal && user && (
+        <FirstLoginHandler
+          user={user}
+          token={localStorage.getItem("token")}
+          onUpdateFirstLogin={() => {
+            setShowFirstLoginModal(false);
+            navigateBasedOnRole(user);
+          }}
+        />
+      )}
       <Button
         icon={<ArrowLeftOutlined />}
         className="back-button"

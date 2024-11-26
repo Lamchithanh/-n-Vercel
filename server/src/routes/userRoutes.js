@@ -20,6 +20,11 @@ router.post("/forgot-password", forgotPassword);
 
 // Route to fetch current logged-in user's profile based on token
 router.get("/users/profile", authMiddleware, userController.getUserProfile);
+router.get(
+  "/auth/update-first-login",
+  authMiddleware,
+  userController.updateFirstLogin
+);
 
 // Route để đăng xuất
 router.post("/logout", userController.logout);
@@ -27,4 +32,6 @@ router.post("/users", userController.createUser);
 router.put("/users/:id", userController.updateUser);
 router.delete("/users/:id", userController.deleteUser);
 router.put("/users/:id/lock", userController.toggleUserLock);
+router.get("/users/coupons/random", userController.getRandomCoupon);
+
 module.exports = router;

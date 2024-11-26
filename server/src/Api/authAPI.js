@@ -48,3 +48,14 @@ export const sendForgotPasswordEmail = async (email) => {
   const response = await axios.post(`${API_URL}/forgot-password`, { email });
   return response.data;
 };
+
+export const updateFirstLogin = async (userId) => {
+  try {
+    const response = await axios.post(`${API_URL}/auth/update-first-login`, {
+      userId,
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

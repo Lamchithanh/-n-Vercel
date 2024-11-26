@@ -184,6 +184,28 @@ exports.register = async (req, res) => {
   }
 };
 
+// In your Express routes or controller
+exports.updateFirstLogin = async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    // Update is_first_login to false for the specific user
+    await pool.query("UPDATE users SET is_first_login = FALSE WHERE id = ?", [
+      userId,
+    ]);
+
+    return res.status(200).json({
+      message: "Đã cập nhật trạng thái đăng nhập lần đầu",
+      success: true,
+    });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật trạng thái đăng nhập:", error);
+    return res.status(500).json({
+      error: "Không thể cập nhật trạng thái đăng nhập",
+      success: false,
+    });
+  }
+};
 // Đảm bảo kết nối database đã được import
 
 exports.createUser = async (req, res) => {
@@ -404,5 +426,20 @@ exports.deleteUser = async (req, res) => {
   } catch (error) {
     console.error("Lỗi khi xóa người dùng:", error);
     res.status(500).json({ error: "Lỗi server, không thể xóa người dùng" });
+  }
+};
+
+exports.getRandomCoupon = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM coupons WHERE is_active = 1 ORDER BY RAND() LIMIT 1"
+    );
+    if (rows.length > 0) {
+      res.json(rows[0]); // Trả về coupon ngẫu nhiên
+    } else {
+      res.status(404).json({ message: "Không có mã giảm giá hoạt động" });
+    }
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi khi lấy coupon", error: err.message });
   }
 };

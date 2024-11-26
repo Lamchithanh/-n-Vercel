@@ -25,7 +25,7 @@ const CouponCard = ({ coupon }) => {
   const getDiscountDisplay = () => {
     return coupon.discount_type === "percentage"
       ? `${coupon.discount_amount}%`
-      : `${coupon.discount_amount.toLocaleString()}đ`;
+      : `${coupon.discount_amount.toLocaleString("vi-VN")}&nbsp;đ`;
   };
 
   const handleCopyCode = async () => {
@@ -58,14 +58,11 @@ const CouponCard = ({ coupon }) => {
           </div>
 
           <div
-            className={`
-            coupon-card__header-status 
-            ${
+            className={`coupon-card__header-status ${
               coupon.is_used
                 ? "coupon-card__header-status--used"
                 : "coupon-card__header-status--available"
-            }
-          `}
+            }`}
           >
             {coupon.is_used ? "Đã sử dụng" : "Chưa sử dụng"}
           </div>
@@ -77,14 +74,17 @@ const CouponCard = ({ coupon }) => {
             <span>Giảm {getDiscountDisplay()}</span>
           </div>
 
-          {coupon.min_purchase_amount && (
-            <div className="coupon-card__content-details">
-              <GiftIcon size={18} />
+          <div className="coupon-card__content-details">
+            <GiftIcon size={18} />
+            {coupon.min_purchase_amount ? (
               <span>
-                Đơn tối thiểu: {coupon.min_purchase_amount.toLocaleString()}đ
+                Đơn tối thiểu:{" "}
+                {coupon.min_purchase_amount.toLocaleString("vi-VN")}&nbsp;đ
               </span>
-            </div>
-          )}
+            ) : (
+              <span>Áp dụng cho tất cả</span>
+            )}
+          </div>
 
           {coupon.expiration_date && (
             <div className="coupon-card__content-details">
@@ -97,7 +97,8 @@ const CouponCard = ({ coupon }) => {
           )}
 
           <div className="text-sm text-gray-500 mt-2">
-            Tiết kiệm tối đa: {coupon.calculated_discount.toLocaleString()}đ
+            Tiết kiệm tối đa:{" "}
+            {coupon.calculated_discount.toLocaleString("vi-VN")}&nbsp;đ
           </div>
         </div>
       </div>

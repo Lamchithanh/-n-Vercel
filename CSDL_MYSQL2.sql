@@ -15,6 +15,7 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   reset_token VARCHAR(64),
+  is_first_login BOOLEAN DEFAULT TRUE,
   reset_token_expiry TIMESTAMP,
   isLocked TINYINT(1) DEFAULT 0,
   lockReason VARCHAR(255) DEFAULT NULL,
@@ -27,6 +28,8 @@ CREATE TABLE users (
   total_savings DECIMAL(10,2) DEFAULT 0.00,
   CONSTRAINT chk_locked CHECK (isLocked IN (0,1))
 );
+
+
 
 ALTER TABLE users MODIFY COLUMN avatar MEDIUMTEXT;
 
@@ -225,6 +228,11 @@ CREATE TABLE coupon_usage (
     FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE,
     UNIQUE KEY unique_usage (user_id, course_id, coupon_id)
 );
+
+-- Ràng buộc để đảm bảo discount_amount không vượt quá original_amount
+ALTER TABLE coupon_usage 
+ADD CONSTRAINT chk_discount_amount 
+CHECK (discount_amount <= original_amount);
 
 CREATE TABLE mycoupons (
     id INT PRIMARY KEY AUTO_INCREMENT, -- ID tự tăng của bảng

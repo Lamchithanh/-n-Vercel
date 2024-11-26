@@ -101,14 +101,31 @@ const PaymentPage = () => {
       };
     }
 
-    const discountValue = parseFloat(couponData.discount || 0);
-    const discountAmount =
-      couponData.type === "percentage"
-        ? (basePrice * discountValue) / 100
-        : discountValue;
+    let discountAmount = 0;
+
+    // Handle percentage discount
+    if (couponData.type === "percentage") {
+      const percentageDiscount = parseFloat(couponData.discount || 0);
+      discountAmount = Math.min(
+        (basePrice * percentageDiscount) / 100, // Calculate percentage discount
+        basePrice // Ensure discount doesn't exceed course price
+      );
+    }
+    // Handle fixed amount discount
+    else {
+      const fixedDiscount = parseFloat(couponData.discount || 0);
+      discountAmount = Math.min(
+        fixedDiscount, // Fixed discount amount
+        basePrice // Ensure discount doesn't exceed course price
+      );
+    }
+
+    // Ensure non-negative values
+    discountAmount = Math.max(0, discountAmount);
+    const finalPrice = Math.max(0, basePrice - discountAmount);
 
     return {
-      finalPrice: Math.max(0, basePrice - discountAmount),
+      finalPrice,
       discount: discountAmount,
     };
   }, []);

@@ -80,6 +80,7 @@ const getCoupon = async (req, res) => {
     });
   }
 };
+
 const claimCoupon = async (req, res) => {
   const { user_id, coupon_id, course_id } = req.body;
 
