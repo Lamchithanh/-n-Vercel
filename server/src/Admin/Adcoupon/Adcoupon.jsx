@@ -9,6 +9,8 @@ import {
   Space,
   Modal,
   message,
+  DatePicker,
+  Switch,
 } from "antd";
 import axios from "axios";
 import { API_URL } from "../../../../server/src/config/config";
@@ -86,6 +88,7 @@ const AdminAddCoupon = () => {
       },
     });
   };
+
   // Handle edit
   const handleEdit = (record) => {
     setEditingCoupon(record);
@@ -203,6 +206,36 @@ const AdminAddCoupon = () => {
               <Option value="percentage">Phần trăm (%)</Option>
               <Option value="fixed">Số tiền cố định</Option>
             </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Số lần sử dụng tối đa"
+            name="max_usage"
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng nhập số lần sử dụng tối đa!",
+              },
+            ]}
+          >
+            <InputNumber style={{ width: "100%" }} min={1} />
+          </Form.Item>
+
+          <Form.Item label="Số tiền mua tối thiểu" name="min_purchase_amount">
+            <InputNumber style={{ width: "100%" }} min={0} />
+          </Form.Item>
+
+          <Form.Item label="Ngày hết hạn" name="expiration_date">
+            <DatePicker style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Kích hoạt"
+            name="is_active"
+            valuePropName="checked"
+            initialValue={true}
+          >
+            <Switch />
           </Form.Item>
 
           <Form.Item>

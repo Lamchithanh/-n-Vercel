@@ -62,11 +62,25 @@ const getAllCoupons = async (req, res) => {
   }
 };
 
-// Create new coupon
+const moment = require("moment"); // Import moment.js hoặc bạn có thể sử dụng Date từ JavaScript chuẩn
+
 const createCoupon = async (req, res) => {
   const connection = await pool.getConnection();
   try {
-    const { code, discount_amount, discount_type } = req.body;
+    const {
+      code,
+      discount_amount,
+      discount_type,
+      max_usage,
+      min_purchase_amount,
+      expiration_date, // Ngày giờ sẽ được chuyển đổi ở đây
+      is_active,
+    } = req.body;
+
+    // Chuyển đổi expiration_date thành định dạng phù hợp với MySQL (YYYY-MM-DD HH:mm:ss)
+    const formattedExpirationDate = moment(expiration_date).format(
+      "YYYY-MM-DD HH:mm:ss"
+    );
 
     // Validate input data
     const validationErrors = validateCouponData({
@@ -85,8 +99,18 @@ const createCoupon = async (req, res) => {
     await connection.beginTransaction();
 
     const [result] = await connection.query(
-      "INSERT INTO coupons (code, discount_amount, discount_type) VALUES (?, ?, ?)",
-      [code, discount_amount, discount_type]
+      `INSERT INTO coupons 
+        (code, discount_amount, discount_type, max_usage, min_purchase_amount, expiration_date, is_active) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        code,
+        discount_amount,
+        discount_type,
+        max_usage,
+        min_purchase_amount,
+        formattedExpirationDate, // Sử dụng giá trị đã được định dạng
+        is_active,
+      ]
     );
 
     await connection.commit();
@@ -96,6 +120,10 @@ const createCoupon = async (req, res) => {
       code,
       discount_amount,
       discount_type,
+      max_usage,
+      min_purchase_amount,
+      expiration_date: formattedExpirationDate, // Trả về giá trị đã được định dạng lại
+      is_active,
     });
   } catch (error) {
     await connection.rollback();

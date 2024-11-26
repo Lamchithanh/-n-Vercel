@@ -1,229 +1,182 @@
-.voucher-container {
-  $primary-color: #ff3b30;
-  $white: #ffffff;
-  $black: #000000;
+// Variables
+$primary-color: #2563eb;
+$secondary-color: #10b981;
+$text-dark: #1f2937;
+$text-light: #6b7280;
+$border-radius: 12px;
+$transition-speed: 0.3s;
 
-  position: relative;
-  width: 100%;
-  max-width: 800px;
-  margin: 2rem auto;
-  font-family: "Arial", sans-serif;
+// Mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  // Jagged edges
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    width: 20px;
-    height: 100%;
-    background: $white;
+@mixin card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+// Coupon Styles
+.my-coupons {
+  &__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
   }
 
-  &::before {
-    left: 0;
-    clip-path: polygon(
-      0 5%,
-      100% 0,
-      100% 100%,
-      0 95%,
-      0 5%,
-      100% 10%,
-      100% 90%,
-      0 95%
-    );
-  }
+  &__header {
+    @include flex-center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
 
-  &::after {
-    right: 0;
-    clip-path: polygon(
-      0 0,
-      100% 5%,
-      100% 95%,
-      0 100%,
-      0 90%,
-      100% 95%,
-      100% 5%,
-      0 10%
-    );
-  }
-
-  .voucher-content {
-    background-color: $primary-color;
-    padding: 2rem;
-    margin: 1rem;
-    color: $white;
-
-    // Header section
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        &-logo {
-          width: 2rem;
-          height: 2rem;
-          background: $white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          span {
-            color: $primary-color;
-            font-weight: bold;
-          }
-        }
-
-        &-info {
-          .name {
-            font-weight: bold;
-            font-size: 0.875rem;
-          }
-
-          .tagline {
-            font-size: 0.75rem;
-          }
-        }
-      }
-
-      .validity {
-        font-size: 0.875rem;
-      }
-    }
-
-    // Title section
-    .title-section {
-      position: relative;
-      text-align: center;
-      margin: 3rem 0;
-
-      .voucher-text {
-        font-size: 3rem;
-        font-weight: bold;
-        color: $black;
-        position: relative;
-        z-index: 1;
-      }
-
-      .gift-text {
-        position: absolute;
-        top: -1rem;
-        left: 50%;
-        transform: translateX(-50%) rotate(-10deg);
-        font-size: 4rem;
-        font-family: "Brush Script MT", cursive;
-        color: $white;
-        z-index: 2;
-      }
-    }
-
-    // Value section
-    .value-section {
-      text-align: center;
-      margin: 2rem 0;
-
-      .value-container {
-        display: inline-block;
-        border: 2px solid $white;
-        padding: 0.75rem 3rem;
-
-        .value {
-          font-size: 1.5rem;
-          font-weight: bold;
-        }
-      }
-    }
-
-    // Description
-    .description {
-      text-align: center;
-      font-size: 0.75rem;
-      max-width: 600px;
-      margin: 0 auto 2rem;
-      line-height: 1.5;
-      opacity: 0.9;
-    }
-
-    // Contact information
-    .contact-info {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      font-size: 0.875rem;
-
-      .info-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        svg {
-          width: 1rem;
-          height: 1rem;
-        }
-
-        &:hover {
-          opacity: 0.8;
-          transition: opacity 0.2s ease;
-        }
-      }
-    }
-  }
-
-  // Hover effects
-  &:hover {
-    .voucher-content {
-      transform: scale(1.005);
-      transition: transform 0.3s ease;
-    }
-  }
-
-  // Responsive styles
-  @media (max-width: 768px) {
-    margin: 1rem;
-
-    .voucher-content {
-      padding: 1.5rem;
-
-      .title-section {
-        .voucher-text {
-          font-size: 2.5rem;
-        }
-
-        .gift-text {
-          font-size: 3rem;
-        }
-      }
-
-      .contact-info {
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-      }
-    }
-  }
-
-  // Print styles
-  @media print {
-    &::before,
-    &::after {
-      display: none;
-    }
-
-    .voucher-content {
-      border: 2px dashed $primary-color;
-      background-color: transparent;
+    &-icon {
       color: $primary-color;
+    }
 
-      .value-container {
-        border-color: $primary-color;
+    &-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: $text-dark;
+    }
+  }
+
+  &__empty-state {
+    @include flex-center;
+    flex-direction: column;
+    background-color: #f3f4f6;
+    border-radius: $border-radius;
+    padding: 2rem;
+    text-align: center;
+
+    &-icon {
+      color: $text-light;
+      margin-bottom: 1rem;
+    }
+
+    &-message {
+      font-size: 1.25rem;
+      color: $text-light;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+.coupon-card {
+  border: 2px solid transparent;
+  border-radius: $border-radius;
+  padding: 1rem;
+  transition: all $transition-speed ease;
+
+  &:hover {
+    @include card-shadow;
+    transform: translateY(-5px);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    &-code {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      color: $text-dark;
+    }
+
+    &-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+
+      &--used {
+        background-color: #e5e7eb;
+        color: #6b7280;
+      }
+
+      &--available {
+        background-color: #dcfce7;
+        color: #166534;
       }
     }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    &-discount {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #dc2626;
+    }
+
+    &-details {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: $text-light;
+      font-size: 0.875rem;
+    }
+  }
+
+  // Status Variants
+  &--expired {
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+  }
+
+  &--used {
+    border-color: #fbbf24;
+    background-color: #fffbeb;
+  }
+
+  &--available {
+    border-color: #34d399;
+    background-color: #f0fdf4;
+  }
+}
+
+.loading-spinner {
+  @include flex-center;
+  height: 16rem;
+
+  &__icon {
+    width: 3rem;
+    height: 3rem;
+    border-top: 2px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }

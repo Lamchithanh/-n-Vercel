@@ -319,7 +319,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
         </p>
         {!isCouponClaimed && availableCoupon ? (
           <Button type="primary" onClick={handleClaimCoupon}>
-            Nhận mã giảm giá: {availableCoupon.code}
+            Nhận mã: {availableCoupon.code}
           </Button>
         ) : isCouponClaimed && availableCoupon ? (
           <div>

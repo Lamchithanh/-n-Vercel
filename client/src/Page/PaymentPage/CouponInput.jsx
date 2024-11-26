@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
 import { Input, Button, message, Space, Tag } from "antd";
 import { TagOutlined, CloseOutlined } from "@ant-design/icons";
@@ -15,71 +15,12 @@ const CouponInput = ({
   const [loading, setLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const fetchedRef = useRef(false);
 
-  // Hàm gửi coupon đã áp dụng lên backend để lưu
-  const applyCouponToBackend = async (couponData) => {
-    try {
-      const response = await fetch(`${API_URL}/coupons/apply`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          couponCode: couponData.code,
-          userId,
-          courseId,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
-
-      return await response.json();
-    } catch (error) {
-      throw new Error(error.message || "Không thể áp dụng mã giảm giá");
-    }
-  };
-
-  // Lấy thông tin mã giảm giá đã áp dụng
-  useEffect(() => {
-    const fetchAppliedCoupon = async () => {
-      if (!userId || !courseId || isFetching || isInitialized) return;
-      setIsFetching(true);
-      try {
-        const response = await fetch(`${API_URL}/coupons/get-applied`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Không thể lấy thông tin mã giảm giá");
-        }
-
-        const couponData = await response.json();
-        if (couponData) {
-          setAppliedCoupon(couponData);
-          onApplyCoupon(couponData);
-        }
-      } catch (error) {
-        console.error("Lỗi khi lấy mã giảm giá: ", error.message);
-      } finally {
-        setIsFetching(false);
-        setIsInitialized(true);
-      }
-    };
-
-    fetchAppliedCoupon();
-  }, [userId, courseId, isInitialized]);
-
-  // Kiểm tra tính hợp lệ của mã giảm giá
+  // Validate coupon with the backend
   const validateCoupon = async (code) => {
     try {
-      const response = await fetch(`${API_URL}/coupons/check-coupon`, {
+      const response = await fetch(`${API_URL}/coupons/validate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -103,59 +44,82 @@ const CouponInput = ({
     }
   };
 
-  // Tính toán mức giảm giá
-  const calculateDiscount = (couponData) => {
-    const { discountType, discountAmount } = couponData;
-    return discountType === "percentage"
-      ? Math.min((coursePrice * discountAmount) / 100, coursePrice)
-      : Math.min(discountAmount, coursePrice);
-  };
-
-  // Áp dụng mã giảm giá
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) {
-      message.warning("Vui lòng nhập mã giảm giá");
-      return;
-    }
-
-    if (
-      loading ||
-      (appliedCoupon && appliedCoupon.code === couponCode.trim())
-    ) {
-      return;
-    }
-
+  // Apply coupon to the backend
+  const applyCouponToBackend = async (couponData) => {
     try {
-      setLoading(true);
-      const couponData = await validateCoupon(couponCode);
+      const response = await fetch(`${API_URL}/coupons/apply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          couponCode: couponData.code,
+          userId,
+          courseId,
+          coursePrice,
+        }),
+      });
 
-      const calculatedDiscount = calculateDiscount(couponData);
-      const finalCouponData = {
-        code: couponData.code,
-        type: couponData.discountType,
-        discount: couponData.discountAmount,
-        calculatedDiscount,
-        couponId: couponData.couponId,
-      };
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
 
-      await applyCouponToBackend(finalCouponData);
-
-      setAppliedCoupon(finalCouponData);
-      onApplyCoupon(finalCouponData);
-      message.success(`Áp dụng mã giảm giá thành công: ${couponData.code}`);
-      setCouponCode("");
+      return await response.json();
     } catch (error) {
-      message.error(error.message || "Không thể áp dụng mã giảm giá");
-      onApplyCoupon(null);
-    } finally {
-      setLoading(false);
+      throw new Error(error.message || "Không thể áp dụng mã giảm giá");
     }
   };
 
-  // Gỡ bỏ mã giảm giá
+  // Fetch applied coupon from the backend
+  const fetchAppliedCoupon = useCallback(async () => {
+    if (fetchedRef.current || isFetching || !userId || !courseId) return;
+
+    setIsFetching(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/coupons/get-applied?userId=${userId}&courseId=${courseId}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (!response.ok) throw new Error("Không thể lấy thông tin mã giảm giá");
+
+      const couponData = await response.json();
+      if (couponData.length > 0) {
+        const appliedCoupon = couponData[0];
+        setAppliedCoupon({
+          code: appliedCoupon.code,
+          type: appliedCoupon.discount_type,
+          discount: appliedCoupon.discount_amount,
+          calculatedDiscount: appliedCoupon.discount_amount,
+        });
+        onApplyCoupon({
+          code: appliedCoupon.code,
+          type: appliedCoupon.discount_type,
+          discount: appliedCoupon.discount_amount,
+          calculatedDiscount: appliedCoupon.discount_amount,
+        });
+      }
+
+      fetchedRef.current = true;
+    } catch (error) {
+      console.error("Lỗi khi lấy mã giảm giá: ", error.message);
+    } finally {
+      setIsFetching(false);
+    }
+  }, [userId, courseId, onApplyCoupon, isFetching]);
+
+  useEffect(() => {
+    fetchAppliedCoupon();
+  }, [fetchAppliedCoupon]);
+
+  // Remove applied coupon
   const handleRemoveCoupon = async () => {
     try {
-      const response = await fetch(`${API_URL}/coupons/remove-coupon`, {
+      const response = await fetch(`${API_URL}/coupons/remove-usage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,6 +127,7 @@ const CouponInput = ({
         body: JSON.stringify({
           userId,
           courseId,
+          couponId: appliedCoupon.couponId,
         }),
       });
 
@@ -175,8 +140,35 @@ const CouponInput = ({
       onRemoveCoupon();
       setCouponCode("");
       message.success("Mã giảm giá đã được gỡ bỏ");
-    } catch {
-      message.error("Lỗi khi gỡ bỏ mã giảm giá");
+    } catch (error) {
+      message.error(error.message || "Lỗi khi gỡ bỏ mã giảm giá");
+    }
+  };
+
+  // Handle coupon input change
+  const handleCouponChange = (e) => {
+    setCouponCode(e.target.value);
+  };
+
+  // Handle apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      message.error("Vui lòng nhập mã giảm giá.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const couponData = await validateCoupon(couponCode);
+      const appliedData = await applyCouponToBackend(couponData);
+
+      setAppliedCoupon(appliedData);
+      onApplyCoupon(appliedData);
+      message.success("Mã giảm giá đã được áp dụng thành công!");
+    } catch (error) {
+      message.error(error.message || "Lỗi server, vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -191,7 +183,7 @@ const CouponInput = ({
             prefix={<TagOutlined className="text-gray-400" />}
             placeholder="Nhập mã giảm giá"
             value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
+            onChange={handleCouponChange}
             onPressEnter={handleApplyCoupon}
             maxLength={20}
             disabled={loading}

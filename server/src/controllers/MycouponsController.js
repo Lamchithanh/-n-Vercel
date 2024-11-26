@@ -2,9 +2,9 @@ const pool = require("../config/pool");
 
 const getMyCoupons = async (req, res) => {
   try {
-    const userId = req.query.userId; // Lấy userId từ query params
+    const userId = req.params.userId;
+    console.log("User ID nhận được:", userId);
 
-    // Query để join 2 bảng và lấy thông tin cần thiết
     const [rows] = await pool.query(
       `
         SELECT 
@@ -26,11 +26,14 @@ const getMyCoupons = async (req, res) => {
         JOIN coupons c ON mc.coupon_id = c.id
         WHERE mc.user_id = ?
         ORDER BY mc.created_at DESC
-        `,
+      `,
       [userId]
     );
 
-    // Thêm thông tin calculated_discount cho mỗi mã
+    if (rows.length === 0) {
+      console.log("Không tìm thấy mã giảm giá cho userId:", userId);
+    }
+
     const couponsWithDiscount = rows.map((coupon) => ({
       ...coupon,
       calculated_discount:
@@ -51,12 +54,11 @@ const getMyCoupons = async (req, res) => {
 
 const getCoupon = async (req, res) => {
   try {
-    // Lọc mã giảm giá 20% (không cần chọn ngẫu nhiên nữa)
+    // Lọc mã giảm giá 20% với các điều kiện chi tiết
     const [coupons] = await pool.query(
       `SELECT * FROM coupons
-           WHERE discount_type = 'percentage'
-             AND discount_amount = 20.0
-           LIMIT 1` // Chỉ lấy 1 mã giảm giá đầu tiên thỏa mãn điều kiện
+       WHERE discount_type = 'percentage'
+         AND discount_amount = 20.0`
     );
 
     if (coupons.length === 0) {
@@ -65,8 +67,11 @@ const getCoupon = async (req, res) => {
       });
     }
 
-    const coupon = coupons[0]; // Chọn mã giảm giá
-    res.json(coupon); // Trả về mã giảm giá
+    // Chọn ngẫu nhiên một mã giảm giá từ danh sách các mã khả dụng
+    const randomIndex = Math.floor(Math.random() * coupons.length);
+    const coupon = coupons[randomIndex];
+
+    res.json(coupon); // Trả về mã giảm giá ngẫu nhiên
   } catch (error) {
     console.error("Lỗi khi lấy mã giảm giá:", error);
     res.status(500).json({
@@ -75,7 +80,6 @@ const getCoupon = async (req, res) => {
     });
   }
 };
-
 const claimCoupon = async (req, res) => {
   const { user_id, coupon_id, course_id } = req.body;
 
