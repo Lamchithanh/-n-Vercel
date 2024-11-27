@@ -81,22 +81,38 @@ const Login = () => {
       const response = await login(values.email, values.password);
 
       if (response && response.user && response.token) {
+        // Chuyển đổi is_first_login từ số sang boolean
+        if (response.user.is_first_login === 1) {
+          response.user.is_first_login = true;
+        } else if (response.user.is_first_login === 0) {
+          response.user.is_first_login = false;
+        }
+
         // Lưu thông tin vào localStorage
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("token", response.token);
 
-        // Hiển thị modal cho tất cả tài khoản
+        // Hiển thị modal cho các tài khoản first login
         setUser(response.user);
-        setShowFirstLoginModal(true);
+
+        // Chỉ hiển thị modal nếu là lần đăng nhập đầu tiên
+        if (response.user.is_first_login === true) {
+          setShowFirstLoginModal(true);
+        }
 
         toast.success(`Chào mừng ${response.user.username || "bạn"}!`);
+
+        // Chuyển hướng dựa trên vai trò nếu không phải first login
+        if (response.user.is_first_login !== true) {
+          navigateBasedOnRole(response.user);
+        }
       } else {
         toast.error("Dữ liệu phản hồi không hợp lệ từ máy chủ.");
       }
     } catch (error) {
-      // Xử lý lỗi tài khoản bị khóa hoặc lỗi khác
+      // Phần xử lý lỗi giữ nguyên như ban đầu
       if (error.response?.status === 403 && error.response?.data?.lockInfo) {
         const { lockInfo } = error.response.data;
         const formatDateTime = (dateString) => {

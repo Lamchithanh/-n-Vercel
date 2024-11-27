@@ -355,6 +355,17 @@ const HomePage = () => {
 
   return (
     <Layout className="">
+      {/* {showFirstLoginModal && user && (
+        <FirstLoginHandler
+          user={user}
+          token={localStorage.getItem("token")}
+          onUpdateFirstLogin={() => {
+            setShowFirstLoginModal(false);
+            navigateBasedOnRole(user);
+          }}
+          setUser={setUser} // Truyền thêm setUser
+        />
+      )} */}
       <Header
         style={{
           background: colorBgContainer,

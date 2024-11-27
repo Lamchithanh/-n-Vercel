@@ -49,13 +49,21 @@ export const sendForgotPasswordEmail = async (email) => {
   return response.data;
 };
 
-export const updateFirstLogin = async (userId) => {
+export const updateFirstLogin = async (userId, token) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/update-first-login`, {
-      userId,
-    });
+    const response = await axios.post(
+      `${API_URL}/auth/update-first-login`,
+      { userId },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
+    console.error("Detailed Error:", error.response?.data || error.message);
     throw error;
   }
 };

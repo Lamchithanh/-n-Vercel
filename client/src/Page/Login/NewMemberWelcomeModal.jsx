@@ -5,26 +5,35 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import { API_URL } from "../../../../server/src/config/config";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
-const FirstLoginHandler = ({ user, token, onUpdateFirstLogin }) => {
+const FirstLoginHandler = ({
+  user,
+  token,
+  onUpdateFirstLogin,
+  setUser: setUserProp,
+}) => {
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCouponClaimed, setIsCouponClaimed] = useState(false);
   const [coupon, setCoupon] = useState(null); // Lưu thông tin mã giảm giá
 
   useEffect(() => {
-    // Hiển thị modal khi người dùng lần đầu đăng nhập
-    setIsModalVisible(true);
+    const isFirstLogin =
+      user.is_first_login === 1 || user.is_first_login === true;
 
-    // Gọi API lấy mã giảm giá ngẫu nhiên
+    if (!isFirstLogin) {
+      navigate("/");
+      return;
+    }
+
+    setIsModalVisible(true);
     const fetchRandomCoupon = async () => {
       try {
         const response = await axios.get(
           "http://localhost:9000/api/users/coupons/random"
         );
         console.log("Mã giảm giá ngẫu nhiên:", response.data);
-
-        // Set the coupon state with the received coupon data
         setCoupon(response.data);
       } catch (error) {
         console.error("Lỗi khi lấy mã giảm giá:", error);
@@ -33,7 +42,7 @@ const FirstLoginHandler = ({ user, token, onUpdateFirstLogin }) => {
     };
 
     fetchRandomCoupon();
-  }, [token]);
+  }, [token, user, navigate]);
 
   const handleClaimCoupon = async () => {
     try {
@@ -56,9 +65,10 @@ const FirstLoginHandler = ({ user, token, onUpdateFirstLogin }) => {
         message.success(response.data.message);
         setIsCouponClaimed(true);
 
-        // Navigate to home page after 1 second
+        // Close the modal and navigate after 1 second
         setTimeout(() => {
-          navigate("/"); // Adjust the path to your home page route
+          setIsModalVisible(false);
+          navigate("/");
         }, 1000);
       } else {
         message.error("Lỗi khi nhận mã giảm giá.");
@@ -71,7 +81,7 @@ const FirstLoginHandler = ({ user, token, onUpdateFirstLogin }) => {
 
   const handleClose = async () => {
     try {
-      await axios.post(
+      const response = await axios.post(
         `${API_URL}/update-first-login`,
         { userId: user.id },
         {
@@ -82,10 +92,21 @@ const FirstLoginHandler = ({ user, token, onUpdateFirstLogin }) => {
         }
       );
 
-      onUpdateFirstLogin && onUpdateFirstLogin();
-      setIsModalVisible(false);
+      if (response.data.success) {
+        // Update local storage to reflect the new first login status
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        storedUser.is_first_login = false;
+        localStorage.setItem("user", JSON.stringify(storedUser));
+
+        // Update the user state using the prop
+        setUserProp((prevUser) => ({ ...prevUser, is_first_login: false }));
+
+        onUpdateFirstLogin && onUpdateFirstLogin();
+        setIsModalVisible(false);
+      }
     } catch (error) {
       console.error("Update first login error:", error);
+      toast.error("Không thể cập nhật trạng thái đăng nhập");
     }
   };
 
@@ -226,6 +247,7 @@ FirstLoginHandler.propTypes = {
   }).isRequired,
   token: PropTypes.string.isRequired,
   onUpdateFirstLogin: PropTypes.func.isRequired,
+  setUser: PropTypes.func.isRequired,
 };
 
 export default FirstLoginHandler;

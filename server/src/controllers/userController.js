@@ -33,10 +33,9 @@ exports.startCronJob = () => {
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-
   try {
     const [results] = await pool.query(
-      "SELECT id, username, email, role, password_hash, isLocked, lockReason, lockedAt, lockedUntil FROM users WHERE email = ?",
+      "SELECT id, username, email, role, password_hash, isLocked, lockReason, lockedAt, lockedUntil, is_first_login FROM users WHERE email = ?",
       [email]
     );
 
@@ -110,7 +109,11 @@ exports.login = async (req, res) => {
     }
 
     // Kiểm tra mật khẩu
-    if (user.password_hash !== password) {
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
+    if (!isPasswordCorrect) {
       return res.status(401).json({ error: "Mật khẩu không đúng" });
     }
 
@@ -120,6 +123,7 @@ exports.login = async (req, res) => {
         userId: user.id,
         role: user.role,
         isLocked: user.isLocked === 1,
+        is_first_login: user.is_first_login, // Thêm is_first_login vào token
       },
       process.env.SECRET_KEY,
       { expiresIn: "1d" }
@@ -133,6 +137,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         isLocked: user.isLocked === 1,
+        is_first_login: user.is_first_login, // Thêm is_first_login vào user object
         lockInfo:
           user.isLocked === 1
             ? {
@@ -149,7 +154,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// truy xuất và đăng ký
 exports.register = async (req, res) => {
   const { username, email, password, role } = req.body;
 
@@ -171,15 +175,28 @@ exports.register = async (req, res) => {
         .json({ error: "Tên người dùng hoặc email đã tồn tại!" });
     }
 
+    // Mã hóa mật khẩu
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     // Chèn người dùng mới vào cơ sở dữ liệu
+    // Thêm is_first_login với giá trị mặc định là TRUE
     const result = await connection.query(
-      `INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)`,
-      [username, email, password, role]
+      `INSERT INTO users (username, email, password_hash, role, is_first_login) VALUES (?, ?, ?, ?, ?)`,
+      [username, email, hashedPassword, role, true]
     );
 
-    return res.status(201).json({ message: "Đăng ký người dùng thành công!" });
+    return res.status(201).json({
+      message: "Đăng ký người dùng thành công!",
+      user: {
+        username,
+        email,
+        role,
+        is_first_login: true,
+      },
+    });
   } catch (error) {
-    console.error("Lỗi khi đăng ký người dùng: ", error); // In ra lỗi chi tiết
+    console.error("Lỗi khi đăng ký người dùng: ", error);
     return res.status(500).json({ error: "Lỗi nội bộ máy chủ" });
   }
 };
@@ -188,11 +205,25 @@ exports.register = async (req, res) => {
 exports.updateFirstLogin = async (req, res) => {
   const { userId } = req.body;
 
+  if (!userId) {
+    return res.status(400).json({
+      error: "ID người dùng không hợp lệ",
+      success: false,
+    });
+  }
+
   try {
-    // Update is_first_login to false for the specific user
-    await pool.query("UPDATE users SET is_first_login = FALSE WHERE id = ?", [
-      userId,
-    ]);
+    const [result] = await pool.query(
+      "UPDATE users SET is_first_login = FALSE WHERE id = ? AND is_first_login = TRUE",
+      [userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: "Không tìm thấy người dùng hoặc trạng thái đã được cập nhật",
+        success: false,
+      });
+    }
 
     return res.status(200).json({
       message: "Đã cập nhật trạng thái đăng nhập lần đầu",

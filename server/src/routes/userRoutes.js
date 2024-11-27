@@ -20,8 +20,8 @@ router.post("/forgot-password", forgotPassword);
 
 // Route to fetch current logged-in user's profile based on token
 router.get("/users/profile", authMiddleware, userController.getUserProfile);
-router.get(
-  "/auth/update-first-login",
+router.post(
+  "/update-first-login",
   authMiddleware,
   userController.updateFirstLogin
 );
