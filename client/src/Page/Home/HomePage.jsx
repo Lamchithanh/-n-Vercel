@@ -33,6 +33,9 @@ import LatestBlog from "./LatestBlog/LatestBlog";
 import CourseCard from "../../components/Card/Card";
 import BackToTop from "./BacktoTop";
 import Banner from "../../components/BannerScrollView/BannerScrollView";
+import FeaturesSection from "./FeaturesSection";
+import Bannertwo from "../../components/BannerScrollView/Bannertwo";
+import FeaturesWith from "./FeaturesWith";
 
 const { Header, Content } = Layout;
 
@@ -388,11 +391,16 @@ const HomePage = () => {
           )}
         </div>
       </Header>
-      <div className="banner_homepage">
+      <div className="bannerone_homepage">
         {" "}
         <Banner />
       </div>
-      <div style={{ height: "100vh" }} data-aos="fade-up" data-aos-delay="300">
+      <div
+        className="homepage_FeaturedCourses"
+        style={{ height: "120vh" }}
+        data-aos="fade-up"
+        data-aos-delay="300"
+      >
         <FeaturedCourses
           courses={courses
             .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
@@ -406,13 +414,20 @@ const HomePage = () => {
             }))}
         />
       </div>
-
+      <div className="">
+        {" "}
+        <FeaturesSection />
+      </div>
       <div
-        data-aos="fade-left"
+        data-aos="fade-up"
         data-aos-delay="300"
         style={{ width: "100%", display: "grid" }}
       >
         <Testimonials />
+      </div>
+      <div className="bannertwo_homepage">
+        {" "}
+        <Bannertwo />
       </div>
 
       <Content className="content_homepage">
@@ -441,7 +456,9 @@ const HomePage = () => {
           </div>
         </p>
       </Content>
-
+      <div data-aos="fade-up" data-aos-delay="400">
+        <FeaturesWith />
+      </div>
       <div data-aos="fade-up" data-aos-delay="400">
         <LatestBlog />
       </div>
@@ -455,7 +472,7 @@ const HomePage = () => {
         onClose={() => setIsMobileMenuVisible(false)}
         open={isMobileMenuVisible}
         className="mobile-menu-drawer"
-        width={280}
+        width={300}
       >
         <Menu
           mode="inline"
@@ -466,6 +483,7 @@ const HomePage = () => {
       </Drawer>
 
       <Drawer
+        className="Drawer_homepage"
         title="Thông báo mới"
         placement="right"
         onClose={handleNotificationClose}

@@ -1,7 +1,13 @@
+$text_title: #e6356f;
+$text_color: #f05a28;
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+
+  p {
+    color: $text_color;
+  }
 }
 
 .header {
@@ -14,7 +20,7 @@
   h1 {
     font-size: 2rem;
     font-weight: bold;
-    color: #333;
+    color: $text_title;
   }
 }
 

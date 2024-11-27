@@ -12,6 +12,7 @@ import {
 import "./MyCouponsPage.scss";
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
+import { LeftOutlined } from "@ant-design/icons";
 
 const CouponCard = ({ coupon }) => {
   const [copied, setCopied] = useState(false);
@@ -158,18 +159,22 @@ const MyCoupons = () => {
 
   return (
     <div className="my-coupons__container">
-      <Button
-        className="btn-back"
-        onClick={() => navigate(-1)}
-        style={{ margin: 10 }}
-      >
-        ← Quay lại
-      </Button>
+      <p>
+        <Button
+          className="btn-back"
+          onClick={() => navigate(-1)}
+          style={{ margin: 10 }}
+        >
+          <span className="btn_back">
+            <LeftOutlined />{" "}
+          </span>
+        </Button>
 
-      <div className="my-coupons__header">
-        <TicketPercent className="my-coupons__header-icon" size={32} />
-        <h2 className="my-coupons__header-title">Mã giảm giá của tôi</h2>
-      </div>
+        <div className="my-coupons__header">
+          <TicketPercent className="my-coupons__header-icon" size={32} />
+          <h2 className="my-coupons__header-title">Mã giảm giá của tôi</h2>
+        </div>
+      </p>
 
       {coupons.length === 0 ? (
         <div className="my-coupons__empty-state">

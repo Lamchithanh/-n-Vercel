@@ -51,43 +51,45 @@ const FeaturedCoursesContainer = ({ courses = [], maxDisplayCount = 6 }) => {
   }
 
   return (
-    <div className={styles.featuredCourses__container}>
-      {topEnrolledCourses.length > 0 ? (
-        topEnrolledCourses.map((course) => (
-          <div
-            key={course.id}
-            className={styles.featuredCourses__cardWrapper}
-            data-aos="fade-up" // Thêm animation "fade-up" cho AOS
-          >
-            <CourseCard course={course} />
+    <div className="featuredCourses_content">
+      <div className={styles.featuredCourses__container}>
+        {topEnrolledCourses.length > 0 ? (
+          topEnrolledCourses.map((course) => (
             <div
-              style={{
-                background: "#fff2b2",
-                padding: 10,
-                borderRadius: 10,
-                color: "#db7c26",
-                fontWeight: 600,
-                display: "inline-block",
-              }}
-              className={styles.featuredCourses__enrollmentCount}
-              data-aos="zoom-in" // Thêm animation "zoom-in" cho AOS
+              key={course.id}
+              className={styles.featuredCourses__cardWrapper}
+              data-aos="fade-up" // Thêm animation "fade-up" cho AOS
             >
-              + {course.enrollment_count?.toLocaleString() || 0} Học viên
+              <CourseCard course={course} />
+              <div
+                style={{
+                  background: "#fff2b2",
+                  padding: 10,
+                  borderRadius: 10,
+                  color: "#db7c26",
+                  fontWeight: 600,
+                  display: "inline-block",
+                }}
+                className={styles.featuredCourses__enrollmentCount}
+                data-aos="zoom-in" // Thêm animation "zoom-in" cho AOS
+              >
+                + {course.enrollment_count?.toLocaleString() || 0} Học viên
+              </div>
             </div>
+          ))
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%", // Hoặc chiều cao cụ thể nếu cần
+            }}
+          >
+            {/* Không có khóa học nổi bật. */}
           </div>
-        ))
-      ) : (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%", // Hoặc chiều cao cụ thể nếu cần
-          }}
-        >
-          {/* Không có khóa học nổi bật. */}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button } from "antd";
-import { ArrowUpOutlined } from "@ant-design/icons";
+import { ToTopOutlined } from "@ant-design/icons";
 import "./BackToTop.scss"; // Import file SCSS cho styling
 
 const BackToTop = () => {
@@ -9,7 +8,7 @@ const BackToTop = () => {
   useEffect(() => {
     // Khi người dùng cuộn trang, kiểm tra vị trí và cập nhật trạng thái của nút
     const handleScroll = () => {
-      if (window.scrollY > 200) {
+      if (window.scrollY > 2500) {
         setIsVisible(true); // Hiển thị nút khi cuộn xuống dưới 200px
       } else {
         setIsVisible(false); // Ẩn nút khi cuộn lên trên
@@ -36,13 +35,9 @@ const BackToTop = () => {
       onClick={handleBackToTop}
     >
       {isVisible && (
-        <Button
-          type="primary"
-          shape="circle"
-          icon={<ArrowUpOutlined />}
-          size="large"
-          className="back-to-top-btn"
-        />
+        <button shape="circle" size="large" className="back-to-top-btn">
+          <ToTopOutlined style={{ fontWeight: "800", fontSize: 18 }} />
+        </button>
       )}
     </div>
   );

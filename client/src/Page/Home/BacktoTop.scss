@@ -1,5 +1,8 @@
-/* BackToTop.scss */
+$background_top: #e6356f;
+$icon_color: #fff;
+
 .back-to-top {
+  border-radius: 9px;
   position: fixed;
   bottom: 120px;
   right: 60px;
@@ -11,15 +14,15 @@
   }
 
   .back-to-top-btn {
-    background-color: #e8f3ff;
-    border-color: #707470;
-    color: rgb(50, 206, 226);
+    background-color: $background_top;
+    color: $icon_color;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
 
     &:hover {
-      background-color: #69d4e2; /* Thay đổi màu khi hover */
-      transform: scale(1.1); /* Hiệu ứng phóng to khi hover */
+      background: none;
+      color: #e6356f;
+      transform: scale(1.1);
     }
 
     &:focus {

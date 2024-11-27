@@ -14,6 +14,7 @@ import {
   BankOutlined,
   WalletOutlined,
   PayCircleOutlined,
+  ShoppingOutlined,
 } from "@ant-design/icons";
 import { useMediaQuery } from "react-responsive";
 import {
@@ -23,7 +24,7 @@ import {
 } from "../../../../server/src/Api/paymentApi";
 import PropTypes from "prop-types";
 import CouponInput from "./CouponInput";
-
+import "./Payment.scss";
 const { Title, Text } = Typography;
 
 // Define valid payment methods according to database schema
@@ -340,191 +341,202 @@ const PaymentPage = () => {
   };
 
   return (
-    <div
-      className="container"
-      style={{
-        padding: isMobile ? "20px 10px" : "40px 20px",
-        background: "#f5f5f5",
-        minHeight: "100vh",
-      }}
-    >
-      <Button
-        onClick={() => navigate(-1)}
+    <div className="playout_payment">
+      <div
+        className="container payment_content "
         style={{
-          marginBottom: "20px",
-          borderRadius: "6px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
+          padding: isMobile ? "20px 10px" : "40px 20px",
+          minHeight: "100vh",
         }}
       >
-        ← Quay lại
-      </Button>
-
-      <Row gutter={[24, 24]}>
-        <Col span={layout.mainCol}>
-          <Card
-            title={
-              <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
-                Thông tin thanh toán
-              </Title>
-            }
-            bordered={false}
+        <div className="header_payment">
+          <Button
+            onClick={() => navigate(-1)}
             style={{
-              borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              marginBottom: "20px",
+              borderRadius: "6px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
-            <div style={{ padding: isMobile ? "10px" : "20px" }}>
-              <Row
-                gutter={[24, 24]}
-                align="middle"
-                style={{ marginBottom: "30px" }}
-              >
-                <Col span={layout.imageCol}>
-                  <img
-                    src={course.image || defaultImage}
-                    alt={course.title}
-                    style={{
-                      width: "100%",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    }}
-                  />
-                </Col>
-                <Col span={layout.infoCol}>
-                  <Title
-                    level={4}
-                    style={{ marginBottom: "16px", color: "#1890ff" }}
-                  >
-                    {course.title}
-                  </Title>
-                  <Text
-                    style={{
-                      fontSize: isMobile ? "14px" : "16px",
-                      color: "#595959",
-                      display: "block",
-                      marginBottom: "20px",
-                    }}
-                  >
-                    {course.description}
-                  </Text>
+            ← Quay lại
+          </Button>
+          <h2>
+            Payment <ShoppingOutlined className="shoppe_payment" />
+          </h2>
+        </div>
 
-                  <Row gutter={[12, 12]}>
-                    <Col span={isMobile ? 24 : 8}>
-                      <div
-                        style={{
-                          textAlign: "center",
-                          padding: "12px",
-                          background: "#f0f7ff",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <BookOutlined
+        <Row gutter={[24, 24]}>
+          <Col span={layout.mainCol}>
+            <Card
+              title={
+                <Title level={isMobile ? 4 : 3} style={{ margin: 0 }}>
+                  <span className="text_payment"> Thông tin thanh toán</span>
+                </Title>
+              }
+              bordered={false}
+              style={{
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+            >
+              <div style={{ padding: isMobile ? "10px" : "20px" }}>
+                <Row
+                  gutter={[24, 24]}
+                  align="middle"
+                  style={{ marginBottom: "30px" }}
+                >
+                  <Col span={layout.imageCol}>
+                    <img
+                      src={course.image || defaultImage}
+                      alt={course.title}
+                      style={{
+                        width: "100%",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                  </Col>
+                  <Col span={layout.infoCol}>
+                    <Title
+                      level={4}
+                      style={{ marginBottom: "16px", color: "#f05a28" }}
+                    >
+                      {course.title}
+                    </Title>
+                    <Text
+                      style={{
+                        fontSize: isMobile ? "14px" : "16px",
+                        color: "#595959",
+                        display: "block",
+                        marginBottom: "20px",
+                      }}
+                    >
+                      {course.description}
+                    </Text>
+
+                    <Row className="list_totalcourses" gutter={[12, 12]}>
+                      <Col classname="list_item_child" span={isMobile ? 24 : 8}>
+                        <div
+                          className="item_child"
                           style={{
-                            fontSize: "24px",
-                            color: "#1890ff",
-                            marginBottom: "8px",
+                            textAlign: "center",
+                            padding: "12px",
+                            background: "#242145",
+                            borderRadius: "8px",
                           }}
-                        />
-                        <div style={{ fontWeight: "bold" }}>
-                          {modules.length} chương
+                        >
+                          <BookOutlined
+                            style={{
+                              fontSize: "24px",
+                              color: "#1890ff",
+                              marginBottom: "8px",
+                            }}
+                          />
+                          <div style={{ fontWeight: "bold", color: "#e6356f" }}>
+                            {modules.length} chương
+                          </div>
                         </div>
-                      </div>
-                    </Col>
-                    <Col span={isMobile ? 24 : 8}>
-                      <div
-                        style={{
-                          textAlign: "center",
-                          padding: "12px",
-                          background: "#f6ffed",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <VideoCameraOutlined
+                      </Col>
+                      <Col classname="list_item_child" span={isMobile ? 24 : 8}>
+                        <div
+                          className="item_child"
                           style={{
-                            fontSize: "24px",
-                            color: "#52c41a",
-                            marginBottom: "8px",
+                            textAlign: "center",
+                            padding: "12px",
+                            background: "#242145",
+                            borderRadius: "8px",
                           }}
-                        />
-                        <div style={{ fontWeight: "bold" }}>
-                          {totalLessons} bài học
+                        >
+                          <VideoCameraOutlined
+                            style={{
+                              fontSize: "24px",
+                              color: "#52c41a",
+                              marginBottom: "8px",
+                            }}
+                          />
+                          <div style={{ fontWeight: "bold", color: "#e6356f" }}>
+                            {totalLessons} bài học
+                          </div>
                         </div>
-                      </div>
-                    </Col>
-                    <Col span={isMobile ? 24 : 8}>
-                      <div
-                        style={{
-                          textAlign: "center",
-                          padding: "12px",
-                          background: "#fff7e6",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <ClockCircleOutlined
+                      </Col>
+                      <Col classname="list_item_child" span={isMobile ? 24 : 8}>
+                        <div
+                          className="item_child"
                           style={{
-                            fontSize: "24px",
-                            color: "#fa8c16",
-                            marginBottom: "8px",
+                            textAlign: "center",
+                            padding: "12px",
+                            background: "#242145",
+                            borderRadius: "8px",
                           }}
-                        />
-                        <div style={{ fontWeight: "bold" }}>
-                          {convertMinutesToHMS(totalDuration)}
+                        >
+                          <ClockCircleOutlined
+                            style={{
+                              fontSize: "24px",
+                              color: "#fa8c16",
+                              marginBottom: "8px",
+                            }}
+                          />
+                          <div style={{ fontWeight: "bold", color: "#e6356f" }}>
+                            {convertMinutesToHMS(totalDuration)}
+                          </div>
                         </div>
-                      </div>
-                    </Col>
-                  </Row>
-                </Col>
-              </Row>
+                      </Col>
+                    </Row>
+                  </Col>
+                </Row>
 
-              <Divider style={{ margin: "24px 0" }} />
-              <PriceBreakdown />
-            </div>
-          </Card>
-        </Col>
+                <Divider style={{ margin: "24px 0" }} />
+                <PriceBreakdown />
+              </div>
+            </Card>
+          </Col>
 
-        <Col span={layout.sideCol}>
-          <Card
-            title={<Title level={4}>Xác nhận thanh toán</Title>}
-            bordered={false}
-            style={{
-              borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              position: isMobile ? "relative" : "sticky",
-              top: "20px",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <Title
-                level={2}
-                style={{ color: "#ff4d4f", marginBottom: "24px" }}
-              >
-                {Number(finalPrice).toLocaleString()} VND
-              </Title>
+          <Col span={layout.sideCol}>
+            <Card
+              title={
+                <Title level={4}>
+                  <span className="text_payment">Xác nhận thanh toán</span>
+                </Title>
+              }
+              bordered={false}
+              style={{
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                position: isMobile ? "relative" : "sticky",
+                top: "20px",
+              }}
+            >
+              <div style={{ textAlign: "center" }}>
+                <Title
+                  level={2}
+                  style={{ color: "#ff4d4f", marginBottom: "24px" }}
+                >
+                  {Number(finalPrice).toLocaleString()} VND
+                </Title>
 
-              <PaymentMethodSelector
-                onMethodSelect={handlePaymentMethodSelect}
-                selectedMethod={paymentMethod}
-              />
+                <PaymentMethodSelector
+                  onMethodSelect={handlePaymentMethodSelect}
+                  selectedMethod={paymentMethod}
+                />
 
-              <Button
-                type="primary"
-                size="large"
-                block
-                onClick={handleConfirmPayment}
-                style={{
-                  borderRadius: "8px",
-                  background: "#52c41a",
-                  marginTop: "20px",
-                }}
-              >
-                Thanh toán
-              </Button>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+                <button
+                  className="btn_payment"
+                  size="large"
+                  onClick={handleConfirmPayment}
+                  style={{
+                    borderRadius: "8px",
+                    marginTop: "20px",
+                  }}
+                >
+                  Thanh toán
+                </button>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 };

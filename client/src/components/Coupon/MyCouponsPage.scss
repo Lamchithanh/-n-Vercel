@@ -1,7 +1,8 @@
 // Variables
 $primary-color: #2563eb;
 $secondary-color: #10b981;
-$text-dark: #1f2937;
+$text-dark: #e6356f;
+$text-title: #f05a28;
 $text-light: #6b7280;
 $border-radius: 12px;
 $transition-speed: 0.3s;
@@ -39,6 +40,7 @@ $transition-speed: 0.3s;
       font-size: 2rem;
       font-weight: 700;
       color: $text-dark;
+      margin: 0;
     }
   }
 
@@ -79,6 +81,7 @@ $transition-speed: 0.3s;
 .coupon-card {
   border: 2px solid transparent;
   border-radius: $border-radius;
+  margin-top: 2rem;
   padding: 1rem;
   transition: all $transition-speed ease;
 
@@ -93,12 +96,15 @@ $transition-speed: 0.3s;
     align-items: center;
     margin-bottom: 1rem;
 
+    h2 {
+      color: #d1d5db;
+    }
     &-code {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       font-weight: 700;
-      color: $text-dark;
+      color: $text-title;
     }
 
     &-status {
@@ -179,4 +185,14 @@ $transition-speed: 0.3s;
   100% {
     transform: rotate(360deg);
   }
+}
+
+.btn-back {
+  background: none;
+  color: $text-title;
+  font-size: 18px;
+  border: 2px solid #585fa2;
+}
+.btn-back:hover {
+  background: $text-dark;
 }

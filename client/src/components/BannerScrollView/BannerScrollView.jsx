@@ -1,5 +1,5 @@
-import "./Banner.scss";
-import banner from "../../assets/img/BoostRiskSkills_Hero.webp";
+import "./Bannerone.scss";
+import bannerone from "../../assets/img/BoostRiskSkills_Hero.webp";
 import { useEffect } from "react";
 import Aos from "aos";
 const Banner = () => {
@@ -38,7 +38,7 @@ const Banner = () => {
         </button>
       </div>
       <div className="banner_image" data-aos="fade-up" data-aos-delay="1000">
-        <img src={banner} alt="Cybersecurity Banner" />
+        <img src={bannerone} alt="Cybersecurity Banner" />
       </div>
     </div>
   );

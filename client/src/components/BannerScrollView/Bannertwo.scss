@@ -1,0 +1,54 @@
+.bannertwo {
+  width: 90%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  background: rgba(29, 23, 61, 0.268); // Nền banner con với độ trong suốt cao
+  backdrop-filter: blur(8px); // Tạo hiệu ứng làm mờ
+  border-radius: 16px;
+  color: white;
+
+  .bannertwo_content {
+    max-width: 50%;
+
+    .bannertwo_subtitle {
+      font-size: 1rem;
+      color: #ff4081;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    .bannertwo_title {
+      font-size: 2rem;
+      font-weight: bold;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+    }
+
+    .bannertwo_description {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .bannertwo_button {
+      padding: 0.75rem 1.5rem;
+      background: #292940;
+      border: none;
+      border-radius: 8px;
+      color: #f05a28;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  }
+
+  .bannertwo_image {
+    max-width: 40%;
+
+    img {
+      width: 100%;
+      border-radius: 16px;
+    }
+  }
+}

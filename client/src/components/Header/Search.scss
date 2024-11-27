@@ -1,0 +1,79 @@
+$text_title: #e6356f;
+$text_color: #f05a28;
+$text_detail: #292940;
+$text_title: #e6356f;
+
+.CourseSearch_card {
+  width: 100%;
+  max-width: 350px;
+  padding: 10px;
+  background-color: $text_detail;
+  border: 2px solid #585fa1;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Tiêu đề
+.mb-2.line-clamp-2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: $text_title; // Màu chữ đậm
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; // Giới hạn 2 dòng
+  -webkit-box-orient: vertical;
+  margin-bottom: 8px;
+}
+
+// Mô tả
+.text-gray-600.block.mb-4.line-clamp-3 {
+  font-size: 14px;
+  color: #6b7280; // Màu xám chữ
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; // Giới hạn 3 dòng
+  -webkit-box-orient: vertical;
+  margin-bottom: 16px;
+}
+
+// Footer của card
+.flex.justify-between.items-center.mt-auto {
+  margin-top: auto;
+
+  .text-orange {
+    font-size: 16px;
+    font-weight: 700;
+    color: $text_color; // Màu cam cho giá
+  }
+
+  .flex.items-center.gap-4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .flex.items-center.gap-1 {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      span {
+        color: #f59e0b; // Màu cam cho biểu tượng sao
+      }
+    }
+
+    span {
+      font-size: 14px;
+      color: $text_color; // Màu xám đậm
+    }
+  }
+}

@@ -146,7 +146,7 @@ $secondary-color: #aa00ff;
   }
 }
 
-.banner_homepage {
+.bannerone_homepage {
   display: flex;
   justify-content: center;
   width: 100%;
@@ -159,7 +159,19 @@ $secondary-color: #aa00ff;
     #4531bc
   ); // Nền cha với các màu bạn yêu cầu
 }
-
+.bannertwo_homepage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 30px 10px;
+  background: linear-gradient(
+    45deg,
+    #231746,
+    #511659,
+    #291752,
+    #a5175e
+  ); // Nền cha với các màu bạn yêu cầu
+}
 // Mobile Menu Drawer
 .mobile-menu-drawer {
   .ant-drawer-body {
@@ -635,5 +647,65 @@ $secondary-color: #aa00ff;
         }
       }
     }
+  }
+}
+
+.homepage_FeaturedCourses {
+  background: linear-gradient(to right, #1b1834, #66184a);
+  padding: 20px 30px;
+}
+
+.Drawer_homepage {
+  .ant-drawer-header {
+    background-color: #1b1834; // Màu nền tiêu đề của Drawer
+    color: #e11d48; // Màu chữ tiêu đề
+    font-weight: bold;
+  }
+
+  .ant-drawer-body {
+    background-color: #f8f9fa; // Màu nền chính của Drawer
+    color: #333; // Màu chữ mặc định
+  }
+
+  // Phong cách cho danh sách thông báo
+  .drawer_homepage {
+    &:hover {
+      background-color: #f0f0f0 !important; // Màu nền khi hover
+    }
+
+    .ant-list-item {
+      border-radius: 8px; // Bo góc cho các item
+      transition: background-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .ant-list-item-meta-title {
+      font-weight: bold;
+      color: #1b1834; // Màu chữ tiêu đề
+    }
+
+    .ant-list-item-meta-description {
+      color: #666; // Màu chữ mô tả
+    }
+
+    // Tag tùy chỉnh
+    .ant-tag {
+      &.ant-tag-red {
+        background-color: #ff4d4f;
+        color: #fff;
+        border: none;
+      }
+
+      &.ant-tag-gold {
+        background-color: #faad14;
+        color: #fff;
+        border: none;
+      }
+    }
+  }
+
+  // Xử lý thông báo quan trọng
+  .ant-list-item[style*="background-color: #fff7e6"] {
+    border-left: 4px solid #faad14; // Đường viền bên trái cho thông báo quan trọng
   }
 }

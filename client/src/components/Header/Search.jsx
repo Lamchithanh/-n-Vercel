@@ -5,7 +5,7 @@ import { Input, Card, List, Typography, Empty } from "antd";
 import { useNavigate } from "react-router-dom";
 import debounce from "lodash/debounce";
 import Loader from "../../context/Loader";
-
+import "./Search.scss";
 const { Title, Text } = Typography;
 
 const CourseSearch = () => {
@@ -162,6 +162,7 @@ const CourseSearch = () => {
               key={course.id}
             >
               <Card
+                className="CourseSearch_card"
                 style={{
                   width: "100%", // Sử dụng full width của item
                   maxWidth: "350px", // Đảm bảo card không quá rộng khi chỉ có ít card
@@ -182,8 +183,9 @@ const CourseSearch = () => {
                   <Text style={{ color: "orange" }} strong>
                     {course.price === "0" || course.price === "0.00"
                       ? "Miễn phí"
-                      : `${course.price} vnd`}
+                      : `${Number(course.price).toLocaleString("vi-VN")} VND`}
                   </Text>
+
                   <div className="flex items-center gap-4">
                     <Text className="flex items-center gap-1">
                       <span>⭐</span>

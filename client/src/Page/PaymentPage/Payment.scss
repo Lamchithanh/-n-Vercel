@@ -1,0 +1,48 @@
+$title_color: #e6356f;
+$text_color: #130f25;
+$text_hover: #d94317;
+.playout_payment {
+  margin: 30px 10px;
+
+  .payment_content {
+    border-radius: 9px;
+    background: rgba(36, 30, 70, 0.889);
+    backdrop-filter: blur(8px);
+
+    .header_payment {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      h2 {
+        color: $title_color;
+      }
+      .shoppe_payment {
+        color: $title_color;
+        font-size: 50px;
+        font-weight: 900;
+      }
+    }
+  }
+
+  .text_payment {
+    color: $text_color;
+  }
+}
+.list_totalcourses {
+  .list_item_child {
+    .item_child {
+      background: #130f25;
+    }
+  }
+}
+.btn_payment {
+  color: $text_hover;
+  font-style: 18px;
+  background: #130f25;
+  transition: 0.5s ease;
+  &:hover {
+    color: white;
+    background: #130f25;
+  }
+}

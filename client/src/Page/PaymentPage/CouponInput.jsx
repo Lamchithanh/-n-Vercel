@@ -246,6 +246,8 @@ const CouponInput = ({
 
   return (
     <div className="mb-6">
+      <strong>Lưu ý: không thể hoàn tác sau khi đã áp mã!</strong>
+      <p></p>
       {!appliedCoupon ? (
         <Space.Compact style={{ width: "100%", marginBottom: "16px" }}>
           <Input
@@ -261,7 +263,11 @@ const CouponInput = ({
             disabled={loading}
           />
           <Button
-            type="primary"
+            style={{
+              color: "#f05a28",
+              fontWeight: "600",
+              background: "#1B1834",
+            }}
             onClick={handleApplyCoupon}
             loading={loading}
             disabled={loading}
