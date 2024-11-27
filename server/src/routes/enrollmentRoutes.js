@@ -12,7 +12,7 @@ router.get(
   enrollmentController.getMyCourses
 );
 router.get(
-  "/enrollments/status/:userId/:courseId",
+  "/enrollment-status/:userId/:courseId",
   enrollmentController.getEnrollmentStatus
 );
 router.patch("/complete/:id", enrollmentController.completeCourse);

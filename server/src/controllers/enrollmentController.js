@@ -214,14 +214,18 @@ const getEnrollmentStatus = async (req, res) => {
     );
 
     if (rows.length > 0) {
-      // Return a clear, consistent status
-      return res
-        .status(200)
-        .json(rows[0].status === "active" ? "enrolled" : "not_enrolled");
+      // Check enrollment status of the user
+      if (rows[0].status === "enrolled") {
+        return res.status(200).json("enrolled"); // Currently taking the course
+      } else if (rows[0].status === "completed") {
+        return res.status(200).json("completed"); // Completed the course
+      } else if (rows[0].status === "dropped") {
+        return res.status(200).json("dropped"); // Dropped the course
+      }
     }
 
     // If no enrollment found
-    return res.status(200).json("not_enrolled");
+    return res.status(200).json("not_enrolled"); // Not enrolled in the course
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Error checking enrollment status" });

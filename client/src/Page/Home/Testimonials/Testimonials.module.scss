@@ -1,9 +1,10 @@
 .testimonials__form {
-  background: #e2ebeb !important;
+  background: #130f25 !important;
   padding: 20px 0;
 
   .testimonials__header {
     margin: 30px 50px;
+    color: #ddd;
   }
 
   .testimonials__container {
@@ -13,7 +14,8 @@
     .testimonials__subtitle {
       width: 80%;
       font-style: 18px;
-      color: #47775f;
+      color: #e7005e;
+      margin-right: 20px;
     }
 
     .testimonials__cards {
@@ -29,7 +31,7 @@
     }
 
     .reviewCard {
-      background-color: #fff;
+      background-color: #242145;
       width: 100%;
       height: auto;
       border-radius: 9px;
@@ -50,7 +52,7 @@
       font-size: 14px;
       width: 100%; /* Đảm bảo văn bản chiếm toàn bộ chiều rộng của card */
       margin-bottom: 0;
-      color: #555;
+      color: #ffffff;
       line-height: 1.2;
 
       /* Đảm bảo văn bản xuống dòng khi hết không gian */

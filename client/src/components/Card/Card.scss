@@ -1,26 +1,31 @@
+$background-card: #1b1834;
+$border-card: #585fa2;
+$color-price: #e7005e;
+$color-title: #f0f0f0;
+$border-color: #41a5db;
 .form_card {
   transition: transform 0.3s ease-in-out, transform 0.3s ease;
   &:hover {
     transform: translateY(-10px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-color: #41a5db;
+    border-color: $border-color;
   }
 
   .course-card-container {
     width: 380px;
     height: auto;
-    background: #ffffff;
+    background: $background-card;
     border-radius: 12px;
     overflow: hidden;
     transition: transform 0.3s ease-in-out, transform 0.3s ease;
-    border: 1px solid #d4d4d4;
+    border: 1px solid $border-card;
     cursor: pointer;
     position: relative;
 
     &:hover {
       transform: translateY(-10px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-color: #41a5db;
+      border-color: $border-color;
     }
     .course-image-wrapper {
       position: relative;
@@ -56,7 +61,7 @@
       .course-title {
         font-size: 16px;
         font-weight: 600;
-        color: #333;
+        color: $color-title;
         //   margin-bottom: ;
         line-height: 1.4;
         overflow: hidden;
@@ -66,7 +71,7 @@
         -webkit-box-orient: vertical;
 
         &.new-course {
-          color: #ff4d4f;
+          color: $color-price;
         }
       }
 
@@ -78,7 +83,7 @@
 
         .course-price {
           font-weight: 600;
-          color: #f47425;
+          color: $color-price;
         }
 
         .course-level {

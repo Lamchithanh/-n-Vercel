@@ -4,6 +4,8 @@ $mobile-header-height: 56px;
 $content-max-width: 1200px;
 $mobile-breakpoint: 768px;
 $small-mobile-breakpoint: 576px;
+$primary-color: #6200ee;
+$secondary-color: #aa00ff;
 
 // Mixins
 @mixin mobile {
@@ -144,6 +146,20 @@ $small-mobile-breakpoint: 576px;
   }
 }
 
+.banner_homepage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 30px 10px;
+  background: linear-gradient(
+    45deg,
+    #66beb4,
+    #2e1f80,
+    #221375,
+    #4531bc
+  ); // Nền cha với các màu bạn yêu cầu
+}
+
 // Mobile Menu Drawer
 .mobile-menu-drawer {
   .ant-drawer-body {
@@ -169,65 +185,85 @@ $small-mobile-breakpoint: 576px;
 }
 
 // Main Content Area
-.content {
-  background-color: #fff;
-  padding: 24px;
-  border-radius: 8px;
-  margin: 0 auto;
-  max-width: $content-max-width;
+.content_homepage {
+  padding: 30px;
+  width: 100%;
+  background: linear-gradient(
+      to right,
+      #6d1249,
+      #3c0f77,
+      #3c0f77,
+      #140f26,
+      #5c113e,
+      #711245
+    ),
+    url("https://www.pluralsight.com/etc.clientlibs/pluralsight/clientlibs/clientlib-main/resources/images/hero/hero-2-decoration.png");
+  background-size: cover; /* Làm nhỏ hình ảnh xuống 50% kích thước gốc */
+  background-position: center;
+  background-blend-mode: overlay;
+  color: #ffffff;
 
-  @include mobile {
-    padding: 16px;
-    margin-top: 16px;
-  }
-
-  // Course List Grid
-  .course-list {
-    display: grid;
-    justify-items: center;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    grid-gap: 26px;
+  .content {
+    background: rgba(36, 30, 70, 0.289); // Nền banner con với độ trong suốt cao
+    backdrop-filter: blur(8px); // Tạo hiệu ứng làm mờ
+    border-radius: 16px;
+    padding: 24px;
+    margin: 0 auto;
     margin-top: 20px;
+    max-width: $content-max-width;
 
     @include mobile {
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      grid-gap: 16px;
+      padding: 16px;
+      margin-top: 16px;
     }
 
-    // Course Card
-    .ant-card {
-      width: 100%;
-      height: 90%;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
+    // Course List Grid
+    .course-list {
+      display: grid;
+      justify-items: center;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      grid-gap: 26px;
 
-      &[data-aos] {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: transform 0.3s ease, opacity 0.3s ease;
+      @include mobile {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-gap: 16px;
+      }
 
-        &.aos-animate {
-          opacity: 1;
-          transform: translateY(0);
+      // Course Card
+      .ant-card {
+        width: 100%;
+        height: 90%;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+
+        &[data-aos] {
+          opacity: 0;
+          transform: translateY(20px);
+          transition: transform 0.3s ease, opacity 0.3s ease;
+
+          &.aos-animate {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-      }
 
-      &:hover {
-        transform: translateY(-5px);
-      }
-
-      .ant-card-cover {
-        img {
-          object-fit: contain;
-          height: 200px;
-          border-top-left-radius: 10px;
-          border-top-right-radius: 10px;
+        &:hover {
+          transform: translateY(-5px);
         }
-      }
 
-      .ant-card-body {
-        padding: 16px;
+        .ant-card-cover {
+          img {
+            object-fit: contain;
+            height: 200px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+          }
+        }
+
+        .ant-card-body {
+          padding: 16px;
+        }
       }
     }
   }
@@ -483,7 +519,11 @@ $small-mobile-breakpoint: 576px;
     max-width: 1200px;
     margin: 0 auto;
   }
-
+  @media (max-width: 768px) {
+    .testimonials-container {
+      display: none !important;
+    }
+  }
   .testimonial-header {
     text-align: center;
     margin-bottom: 40px;

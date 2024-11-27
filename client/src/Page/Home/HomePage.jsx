@@ -32,6 +32,7 @@ import Testimonials from "./Testimonials/Testimonials";
 import LatestBlog from "./LatestBlog/LatestBlog";
 import CourseCard from "../../components/Card/Card";
 import BackToTop from "./BacktoTop";
+import Banner from "../../components/BannerScrollView/BannerScrollView";
 
 const { Header, Content } = Layout;
 
@@ -355,24 +356,13 @@ const HomePage = () => {
 
   return (
     <Layout className="">
-      {/* {showFirstLoginModal && user && (
-        <FirstLoginHandler
-          user={user}
-          token={localStorage.getItem("token")}
-          onUpdateFirstLogin={() => {
-            setShowFirstLoginModal(false);
-            navigateBasedOnRole(user);
-          }}
-          setUser={setUser} // Truyền thêm setUser
-        />
-      )} */}
       <Header
         style={{
           background: colorBgContainer,
           padding: "0 16px",
           // position: "fixed",
-          width: "100%" /* Đảm bảo header trải dài toàn bộ chiều ngang */,
-          zindex: 1001,
+          width: "100%",
+          // zindex: 999,
           boxshadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
         }}
         className="header"
@@ -398,7 +388,10 @@ const HomePage = () => {
           )}
         </div>
       </Header>
-
+      <div className="banner_homepage">
+        {" "}
+        <Banner />
+      </div>
       <div style={{ height: "100vh" }} data-aos="fade-up" data-aos-delay="300">
         <FeaturedCourses
           courses={courses
@@ -414,28 +407,39 @@ const HomePage = () => {
         />
       </div>
 
-      <div data-aos="fade-left" data-aos-delay="300">
+      <div
+        data-aos="fade-left"
+        data-aos-delay="300"
+        style={{ width: "100%", display: "grid" }}
+      >
         <Testimonials />
       </div>
 
-      <Content style={{ padding: "0 24px 24px" }}>
+      <Content className="content_homepage">
         <Breadcrumb className="breadcrumb" items={[{ title: "" }]} />
-        <div className="content">
-          {location.pathname === "/allcourses" ? (
-            renderHomeContent()
-          ) : (
-            <Outlet />
-          )}
-          <div data-aos="fade-up" data-aos-delay="300">
-            <Pagination
-              current={currentPage}
-              pageSize={pageSize}
-              total={courses.length}
-              onChange={(page) => setCurrentPage(page)}
-              style={{ marginTop: "16px", textAlign: "center" }}
-            />
+
+        <p>
+          <div className="content">
+            {location.pathname === "/allcourses" ? (
+              renderHomeContent()
+            ) : (
+              <Outlet />
+            )}
+            <div data-aos="fade-up" data-aos-delay="300">
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={courses.length}
+                onChange={(page) => setCurrentPage(page)}
+                style={{
+                  marginTop: "16px",
+                  textAlign: "center",
+                  color: "#E7005E",
+                }}
+              />
+            </div>
           </div>
-        </div>
+        </p>
       </Content>
 
       <div data-aos="fade-up" data-aos-delay="400">
@@ -481,7 +485,7 @@ const HomePage = () => {
                   ? "#fff7e6"
                   : "transparent",
               }}
-              className="hover:bg-gray-100"
+              className="drawer_homepage hover:bg-gray-100"
             >
               <List.Item.Meta
                 onClick={() => {

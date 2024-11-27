@@ -10,7 +10,6 @@ import {
   Spin,
 } from "antd";
 import {
-  BookOutlined,
   TeamOutlined,
   TrophyOutlined,
   RocketOutlined,
@@ -55,6 +54,8 @@ const Introduce = () => {
     navigate("allcourses");
   };
 
+  const { totals } = dashboardData || {};
+
   return (
     <Layout className={styles.layout}>
       <CertificateNotification
@@ -69,7 +70,7 @@ const Introduce = () => {
               đầu
             </p>
             <Button
-              style={{ background: "#539B47" }}
+              style={{ background: "#E7005E", fontSize: 18, fontWeight: 700 }}
               type="primary"
               size="large"
               onClick={handleOnclick}
@@ -82,49 +83,89 @@ const Introduce = () => {
         <section className={styles.stats}>
           <Row gutter={[32, 32]} justify="center">
             <Col xs={24} sm={12} md={6}>
-              <Card style={{ border: "#9c9b9b solid 1px" }} data-aos="zoom-in">
+              <Card className={styles.statCard} data-aos="zoom-in">
                 {loading ? (
                   <Spin size="small" />
                 ) : (
-                  <Statistic
-                    title="Học viên"
-                    value={dashboardData?.totals.users || 0}
-                    prefix={<TeamOutlined color="#1890ff" />}
-                  />
+                  <div className={styles.statContent}>
+                    Cộng đồng học viên
+                    <Statistic
+                      value={totals?.users || 0}
+                      valueStyle={{ color: "#ffffff" }}
+                    />
+                    <p className={styles.subText}>
+                      30 days | 60 days | 90 days
+                    </p>
+                  </div>
                 )}
               </Card>
             </Col>
+
             <Col xs={24} sm={12} md={6}>
               <Card
-                style={{ border: "#9c9b9b solid 1px" }}
+                className={styles.statCard}
                 data-aos="zoom-in"
                 data-aos-delay="100"
               >
                 {loading ? (
                   <Spin size="small" />
                 ) : (
-                  <Statistic
-                    title="Khóa học"
-                    value={dashboardData?.totals.courses || 0}
-                    prefix={<BookOutlined />}
-                  />
+                  <div className={styles.statContent}>
+                    Kho tàng khóa học VIP
+                    <Statistic
+                      value={totals?.courses || 0}
+                      valueStyle={{ color: "#ffffff" }}
+                    />
+                    <p className={styles.subText}>
+                      30 days | 60 days | 90 days
+                    </p>
+                  </div>
                 )}
               </Card>
             </Col>
+
             <Col xs={24} sm={12} md={6}>
               <Card
-                style={{ border: "#9c9b9b solid 1px" }}
+                className={styles.statCard}
                 data-aos="zoom-in"
                 data-aos-delay="200"
               >
                 {loading ? (
                   <Spin size="small" />
                 ) : (
-                  <Statistic
-                    title="Chứng chỉ"
-                    value={dashboardData?.totals.certificates || 0}
-                    prefix={<TrophyOutlined />}
-                  />
+                  <div className={styles.statContent}>
+                    Tốt nghiệp chứng chỉ
+                    <Statistic
+                      value={totals?.certificates || 0}
+                      valueStyle={{ color: "#ffffff" }}
+                    />
+                    <p className={styles.subText}>
+                      30 days | 60 days | 90 days
+                    </p>
+                  </div>
+                )}
+              </Card>
+            </Col>
+
+            <Col xs={24} sm={12} md={6}>
+              <Card
+                className={styles.statCard}
+                data-aos="zoom-in"
+                data-aos-delay="300"
+              >
+                {loading ? (
+                  <Spin size="small" />
+                ) : (
+                  <div className={styles.statContent}>
+                    Tỷ lệ ưu đãi và tốt nghiệp
+                    <Statistic value="8/10" valueStyle={{ color: "#ffffff" }} />
+                    <div className={styles.progressBar}>
+                      <div
+                        className={styles.progressFill}
+                        style={{ width: "80%" }}
+                      />
+                    </div>
+                  </div>
                 )}
               </Card>
             </Col>

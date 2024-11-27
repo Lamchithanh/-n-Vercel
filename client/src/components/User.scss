@@ -1,4 +1,4 @@
-/* User Page Wrapper */
+$background_content: #1b1834;
 .user-page-wrapper {
   display: flex;
   flex-direction: column;
@@ -12,7 +12,7 @@
 
 /* Main Content */
 .user-main {
-  background-color: rgb(236, 235, 235);
+  background-color: $background_content;
   flex-grow: 1;
 }
 
@@ -24,5 +24,5 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 20px;
+  margin: 20px 0;
 }

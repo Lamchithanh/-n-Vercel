@@ -42,16 +42,13 @@ const ForgotPassword = () => {
 
   return (
     <div className="login-container">
-      <Button
-        icon={<ArrowLeftOutlined />}
-        className="back-button"
-        onClick={() => navigate(-1)}
-        data-aos="fade-right"
-      >
-        Quay lại
-      </Button>
-
       <div className="login-card" data-aos="zoom-in">
+        <Button
+          icon={<ArrowLeftOutlined />}
+          className="back-button"
+          onClick={() => navigate(-1)}
+          data-aos="fade-right"
+        ></Button>
         <div className="login-header">
           <h2 className="login-title">
             <LockOutlined className="login-icon" /> Quên Mật Khẩu

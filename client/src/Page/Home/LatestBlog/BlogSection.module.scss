@@ -1,102 +1,119 @@
-.blogSection {
-  padding: 3rem 0;
-  background-color: #b8bbbe;
+.blog-section {
+  background-color: #1e1e30; // Dark background
+  padding: 2rem 1rem;
+  color: #fff;
 
   .container {
-    max-width: 72rem;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 1rem;
-  }
 
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
 
-  .title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1f2937;
-  }
+      .title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #e6356f;
+      }
 
-  .viewAllBtn {
-    display: flex;
-    align-items: center;
-    color: #3b82f6;
+      .view-all-btn {
+        color: #f05a28;
+        font-size: 1rem;
+        font-weight: bold;
 
-    &:hover {
-      color: #2563eb;
+        &:hover {
+          color: #d94317;
+        }
+
+        .arrow {
+          font-size: 1.2rem;
+        }
+      }
     }
 
-    .arrow {
-      margin-left: 0.5rem;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+
+      .blog-card {
+        background-color: #292940;
+        border: none;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+
+        &:hover {
+          transform: scale(1.05);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-image {
+          width: 100%;
+          height: 180px;
+          object-fit: cover;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .date {
+          display: block;
+          font-size: 0.875rem;
+          color: #9a9ab1;
+          margin: 1rem 1rem 0;
+        }
+
+        .post-title {
+          font-size: 1.2rem;
+          font-weight: bold;
+          color: #ffffff;
+          // margin: 0.5rem 1rem;
+        }
+
+        .excerpt {
+          font-size: 0.875rem;
+          color: #cfcfe2;
+          margin: 0.5rem 1rem 1rem;
+        }
+
+        .read-more-btn {
+          margin: 0 1rem 1rem;
+          font-size: 0.9rem;
+          color: #f05a28;
+          font-weight: bold;
+
+          &:hover {
+            color: #d94317;
+          }
+
+          .arrow {
+            font-size: 1rem;
+          }
+        }
+      }
     }
   }
+}
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 2rem;
+.content-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; // Căn giữa nội dung
+  max-width: 100%; // Đảm bảo nội dung không vượt quá modal
 
-    @media (min-width: 768px) {
-      grid-template-columns: repeat(3, 1fr);
-    }
+  .post-image {
+    max-width: 100%; // Giới hạn chiều rộng tối đa theo modal
+    height: auto; // Đảm bảo tỷ lệ ảnh không bị méo
+    border-radius: 0.5rem; // Bo góc ảnh
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 1rem; // Khoảng cách giữa ảnh và nội dung
   }
 
-  .card {
-    border: 2px solid #e5e7eb;
-    transition: transform 0.2s ease-in-out;
-
-    &:hover {
-      transform: translateY(-4px);
-    }
-  }
-
-  .cardImage {
-    height: 12rem;
-    object-fit: cover;
-    width: 100%;
-  }
-
-  .date {
+  .post-date {
+    margin-bottom: 1rem;
+    color: #9a9ab1;
     font-size: 0.875rem;
-    color: #6b7280;
-    margin-bottom: 0.5rem;
-  }
-
-  .postTitle {
-    font-size: 1.125rem;
-    font-weight: 500;
-    color: #1f2937;
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-  }
-
-  .excerpt {
-    color: #4b5563;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .readMoreBtn {
-    padding: 0;
-    margin-top: 1rem;
-    color: #3b82f6;
-    display: flex;
-    align-items: center;
-
-    &:hover {
-      color: #2563eb;
-    }
-
-    .arrow {
-      margin-left: 0.25rem;
-    }
   }
 }

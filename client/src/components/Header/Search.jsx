@@ -106,7 +106,7 @@ const CourseSearch = () => {
         <div
           style={{
             position: "absolute",
-            zIndex: 1000,
+            zIndex: 1001,
             marginTop: 20,
             background: "#8C42F6",
 
@@ -130,11 +130,12 @@ const CourseSearch = () => {
         <List
           style={{
             position: "absolute",
-            zIndex: 100,
+            zIndex: 1001,
             marginTop: 20,
-            background: "#e2ebeb",
+            background: "rgba(36, 30, 70, 0.889)", // Nền banner con với độ trong suốt cao
+            backdropfilter: blur(5), // Tạo hiệu ứng làm mờ
             padding: 20,
-            borderRadius: 8,
+            borderRadius: "0 0 8px 8px",
             left: 0,
             width: "100%",
           }}

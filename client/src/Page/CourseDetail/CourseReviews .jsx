@@ -126,7 +126,9 @@ const CourseReview = ({ courseId, isEnrolled }) => {
             value={stats.averageRating}
           />
           <span> {averageRating} </span>
-          <span className="text-gray-500">({stats.totalReviews} đánh giá)</span>
+          <strong className="text-gray-500">
+            ({stats.totalReviews} đánh giá)
+          </strong>
         </div>
       </Card>
     );
@@ -170,16 +172,26 @@ const CourseReview = ({ courseId, isEnrolled }) => {
           Viết đánh giá
         </Button>
       ) : (
-        <p>Bạn cần đăng ký khóa học trước khi có thể đánh giá.</p>
+        <p style={{ color: "#f05a28" }}>
+          Bạn cần đăng ký khóa học trước khi có thể đánh giá.
+        </p>
       )}
 
       <List
         itemLayout="vertical"
         dataSource={reviews}
         renderItem={(review) => (
-          <List.Item key={review.id} actions={renderActions(review)}>
+          <List.Item
+            key={review.id}
+            actions={renderActions(review)}
+            style={{
+              marginTop: 5,
+              padding: 5,
+              borderRadius: 8,
+            }}
+          >
             <List.Item.Meta
-              title={review.user_name}
+              title={<span>{review.user_name}</span>}
               description={
                 <div>
                   <Rate
@@ -194,7 +206,7 @@ const CourseReview = ({ courseId, isEnrolled }) => {
                 </div>
               }
             />
-            {review.review_text}
+            <span style={{ color: "#666" }}>{review.review_text}</span>
           </List.Item>
         )}
         style={{
@@ -202,6 +214,8 @@ const CourseReview = ({ courseId, isEnrolled }) => {
           overflowY: "auto",
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
           padding: 10,
+          background: "#fff",
+          borderRadius: 8,
         }}
       />
 

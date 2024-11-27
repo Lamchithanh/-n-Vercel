@@ -1,11 +1,12 @@
 .header {
-  width: 100%; /* Đảm bảo header trải dài toàn bộ chiều ngang */
+  width: 100%;
+  height: 12vh;
   z-index: 1000;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #fff;
+  background-color: #242145;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   &__logo {
@@ -35,7 +36,7 @@
     .logo-text {
       font-size: 1.2rem;
       font-weight: bold;
-      color: #333;
+      color: #f05a28;
     }
   }
 
@@ -62,7 +63,7 @@
         align-items: center;
         gap: 8px;
         padding: 5px 10px;
-        border: none;
+        border: 2px solid #585fa2;
         background: none;
         cursor: pointer;
 
@@ -74,18 +75,25 @@
         }
 
         span {
-          color: #333;
+          color: #f05a28;
           font-size: 0.9rem;
+          &:hover {
+            color: #fff;
+          }
         }
       }
 
       .btn--logout {
         background: none;
-        border: none;
+        border: #585fa2 2px solid;
         padding: 5px;
         cursor: pointer;
         display: flex;
         align-items: center;
+
+        &:hover {
+          background: #d9d9da;
+        }
 
         img {
           width: 32px;
@@ -104,22 +112,24 @@
 
       &--outline {
         background-color: transparent;
-        border: 1px solid #4caf50;
-        color: #4caf50;
+        border: 2px solid #8491c2;
+        color: #f05a28;
 
         &:hover {
-          background-color: #4caf50;
+          background-color: #e7005e;
+          border: 2px solid #242145;
           color: #fff;
         }
       }
 
       &--primary {
-        background-color: #4caf50;
+        background-color: #e7005e;
         border: none;
         color: #fff;
 
         &:hover {
-          background-color: #45a049;
+          background-color: #242145;
+          color: #f05a28;
         }
       }
     }

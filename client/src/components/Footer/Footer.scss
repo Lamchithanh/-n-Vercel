@@ -1,4 +1,11 @@
-// .text-center {
-//   padding: 20px;
-//   margin: 10px;
-// }
+.footer-body {
+  width: 100%;
+  background: #242145;
+  padding: 0;
+  color: #e7005e;
+  .p-3 {
+    p {
+      color: #fff;
+    }
+  }
+}

@@ -35,6 +35,8 @@ import CourseProgress from "./CourseProgress";
 import VideoProgressTracker from "./VideoProgressTracker";
 // import CertificateNotification from "../CertificatesPage/CertificateNotification";
 import { checkPaymentStatusAPI } from "../../../../server/src/Api/paymentApi";
+import axios from "axios";
+import { API_URL } from "../../../../server/src/config/config";
 // import RandomCoupon from "../../components/Coupon/Coupon";
 const { Title, Paragraph } = Typography;
 
@@ -314,29 +316,60 @@ const CourseDetail = () => {
     }
   };
 
+  const checkEnrollmentStatus = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.id) {
+      return "not_enrolled";
+    }
+
+    try {
+      const response = await axios.get(
+        `${API_URL}/enrollment-status/${user.id}/${courseId}`
+      );
+      return response.data; // Will return "not_enrolled", "enrolled", "completed", or "dropped"
+    } catch (error) {
+      console.error("Error checking enrollment status:", error);
+      return "not_enrolled";
+    }
+  };
+
   const handleEnroll = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
-
     if (!user || !user.id) {
       message.error("Bạn cần đăng nhập để đăng ký khóa học.");
       return;
     }
 
     try {
+      // First, check the current enrollment status
+      const currentStatus = await checkEnrollmentStatus();
+
+      // If already enrolled or completed, show appropriate message
+      if (currentStatus === "enrolled") {
+        message.info("Bạn đã đăng ký khóa học này.");
+        setIsEnrolled(true);
+        return;
+      }
+
+      if (currentStatus === "completed") {
+        message.info("Bạn đã hoàn thành khóa học này.");
+        setIsEnrolled(true);
+        return;
+      }
+
+      // Proceed with enrollment if not already enrolled
       const response = await enrollCourseAPI({
         userId: user.id,
         courseId,
       });
 
-      console.log("API Enrollment Response:", response);
-
-      // Check if response contains a success message
       if (
         response &&
         (response.success || response.message === "Đăng ký thành công!")
       ) {
         setIsEnrolled(true);
 
+        // Update local storage for enrolled courses
         let enrolledCoursesData =
           JSON.parse(localStorage.getItem("enrolledCourses")) || {};
         enrolledCoursesData[user.id] = enrolledCoursesData[user.id] || [];
@@ -351,7 +384,6 @@ const CourseDetail = () => {
 
         message.success(response.message || "Đăng ký khóa học thành công!");
       } else {
-        // If the response doesn't indicate success, show an error
         message.error(
           response?.message || "Đăng ký khóa học thất bại. Vui lòng thử lại."
         );
@@ -361,6 +393,16 @@ const CourseDetail = () => {
       message.error("Có lỗi xảy ra trong quá trình đăng ký.");
     }
   };
+
+  useEffect(() => {
+    const verifyEnrollmentStatus = async () => {
+      const status = await checkEnrollmentStatus();
+      setIsEnrolled(["enrolled", "completed"].includes(status));
+    };
+
+    verifyEnrollmentStatus();
+  }, [courseId]);
+
   const loadLessons = async (moduleId) => {
     try {
       const lessonsData = await fetchLessonsAPI(moduleId);
@@ -475,7 +517,7 @@ const CourseDetail = () => {
       <div className="module-header">
         <span>
           <strong>Chương {index + 1}: </strong>
-          <strong style={{ color: "orange" }}>{module.title}</strong>
+          <strong style={{ color: "#f05a28" }}>{module.title}</strong>
         </span>
         <span> </span>
         {lessons[module.id]?.length > 0 && (
@@ -625,7 +667,7 @@ const CourseDetail = () => {
         <div style={{ marginBottom: 10 }} className="course-price">
           <strong>
             Giá:{" "}
-            <span style={{ color: "orange" }}>
+            <span style={{ color: "#f05a28" }}>
               {course.price === "0" || course.price === "0.00"
                 ? "Miễn phí"
                 : `${new Intl.NumberFormat("vi-VN").format(course.price)} VND`}
@@ -671,8 +713,10 @@ const CourseDetail = () => {
           {course.price === "0" || course.price === "0.00" ? (
             <Button
               style={{
-                backgroundColor: "#4caf50",
-                borderColor: "#4caf50",
+                backgroundColor: "#E7005E",
+                color: "#F4F7FA",
+                fontWeight: 600,
+                borderRadius: 8,
                 width: isMobile ? "100%" : "auto",
               }}
               type="primary"
@@ -694,11 +738,12 @@ const CourseDetail = () => {
             </Button>
           ) : (
             <Button
-              type="primary"
               onClick={() => navigate(`/payment/${courseId}`)}
               style={{
-                backgroundColor: "#f5222d",
-                borderColor: "#f5222d",
+                backgroundColor: "#242145",
+                borderColor: "#8491C2",
+                color: "#f05a28",
+                fontWeight: 700,
                 width: isMobile ? "100%" : "auto",
               }}
             >
@@ -708,7 +753,7 @@ const CourseDetail = () => {
         </div>
       )}
       {isEnrolled && (
-        <h6 style={{ color: "#11bd23", textAlign: "center", margin: 0 }}>
+        <h6 style={{ color: "#f05a28", textAlign: "center", margin: 0 }}>
           <span>
             Đã đăng ký
             <span style={{ marginLeft: 5 }}>
@@ -786,7 +831,7 @@ const CourseDetail = () => {
         ← Quay lại
       </Button>
 
-      <Row gutter={[16, 16]} justify="center">
+      <Row className="coursesdetail_content" gutter={[16, 16]} justify="center">
         <Col
           xs={24}
           sm={24}
@@ -910,7 +955,7 @@ const CourseDetail = () => {
               <CourseInfoCard />
             </div>
           )}
-          <Title style={{ margin: "20px 40px" }} level={4}>
+          <Title style={{ margin: "20px 40px", color: "#e6356f" }} level={4}>
             Đánh giá khóa học
           </Title>
           <CourseReviews courseId={courseId} isEnrolled={isEnrolled} />

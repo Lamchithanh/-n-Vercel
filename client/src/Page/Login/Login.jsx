@@ -19,7 +19,7 @@ import {
   // updateFirstLogin,
 } from "../../../../server/src/Api/authAPI";
 import "./Login.scss";
-import FirstLoginHandler from "./NewMemberWelcomeModal";
+// import FirstLoginHandler from "./NewMemberWelcomeModal";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -157,197 +157,187 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      {showFirstLoginModal && user && (
-        <FirstLoginHandler
-          user={user}
-          token={localStorage.getItem("token")}
-          onUpdateFirstLogin={() => {
-            setShowFirstLoginModal(false);
-            navigateBasedOnRole(user);
-          }}
-        />
-      )}
-      <Button
-        icon={<ArrowLeftOutlined />}
-        className="back-button"
-        onClick={() => navigate(-1)}
-        data-aos="fade-right"
-      >
-        Quay lại
-      </Button>
+    <>
+      <div className="login-container">
+        <div className="login-card" data-aos="zoom-in">
+          {" "}
+          <Button
+            icon={<ArrowLeftOutlined />}
+            className="back-button"
+            onClick={() => navigate(-1)}
+            data-aos="fade-right"
+          ></Button>
+          <div className="login-header">
+            {" "}
+            <h2 className="login-title">
+              {isLogin ? (
+                <>
+                  <LoginOutlined className="login-icon" /> Đăng nhập
+                </>
+              ) : (
+                <>
+                  <UserAddOutlined className="login-icon" /> Đăng ký
+                </>
+              )}
+            </h2>
+            <Text className="login-subtitle">
+              {isLogin ? "Chào mừng bạn trở lại!" : "Tạo tài khoản để bắt đầu"}
+            </Text>
+          </div>
+          {isLogin ? (
+            <Form
+              name="login"
+              onFinish={handleLogin}
+              layout="vertical"
+              className="login-form"
+              data-aos="fade-up"
+            >
+              <Form.Item
+                name="email"
+                rules={[
+                  { required: true, message: "Vui lòng nhập email!" },
+                  { type: "email", message: "Email không hợp lệ!" },
+                ]}
+              >
+                <Input
+                  prefix={<MailOutlined className="form-icon" />}
+                  placeholder="Email"
+                  className="login-input"
+                />
+              </Form.Item>
 
-      <div className="login-card" data-aos="zoom-in">
-        <div className="login-header">
-          <h2 className="login-title">
-            {isLogin ? (
-              <>
-                <LoginOutlined className="login-icon" /> Đăng nhập
-              </>
-            ) : (
-              <>
-                <UserAddOutlined className="login-icon" /> Đăng ký
-              </>
-            )}
-          </h2>
-          <Text className="login-subtitle">
-            {isLogin ? "Chào mừng bạn trở lại!" : "Tạo tài khoản để bắt đầu"}
-          </Text>
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+              >
+                <Input.Password
+                  prefix={<LockOutlined className="form-icon" />}
+                  placeholder="Mật khẩu"
+                  className="login-input"
+                />
+              </Form.Item>
+
+              <div className="login-links">
+                <Button
+                  type="link"
+                  onClick={() => setIsLogin(false)}
+                  className="register-link"
+                >
+                  Chưa có tài khoản?
+                </Button>
+                <Button
+                  type="link"
+                  onClick={() => navigate("/forgot-password")}
+                  className="forgot-password-link"
+                >
+                  Quên mật khẩu?
+                </Button>
+              </div>
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isLoading}
+                  className="login-button"
+                  block
+                >
+                  <LoginOutlined /> Đăng nhập
+                </Button>
+              </Form.Item>
+            </Form>
+          ) : (
+            <Form
+              name="register"
+              onFinish={handleRegister}
+              layout="vertical"
+              className="login-form"
+              data-aos="fade-up"
+            >
+              <Form.Item
+                name="username"
+                rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
+              >
+                <Input
+                  prefix={<UserOutlined className="form-icon" />}
+                  placeholder="Tên người dùng"
+                  className="login-input"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="email"
+                rules={[
+                  { required: true, message: "Vui lòng nhập email!" },
+                  { type: "email", message: "Email không hợp lệ!" },
+                ]}
+              >
+                <Input
+                  prefix={<MailOutlined className="form-icon" />}
+                  placeholder="Email"
+                  className="login-input"
+                />
+              </Form.Item>
+
+              <Form.Item name="role" initialValue="student">
+                <Input
+                  className="login-input"
+                  value="Học viên"
+                  readOnly
+                  style={{ background: "none", cursor: "not-allowed" }}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="password"
+                rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+              >
+                <Input.Password
+                  prefix={<LockOutlined className="form-icon" />}
+                  placeholder="Mật khẩu"
+                  className="login-input"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="confirmPassword"
+                rules={[
+                  { required: true, message: "Vui lòng xác nhận mật khẩu!" },
+                ]}
+              >
+                <Input.Password
+                  prefix={<LockOutlined className="form-icon" />}
+                  placeholder="Xác nhận mật khẩu"
+                  className="login-input"
+                />
+              </Form.Item>
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isLoading}
+                  className="login-button"
+                  block
+                >
+                  <UserAddOutlined /> Đăng ký
+                </Button>
+              </Form.Item>
+
+              <div className="login-links">
+                <Button
+                  type="link"
+                  onClick={() => setIsLogin(true)}
+                  className="register-link"
+                >
+                  <SwapOutlined /> Đã có tài khoản? Đăng nhập
+                </Button>
+              </div>
+            </Form>
+          )}
         </div>
-
-        {isLogin ? (
-          <Form
-            name="login"
-            onFinish={handleLogin}
-            layout="vertical"
-            className="login-form"
-            data-aos="fade-up"
-          >
-            <Form.Item
-              name="email"
-              rules={[
-                { required: true, message: "Vui lòng nhập email!" },
-                { type: "email", message: "Email không hợp lệ!" },
-              ]}
-            >
-              <Input
-                prefix={<MailOutlined className="form-icon" />}
-                placeholder="Email"
-                className="login-input"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-            >
-              <Input.Password
-                prefix={<LockOutlined className="form-icon" />}
-                placeholder="Mật khẩu"
-                className="login-input"
-              />
-            </Form.Item>
-
-            <div className="login-links">
-              <Button
-                type="link"
-                onClick={() => setIsLogin(false)}
-                className="register-link"
-              >
-                Chưa có tài khoản?
-              </Button>
-              <Button
-                type="link"
-                onClick={() => navigate("/forgot-password")}
-                className="forgot-password-link"
-              >
-                Quên mật khẩu?
-              </Button>
-            </div>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isLoading}
-                className="login-button"
-                block
-              >
-                <LoginOutlined /> Đăng nhập
-              </Button>
-            </Form.Item>
-          </Form>
-        ) : (
-          <Form
-            name="register"
-            onFinish={handleRegister}
-            layout="vertical"
-            className="login-form"
-            data-aos="fade-up"
-          >
-            <Form.Item
-              name="username"
-              rules={[{ required: true, message: "Vui lòng nhập tên!" }]}
-            >
-              <Input
-                prefix={<UserOutlined className="form-icon" />}
-                placeholder="Tên người dùng"
-                className="login-input"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="email"
-              rules={[
-                { required: true, message: "Vui lòng nhập email!" },
-                { type: "email", message: "Email không hợp lệ!" },
-              ]}
-            >
-              <Input
-                prefix={<MailOutlined className="form-icon" />}
-                placeholder="Email"
-                className="login-input"
-              />
-            </Form.Item>
-
-            <Form.Item name="role" initialValue="student">
-              <Select className="login-input">
-                <Option value="student">Học viên</Option>
-                <Option value="instructor" disabled>
-                  Giảng viên
-                </Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-            >
-              <Input.Password
-                prefix={<LockOutlined className="form-icon" />}
-                placeholder="Mật khẩu"
-                className="login-input"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="confirmPassword"
-              rules={[
-                { required: true, message: "Vui lòng xác nhận mật khẩu!" },
-              ]}
-            >
-              <Input.Password
-                prefix={<LockOutlined className="form-icon" />}
-                placeholder="Xác nhận mật khẩu"
-                className="login-input"
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isLoading}
-                className="login-button"
-                block
-              >
-                <UserAddOutlined /> Đăng ký
-              </Button>
-            </Form.Item>
-
-            <div className="login-links">
-              <Button
-                type="link"
-                onClick={() => setIsLogin(true)}
-                className="register-link"
-              >
-                <SwapOutlined /> Đã có tài khoản? Đăng nhập
-              </Button>
-            </div>
-          </Form>
-        )}
       </div>
-    </div>
+    </>
   );
 };
 

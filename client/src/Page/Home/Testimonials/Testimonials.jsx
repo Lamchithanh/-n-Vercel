@@ -11,62 +11,75 @@ const Testimonials = ({ courseId }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     AOS.init({
-      duration: 800, // Thời gian animation
-      once: true, // Chỉ chạy một lần khi scroll tới
-      easing: "ease-in-out", // Kiểu chuyển động
+      duration: 800,
+      once: true,
+      easing: "ease-in-out",
     });
     return () => AOS.refresh();
   }, []);
 
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchReviews = async (page = 1) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const url = courseId
-          ? `http://localhost:9000/api/reviews/course/${courseId}`
-          : "http://localhost:9000/api/reviews";
+      const url = courseId
+        ? `http://localhost:9000/api/reviews/course/${courseId}`
+        : "http://localhost:9000/api/reviews";
 
-        const response = await axios.get(url, {
-          params: {
-            page: 1,
-            limit: 10,
-          },
-        });
+      const response = await axios.get(url, {
+        params: {
+          page,
+          limit: 6,
+        },
+      });
 
-        if (response.data.success) {
-          const filteredReviews = response.data.data
-            .filter((review) => review.rating > 4)
-            .slice(0, 6); // Only show 6 reviews with rating > 4
-          setReviews(filteredReviews);
-        } else {
-          throw new Error(response.data.message || "Failed to fetch reviews");
-        }
-      } catch (err) {
-        console.error("Error fetching reviews:", err);
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            "Có lỗi xảy ra khi tải đánh giá"
+      if (response.data.success) {
+        const filteredReviews = response.data.data
+          .filter((review) => review.rating > 4)
+          .slice(0, 6);
+
+        // If it's the first page, replace reviews. Otherwise, append.
+        setReviews((prevReviews) =>
+          page === 1 ? filteredReviews : [...prevReviews, ...filteredReviews]
         );
-      } finally {
-        setLoading(false);
-      }
-    };
 
+        // Check if there are more reviews to load
+        setHasMore(filteredReviews.length === 6);
+      } else {
+        throw new Error(response.data.message || "Failed to fetch reviews");
+      }
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Có lỗi xảy ra khi tải đánh giá"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchReviews();
 
-    // Cleanup AOS when the component unmounts
     return () => {
-      AOS.refresh(); // To refresh the AOS on unmount
+      AOS.refresh();
     };
   }, [courseId]);
 
-  if (loading) {
+  const handleLoadMore = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+    fetchReviews(currentPage + 1);
+  };
+
+  if (loading && reviews.length === 0) {
     return (
       <div className={styles.testimonials__loading}>
         <Spin tip="Đang tải đánh giá..." />
@@ -118,18 +131,37 @@ const Testimonials = ({ courseId }) => {
               className={styles.reviewCard}
               data-aos="fade-up"
             >
-              <Avatar
-                data-aos="flip-left"
-                src={review.avatar}
-                icon={<UserOutlined />}
-                className={styles.avatar}
-              />
+              <div className={styles.reviewCardHeader}>
+                <Avatar
+                  data-aos="flip-left"
+                  src={review.avatar}
+                  icon={<UserOutlined />}
+                  className={styles.avatar}
+                />
+                {/* <div className={styles.reviewRating}>
+                  {[...Array(review.rating)].map((_, index) => (
+                    <StarFilled key={index} style={{ color: "#ffc107" }} />
+                  ))}
+                </div> */}
+              </div>
               <p data-aos="fade-right" className={styles.reviewText}>
                 {review.review_text}
               </p>
             </div>
           ))}
         </div>
+
+        {hasMore && (
+          <div className={styles.loadMoreContainer}>
+            <button
+              onClick={handleLoadMore}
+              className={styles.loadMoreButton}
+              disabled={loading}
+            >
+              {loading ? "Đang tải..." : "Xem thêm đánh giá"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

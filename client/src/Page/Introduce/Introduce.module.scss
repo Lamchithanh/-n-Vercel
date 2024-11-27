@@ -1,4 +1,4 @@
-// App.module.scss
+@import url("https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200..900;1,200..900&family=Great+Vibes&family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Quattrocento:wght@400;700&display=swap");
 .layout {
   min-height: 100vh;
   background-color: #1890ff;
@@ -42,17 +42,19 @@
 .hero {
   height: 90vh;
   width: 100%;
-  background-image: url("https://edu3.sitebycat.com/wp-content/uploads/2021/11/khoa-hoc-lap-trinh-front-end.jpg");
+  background: linear-gradient(90deg, #242145 0%, #d51976 100%),
+    url("https://www.pluralsight.com/content/dam/pluralsight2/homepage/2024/homepage-test-image2.webp");
   background-size: cover;
-  background-position: center;
+  background-position: center top; /* Hoặc giá trị khác như center bottom, 20% 30% */
+  background-blend-mode: overlay; /* Hòa trộn ảnh nền với lớp phủ */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 0 20px;
   position: relative;
-  z-index: 1;
 }
+
 .hero::before {
   content: "";
   position: absolute;
@@ -71,46 +73,102 @@
   h1 {
     font-size: 48px;
     margin-bottom: 20px;
+    font-family: "Kanit", sans-serif;
+    font-weight: 700;
   }
 
   p {
     font-size: 20px;
     margin-bottom: 30px;
+    font-family: "Kanit", sans-serif;
+    font-weight: 400;
+  }
+}
+.stats {
+  padding: 60px 50px;
+  background: #1e1e56; /* Nền tối */
+}
+
+.statCard {
+  background: #242145; /* Nền tối hơn cho Card */
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Đổ bóng nhẹ */
+  padding: 16px;
+  color: #ffffff; /* Phông chữ trắng */
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+
+  &:hover {
+    transform: translateY(-8px); /* Hiệu ứng nổi khi hover */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
   }
 }
 
-.stats {
-  padding: 60px 50px;
-  background: #eaeeed;
+.statContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  .ant-card {
-    text-align: center;
-    transition: transform 0.3s;
-    border: #9c9b9b solid 1px;
+.statContent .ant-statistic-title {
+  color: #b0b0d6; /* Màu xám nhạt cho tiêu đề */
+}
 
-    &:hover {
-      transform: translateY(-5px);
-    }
-  }
+.subText {
+  font-size: 12px;
+  color: #b0b0d6;
+  margin-top: 8px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: #b0b0d6;
+  border-radius: 4px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #ff7600; /* Màu cam cho thanh progress */
 }
 
 .features {
   padding: 80px 50px;
-  background: #ebf1f1 !important;
+  background-color: #1e1e56; /* Nền màu xanh đậm */
+  background-image: url("https://www.pluralsight.com/content/dam/pluralsight2/homepage/2022-revamp/white-halftone.png");
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: cover;
+  color: #ffffff;
+}
 
-  h2 {
-    text-align: center;
-    font-size: 36px;
-    margin-bottom: 50px;
-  }
+.learningPath {
+  padding: 80px 50px;
+  background: linear-gradient(
+    to right,
+    #e6356f,
+    #ffaa00
+  ); /* Gradient từ hồng sang cam */
+  color: #ffffff;
+}
+
+h2 {
+  text-align: center;
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 50px;
 }
 
 .featureCard {
   text-align: center;
   padding: 30px;
   border-radius: 8px;
+  background: #242145; /* Màu nền tối */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s;
+  color: #ffffff;
 
   &:hover {
     transform: translateY(-10px);
@@ -118,7 +176,7 @@
 
   .featureIcon {
     font-size: 48px;
-    color: #1890ff;
+    color: #ff7600; /* Màu cam nổi bật */
     margin-bottom: 20px;
   }
 
@@ -127,26 +185,41 @@
     margin-bottom: 15px;
   }
 }
-
 .learningPath {
   padding: 80px 50px;
-  background: #ebf1f1 !important;
+  background: linear-gradient(
+    to right,
+    #e6356f,
+    #261661
+  ); /* Gradient từ hồng sang cam */
+  color: #ffffff;
+  text-align: center;
+}
 
-  h2 {
-    text-align: center;
-    font-size: 36px;
-    margin-bottom: 50px;
-  }
+.learningPath h2 {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 50px;
+  color: #ffffff; /* Màu trắng cho tiêu đề */
+}
 
-  .timeline {
-    max-width: 800px;
-    margin: 0 auto;
+.timeline {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1); /* Nền trong suốt nhẹ */
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
-    h3 {
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
-  }
+.timeline h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.timeline p {
+  color: #ffffff;
 }
 
 .footer {
