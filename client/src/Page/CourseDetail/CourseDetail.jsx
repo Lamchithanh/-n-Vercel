@@ -26,18 +26,22 @@ import {
 } from "../../../../server/src/Api/lessonApi";
 import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { useEffect, useState } from "react";
-import { CheckOutlined } from "@ant-design/icons";
+import {
+  CheckOutlined,
+  LeftCircleOutlined,
+  LeftOutlined,
+} from "@ant-design/icons";
 import "react-toastify/dist/ReactToastify.css";
 import CourseReviews from "./CourseReviews ";
 import defaultImage from "../../assets/img/sach.png";
 import Loader from "../../context/Loader";
 import CourseProgress from "./CourseProgress";
 import VideoProgressTracker from "./VideoProgressTracker";
-// import CertificateNotification from "../CertificatesPage/CertificateNotification";
+import "./CourseDetail.scss";
 import { checkPaymentStatusAPI } from "../../../../server/src/Api/paymentApi";
 import axios from "axios";
 import { API_URL } from "../../../../server/src/config/config";
-// import RandomCoupon from "../../components/Coupon/Coupon";
+
 const { Title, Paragraph } = Typography;
 
 const CourseDetail = () => {
@@ -719,7 +723,6 @@ const CourseDetail = () => {
                 borderRadius: 8,
                 width: isMobile ? "100%" : "auto",
               }}
-              type="primary"
               onClick={handleEnroll}
             >
               Đăng ký khóa học
@@ -727,12 +730,12 @@ const CourseDetail = () => {
           ) : hasPaid ? (
             <Button
               style={{
-                backgroundColor: "#4caf50",
+                // backgroundColor: "#4caf50",
                 borderColor: "#4caf50",
                 width: isMobile ? "100%" : "auto",
               }}
-              type="primary"
               onClick={handleEnroll}
+              className="btn_coursesdetail"
             >
               Đăng ký khóa học
             </Button>
@@ -828,7 +831,7 @@ const CourseDetail = () => {
         onClick={() => navigate(-1)}
         style={{ margin: 10 }}
       >
-        ← Quay lại
+        <LeftOutlined />
       </Button>
 
       <Row className="coursesdetail_content" gutter={[16, 16]} justify="center">
@@ -841,6 +844,7 @@ const CourseDetail = () => {
           }}
         >
           <Card
+            className="courses_detailcard"
             title={course.title}
             style={{
               marginBottom: "20px",
@@ -848,10 +852,10 @@ const CourseDetail = () => {
               ...(isMobile
                 ? {
                     margin: "0",
-                    width: "100vw", // Chiếm toàn bộ chiều rộng màn hình
-                    borderRadius: "0", // Bỏ bo góc trên mobile
-                    paddingRight: "10px", // Giảm padding
-                    boxShadow: "none", // Bỏ shadow trên mobile
+                    width: "100vw",
+                    borderRadius: "0",
+                    paddingRight: "10px",
+                    boxShadow: "none",
                   }
                 : {
                     margin: "10px",
@@ -869,7 +873,7 @@ const CourseDetail = () => {
                       videoUrl={selectedLesson.video_url}
                       duration={selectedLesson.duration}
                       courseId={courseId}
-                      onProgressUpdate={handleVideoProgress} // Cập nhật handler mới
+                      onProgressUpdate={handleVideoProgress}
                       requiredProgress={90}
                     />
                     <Title
@@ -972,9 +976,13 @@ const CourseDetail = () => {
           open={isLockedModalVisible}
           onCancel={() => setIsLockedModalVisible(false)}
           footer={[
-            <Button key="back" onClick={() => setIsLockedModalVisible(false)}>
+            <button
+              className="btn_modal"
+              key="back"
+              onClick={() => setIsLockedModalVisible(false)}
+            >
               Đã hiểu
-            </Button>,
+            </button>,
             selectedLockedLesson?.previousLesson && (
               <Button
                 key="watch-previous"

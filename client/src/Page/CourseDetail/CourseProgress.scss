@@ -1,0 +1,29 @@
+.course-progress-card {
+  margin-bottom: 20px;
+  box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2), 0 0px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 -10px 10px rgba(0, 0, 0, 0.2), 0 0px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .progress-header {
+    text-align: center;
+
+    h3 {
+      font-size: 18px;
+      color: #333;
+    }
+  }
+
+  .progress-stats {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    span {
+      font-weight: bold;
+      color: #444;
+    }
+  }
+}

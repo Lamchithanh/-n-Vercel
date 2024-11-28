@@ -8,7 +8,7 @@ const BackToTop = () => {
   useEffect(() => {
     // Khi người dùng cuộn trang, kiểm tra vị trí và cập nhật trạng thái của nút
     const handleScroll = () => {
-      if (window.scrollY > 2500) {
+      if (window.scrollY > 2000) {
         setIsVisible(true); // Hiển thị nút khi cuộn xuống dưới 200px
       } else {
         setIsVisible(false); // Ẩn nút khi cuộn lên trên

@@ -37,7 +37,9 @@ const FeaturedCourses = () => {
 
   return (
     <div style={{ padding: 10 }} className="featuredCourses_content">
-      <h4 style={{ margin: "20px 50px", color: "#e6356f", fontWeight: 700 }}>
+      <h4
+        style={{ margin: "0px 50px 30px", color: "#e6356f", fontWeight: 700 }}
+      >
         Khóa Học Nổi Bật
       </h4>
       <FeaturedCoursesContainer courses={courses} isLoading={isLoading} />

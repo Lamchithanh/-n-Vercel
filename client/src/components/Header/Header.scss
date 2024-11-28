@@ -1,3 +1,4 @@
+$nameweb_color: #e7005e;
 .header {
   width: 100%;
   height: 12vh;
@@ -12,6 +13,7 @@
   &__logo {
     display: flex;
     align-items: center;
+
     cursor: pointer;
     text-decoration: none;
     color: inherit;
@@ -34,9 +36,9 @@
     }
 
     .logo-text {
-      font-size: 1.2rem;
+      font-size: 1.5rem;
       font-weight: bold;
-      color: #f05a28;
+      color: $nameweb_color;
     }
   }
 

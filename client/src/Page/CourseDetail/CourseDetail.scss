@@ -1,6 +1,15 @@
+$background_card: #242145;
+$background_btnmodal: #e7005e;
+$primary-color: #6200ee;
+$secondary-color: #aa00ff;
+$btn_enrrolment: #f25a28;
 .course-detail {
   padding: 20px;
-  background: "#f0f0f00";
+  background-image: url("https://www.pluralsight.com/etc.clientlibs/pluralsight/clientlibs/clientlib-main/resources/images/hero/hero-2-decoration.png");
+  // background-position: center;
+  background-repeat: no-repeat;
+  // background-size: cover;
+
   .course-content {
     margin-top: 20px;
     ul {
@@ -25,4 +34,23 @@
 }
 
 .coursesdetail_content {
+  background-color: rgba(36, 33, 69, 0.307);
+  padding: 30px 10px;
+  border-radius: 9px;
+}
+.courses_detailcard {
+  // background: $background_card;
+}
+.btn_modal {
+  background: $background_btnmodal;
+}
+
+.btn_coursesdetail {
+  background: $background_card;
+  color: $btn_enrrolment;
+  font-weight: bold;
+}
+.btn_coursesdetail:hover {
+  background: #e7005e;
+  color: #fff;
 }

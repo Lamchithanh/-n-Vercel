@@ -77,3 +77,36 @@ $text_title: #e6356f;
     }
   }
 }
+@media (max-width: 576px) {
+  .CourseSearch_card {
+    max-width: 100%; // Card full width trên màn hình nhỏ
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .CourseSearch_card {
+    max-width: 280px; // Card nhỏ hơn trên tablet
+  }
+}
+
+@media (min-width: 1024px) {
+  .CourseSearch_card {
+    max-width: 350px; // Card chuẩn trên desktop
+  }
+}
+.container {
+  padding: 0 16px; // Padding nhỏ trên mobile
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    padding: 0 24px; // Padding lớn hơn trên tablet
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0 32px; // Padding chuẩn trên desktop
+  }
+}
+.Empty {
+  margin-top: 5vh; // Điều chỉnh khoảng cách theo chiều cao màn hình
+  text-align: center;
+}

@@ -6,7 +6,7 @@ $mobile-breakpoint: 768px;
 $small-mobile-breakpoint: 576px;
 $primary-color: #6200ee;
 $secondary-color: #aa00ff;
-
+$title_color: #e6356f;
 // Mixins
 @mixin mobile {
   @media (max-width: $mobile-breakpoint) {
@@ -172,6 +172,24 @@ $secondary-color: #aa00ff;
     #a5175e
   ); // Nền cha với các màu bạn yêu cầu
 }
+.title_courses {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+  background: #130f25;
+  background-image: url("https://www.pluralsight.com/etc.clientlibs/pluralsight/clientlibs/clientlib-main/resources/images/hero/hero-2-decoration.png");
+  // background-position: center;
+  background-repeat: no-repeat;
+  // background-size: cover;
+  color: $title_color;
+
+  h3 {
+    font-size: 2rem;
+    font-weight: bold;
+  }
+}
+
 // Mobile Menu Drawer
 .mobile-menu-drawer {
   .ant-drawer-body {
@@ -198,7 +216,7 @@ $secondary-color: #aa00ff;
 
 // Main Content Area
 .content_homepage {
-  padding: 30px;
+  padding: 20px;
   width: 100%;
   background: linear-gradient(
       to right,
@@ -221,7 +239,7 @@ $secondary-color: #aa00ff;
     border-radius: 16px;
     padding: 24px;
     margin: 0 auto;
-    margin-top: 20px;
+    margin-top: 10px;
     max-width: $content-max-width;
 
     @include mobile {
@@ -233,7 +251,7 @@ $secondary-color: #aa00ff;
     .course-list {
       display: grid;
       justify-items: center;
-      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       grid-gap: 26px;
 
       @include mobile {
@@ -245,6 +263,7 @@ $secondary-color: #aa00ff;
       .ant-card {
         width: 100%;
         height: 90%;
+        margin: 20px;
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         transition: transform 0.3s ease;

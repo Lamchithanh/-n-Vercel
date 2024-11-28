@@ -3,6 +3,7 @@ $border-card: #585fa2;
 $color-price: #e7005e;
 $color-title: #f0f0f0;
 $border-color: #41a5db;
+
 .form_card {
   transition: transform 0.3s ease-in-out, transform 0.3s ease;
   &:hover {
@@ -48,7 +49,7 @@ $border-color: #41a5db;
 
       .hot-label {
         position: absolute;
-        top: 10px;
+        top: 0px;
         right: 10px;
         font-size: 18px;
         z-index: 1;
@@ -92,13 +93,11 @@ $border-color: #41a5db;
           color: #db7c26;
           font-size: 14px;
           padding: 5px 10px;
-          background: #fff2b2;
+          background: none;
           border-radius: 9px;
+          border: 2px solid $border-card;
         }
       }
     }
   }
 }
-// <span className={styles.featuredCourses__level}>
-// Đăng ký: {course.enrollment_count?.toLocaleString() || 0}
-// </span>

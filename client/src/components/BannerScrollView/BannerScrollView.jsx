@@ -13,18 +13,22 @@ const Banner = () => {
 
   return (
     <div className="banner">
-      <div className="banner_content" data-aos="fade-up">
-        <p className="banner_subtitle" data-aos="fade-up" data-aos-delay="200">
+      <div className="banner_content" data-aos="fade-left">
+        <p
+          className="banner_subtitle"
+          data-aos="fade-left"
+          data-aos-delay="400"
+        >
           Kiến thức là chìa khóa mở cánh cửa tương lai.
         </p>
-        <h1 className="banner_title" data-aos="fade-up" data-aos-delay="400">
+        <h1 className="banner_title" data-aos="fade-left" data-aos-delay="600">
           Lập trình kỹ năng biến mơ hồ thành hiện thực, nơi logic gặp gỡ sáng
           tạo.
         </h1>
         <p
           className="banner_description"
-          data-aos="fade-up"
-          data-aos-delay="600"
+          data-aos="fade-left"
+          data-aos-delay="800"
         >
           Mã hóa là nghệ thuật tạo ra những kết nối, nơi mọi thứ có thể kết hợp
           và cùng nhau hoạt động.

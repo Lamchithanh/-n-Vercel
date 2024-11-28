@@ -8,6 +8,7 @@ import {
   requestCertificateAPI,
 } from "../../../../server/src/Api/CertificateRequestAPI";
 import { API_URL } from "../../../../server/src/config/config";
+import "./CourseProgress.scss";
 
 const CourseProgress = ({ modules, userId, courseId }) => {
   const [progress, setProgress] = useState(0);

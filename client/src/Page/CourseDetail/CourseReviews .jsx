@@ -164,13 +164,13 @@ const CourseReview = ({ courseId, isEnrolled }) => {
       {renderStats()}
 
       {isEnrolled ? (
-        <Button
-          type="primary"
+        <button
+          style={{ background: "#e7005e", color: "#fff" }}
           onClick={() => setIsModalVisible(true)}
           className="mb-4"
         >
           Viết đánh giá
-        </Button>
+        </button>
       ) : (
         <p style={{ color: "#f05a28" }}>
           Bạn cần đăng ký khóa học trước khi có thể đánh giá.
@@ -250,9 +250,12 @@ const CourseReview = ({ courseId, isEnrolled }) => {
             <TextArea rows={4} maxLength={1000} />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
+            <button
+              style={{ background: "#e7005e", color: "#fff" }}
+              loading={loading}
+            >
               {editingReview ? "Cập nhật" : "Gửi đánh giá"}
-            </Button>
+            </button>
           </Form.Item>
         </Form>
       </Modal>

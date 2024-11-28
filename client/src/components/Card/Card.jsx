@@ -5,7 +5,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import defaultImage from "../../assets/img/sach.png";
 import "./Card.scss";
-import MacPremium from "../../assets/img/preview (1).webp";
+import MacPremium from "../../assets/img/macvip-removebg-preview-vip.png";
 
 const CourseCard = ({ course, newlyAddedCourses = [] }) => {
   const navigate = useNavigate();
@@ -42,7 +42,7 @@ const CourseCard = ({ course, newlyAddedCourses = [] }) => {
           />
           {!isFree && (
             <span className="hot-label" data-aos="fade-left">
-              <img src={MacPremium} style={{ width: 40 }} />
+              <img src={MacPremium} style={{ width: 80 }} />
             </span>
           )}
         </div>

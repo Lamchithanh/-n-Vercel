@@ -126,13 +126,7 @@ const CertificatesPage = () => {
               Hãy tham gia khóa học năng tầm cuộc sống củng cố kiến thức, kinh
               nghiệm và trãi nghiệm ngay nào.
             </p>
-            <Button
-              onClick={handleJoinClick}
-              style={{ border: "1px #11bd23 solid" }}
-            >
-              {" "}
-              Tham gia{" "}
-            </Button>
+            <button onClick={handleJoinClick}> Tham gia </button>
           </div>
         )}
       </div>

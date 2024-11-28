@@ -329,9 +329,9 @@ const HomePage = () => {
         <h4
           data-aos="fade-right"
           data-aos-delay="100"
-          style={{ fontSize: 18, margin: 20 }}
+          style={{ fontSize: 18, textAlign: "center" }}
         >
-          Tất cả khóa học
+          ----------
         </h4>
 
         <div className="course-list">
@@ -391,7 +391,11 @@ const HomePage = () => {
           )}
         </div>
       </Header>
-      <div className="bannerone_homepage">
+      <div
+        data-aos="fade-up"
+        data-aos-delay="300"
+        className="bannerone_homepage"
+      >
         {" "}
         <Banner />
       </div>
@@ -414,7 +418,7 @@ const HomePage = () => {
             }))}
         />
       </div>
-      <div className="">
+      <div data-aos="fade-up" data-aos-delay="300" className="">
         {" "}
         <FeaturesSection />
       </div>
@@ -425,12 +429,25 @@ const HomePage = () => {
       >
         <Testimonials />
       </div>
-      <div className="bannertwo_homepage">
+      <div
+        data-aos="fade-up"
+        data-aos-delay="300"
+        className="bannertwo_homepage"
+      >
         {" "}
         <Bannertwo />
       </div>
 
-      <Content className="content_homepage">
+      <div data-aos="fade-up" data-aos-delay="300" className="title_courses">
+        <h3 data-aos="zoom-in" data-aos-delay="300">
+          Tất cả khóa học
+        </h3>
+      </div>
+      <Content
+        data-aos="fade-up"
+        data-aos-delay="300"
+        className="content_homepage"
+      >
         <Breadcrumb className="breadcrumb" items={[{ title: "" }]} />
 
         <p>
