@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Form, Input, Button, Select, Typography } from "antd";
+import { Form, Input, Button, Typography } from "antd";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import {
@@ -13,22 +13,18 @@ import {
   LoginOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
-import {
-  login,
-  register,
-  // updateFirstLogin,
-} from "../../../../server/src/Api/authAPI";
+import { login, register } from "../../../../server/src/Api/authAPI";
 import "./Login.scss";
-// import FirstLoginHandler from "./NewMemberWelcomeModal";
 
 const { Text } = Typography;
-const { Option } = Select;
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);
+  const [token, setToken] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,18 +58,15 @@ const Login = () => {
     setIsLoading(false);
   };
 
-  // const updateFirstLoginStatus = async (userId) => {
-  //   try {
-  //     await updateFirstLogin(userId);
-  //     setShowFirstLoginModal(false);
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const storedToken = localStorage.getItem("token");
 
-  //     // Chuyển hướng sau khi cập nhật trạng thái first login
-  //     navigateBasedOnRole(user);
-  //   } catch (error) {
-  //     console.error("Error updating first login status:", error);
-  //     toast.error("Có lỗi xảy ra khi cập nhật trạng thái đăng nhập đầu tiên");
-  //   }
-  // };
+    if (storedUser && storedToken) {
+      setUser(storedUser);
+      setToken(storedToken);
+    }
+  }, []);
 
   const handleLogin = async (values) => {
     setIsLoading(true);
@@ -94,20 +87,12 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(response.user));
         localStorage.setItem("token", response.token);
 
-        // Hiển thị modal cho các tài khoản first login
         setUser(response.user);
-
-        // Chỉ hiển thị modal nếu là lần đăng nhập đầu tiên
-        if (response.user.is_first_login === true) {
-          setShowFirstLoginModal(true);
-        }
 
         toast.success(`Chào mừng ${response.user.username || "bạn"}!`);
 
-        // Chuyển hướng dựa trên vai trò nếu không phải first login
-        if (response.user.is_first_login !== true) {
-          navigateBasedOnRole(response.user);
-        }
+        // Luôn chuyển hướng ngay sau khi đăng nhập
+        navigateBasedOnRole(response.user);
       } else {
         toast.error("Dữ liệu phản hồi không hợp lệ từ máy chủ.");
       }
