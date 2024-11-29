@@ -109,9 +109,7 @@ const CertificateRequired = () => {
       key: "action",
       width: "20%",
       render: (text, record) => (
-        <Button type="primary" onClick={() => showRequestDetails(record)}>
-          Xem chi tiết
-        </Button>
+        <Button onClick={() => showRequestDetails(record)}>Xem chi tiết</Button>
       ),
     },
   ];
@@ -127,8 +125,9 @@ const CertificateRequired = () => {
 
   return (
     <div>
-      <h1>Quản lý yêu cầu cấp chứng chỉ</h1>
+      <h3>Quản lý yêu cầu cấp chứng chỉ</h3>
       <Table
+        style={{ width: "100%" }}
         dataSource={requests}
         columns={columns}
         rowKey="id"
@@ -140,12 +139,16 @@ const CertificateRequired = () => {
         open={isModalVisible}
         onCancel={handleCancel}
         footer={null}
-        width="auto"
-        style={{ maxWidth: "90vw" }}
-        bodyStyle={{ maxHeight: "80vh", overflow: "auto" }}
+        width="30vw"
+        style={{ maxWidth: "100vw" }}
+        bodyStyle={{
+          maxHeight: "80vh",
+          overflow: "auto",
+          padding: "20px",
+        }}
       >
         {currentRequest && (
-          <div style={{ minWidth: "300px", padding: "20px" }}>
+          <div>
             <p>
               <strong>Người yêu cầu:</strong> {currentRequest.username}
             </p>
@@ -155,20 +158,27 @@ const CertificateRequired = () => {
             <p>
               <strong>Ngày yêu cầu:</strong> {currentRequest.request_date}
             </p>
-            <div style={{ marginTop: "20px" }}>
-              <Button
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-start", // Hoặc "center" nếu muốn nút ở giữa
+                gap: "8px",
+                marginTop: "20px",
+              }}
+            >
+              <button
+                className="btn_title"
                 onClick={() => handleAccept(currentRequest.id)}
-                type="primary"
               >
                 Chấp nhận
-              </Button>
-              <Button
+              </button>
+              <button
+                className="btn_title"
                 onClick={() => handleReject(currentRequest.id)}
                 danger
-                style={{ marginLeft: 8 }}
               >
                 Từ chối
-              </Button>
+              </button>
             </div>
           </div>
         )}

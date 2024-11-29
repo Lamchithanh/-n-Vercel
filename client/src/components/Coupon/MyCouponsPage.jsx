@@ -26,7 +26,7 @@ const CouponCard = ({ coupon }) => {
   const getDiscountDisplay = () => {
     return coupon.discount_type === "percentage"
       ? `${coupon.discount_amount}%`
-      : `${coupon.discount_amount.toLocaleString("vi-VN")}&nbsp;đ`;
+      : `${coupon.discount_amount.toLocaleString("vi-VN")} đ`;
   };
 
   const handleCopyCode = async () => {
@@ -80,7 +80,7 @@ const CouponCard = ({ coupon }) => {
             {coupon.min_purchase_amount ? (
               <span>
                 Đơn tối thiểu:{" "}
-                {coupon.min_purchase_amount.toLocaleString("vi-VN")}&nbsp;đ
+                {coupon.min_purchase_amount.toLocaleString("vi-VN")} đ
               </span>
             ) : (
               <span>Áp dụng cho tất cả</span>
@@ -99,7 +99,7 @@ const CouponCard = ({ coupon }) => {
 
           <div className="text-sm text-gray-500 mt-2">
             Tiết kiệm tối đa:{" "}
-            {coupon.calculated_discount.toLocaleString("vi-VN")}&nbsp;đ
+            {coupon.calculated_discount.toLocaleString("vi-VN")}đ
           </div>
         </div>
       </div>

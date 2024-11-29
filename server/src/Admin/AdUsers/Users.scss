@@ -1,0 +1,67 @@
+$primary-color: #24154f;
+$secondary-color: #ffffff;
+$button-border: #2d3748;
+$button-color: #f05a28;
+$button-hover: #e6356f;
+$link-hover-color: #b3b3ff;
+$table-header-color: #3e4a59;
+$table-row-color: #212529;
+$table-hover-row-color: #f5f5f5;
+
+.btn_user_update,
+.btn_user_delete {
+  border: 2px solid $button-border;
+  font-weight: bold;
+  color: $button-color;
+  transition: 0.5s ease;
+
+  &:hover {
+    border: 2px solid $button-hover;
+    color: #ffffff;
+    background: #e6356f;
+    font-weight: bold;
+  }
+}
+
+.aduser_list {
+  background-color: #2c285452;
+  padding: 20px;
+  border-radius: 9px;
+}
+
+.table-header {
+  color: $table-header-color;
+  //   font-weight: bold;
+  text-align: left;
+  padding: 10px;
+  background: none;
+  border-bottom: 2px solid #ddd;
+}
+
+// Cập nhật nội dung cột
+.table-row {
+  color: $table-row-color;
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  background-color: white;
+
+  &:hover {
+    background-color: $table-hover-row-color;
+  }
+}
+
+.table-column {
+  padding: 12px;
+  text-align: left;
+}
+
+.btn_adduser {
+  background: none;
+  color: #f05a28;
+  border: #3e4a59 2px solid;
+
+  &:hover {
+    color: #ffffff;
+  }
+}

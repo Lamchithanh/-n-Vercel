@@ -1,0 +1,24 @@
+$primary-color: #24154f;
+$secondary-color: #ffffff;
+$button-border: #2d3748;
+$button-color: #f05a28;
+$button-hover: #e6356f;
+$link-hover-color: #b3b3ff;
+$table-header-color: #3e4a59;
+$table-row-color: #212529;
+$table-hover-row-color: #f5f5f5;
+
+.btn_user_update,
+.btn_user_delete {
+  border: 2px solid $button-border;
+  font-weight: bold;
+  color: $button-color;
+  transition: 0.5s ease;
+
+  &:hover {
+    border: 2px solid $button-hover;
+    color: #ffffff;
+    background: #e6356f;
+    font-weight: bold;
+  }
+}

@@ -8,6 +8,7 @@ import {
   Input,
   message,
   Row,
+  Pagination,
   Col,
   Select,
 } from "antd";
@@ -21,6 +22,7 @@ import { deleteModuleAPI } from "../../Api/moduleApi";
 import { addLessonAPI } from "../../Api/lessonApi";
 import { updateLessonAPI } from "../../Api/lessonApi";
 import { deleteLessonAPI } from "../../Api/lessonApi";
+import "./adLessons.scss";
 
 const Lessons = () => {
   const [lessons, setLessons] = useState([]);
@@ -34,8 +36,15 @@ const Lessons = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedModule, setSelectedModule] = useState(null);
   const [newModuleName, setNewModuleName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(8);
   const [form] = Form.useForm();
   const [moduleForm] = Form.useForm();
+
+  const paginatedLessons = lessons.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   // Fetch courses
   const fetchCourses = useCallback(async () => {
@@ -427,7 +436,7 @@ const Lessons = () => {
                   <Card>Bài học không có sẳn</Card>
                 </Col>
               ) : (
-                lessons.map((lesson, index) => (
+                paginatedLessons.map((lesson, index) => (
                   <Draggable
                     key={lesson.id}
                     draggableId={String(lesson.id)}
@@ -443,6 +452,7 @@ const Lessons = () => {
                         {...provided.draggableProps}
                       >
                         <Card
+                          className="from_card_lesson"
                           title={
                             <div
                               style={{ display: "flex", alignItems: "center" }}
@@ -595,6 +605,17 @@ const Lessons = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <Row justify="end" style={{ marginTop: 16 }}>
+        <Pagination
+          style={{ marginTop: 16 }}
+          current={currentPage}
+          pageSize={pageSize}
+          total={lessons.length}
+          onChange={setCurrentPage}
+          showSizeChanger={false}
+        />
+      </Row>
     </Spin>
   );
 };

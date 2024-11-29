@@ -14,6 +14,8 @@ import {
 } from "antd";
 import axios from "axios";
 import { API_URL } from "../../../../server/src/config/config";
+import "./AdminAddCoupon.scss";
+import moment from "moment";
 
 const { Option } = Select;
 
@@ -22,6 +24,7 @@ const AdminAddCoupon = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
+  const validDate = moment("2024-11-28", "YYYY-MM-DD");
   const [form] = Form.useForm();
 
   // Fetch all coupons
@@ -52,12 +55,23 @@ const AdminAddCoupon = () => {
   // Handle form submission (create/update)
   const handleSubmit = async (values) => {
     try {
+      // Ensure expiration_date is valid and converted correctly
+      if (values.expiration_date) {
+        // Use moment's isValid() method to check if the date is valid
+        if (moment(values.expiration_date).isValid()) {
+          values.expiration_date = moment(values.expiration_date).format(
+            "YYYY-MM-DD"
+          );
+        } else {
+          message.error("Ngày không hợp lệ");
+          return;
+        }
+      }
+
       if (editingCoupon) {
-        // Update existing coupon
         await axios.put(`${API_URL}/updatecoupons/${editingCoupon.id}`, values);
         message.success("Cập nhật mã giảm giá thành công");
       } else {
-        // Create new coupon
         await axios.post(`${API_URL}/addcoupons`, values);
         message.success("Thêm mã giảm giá thành công");
       }
@@ -68,6 +82,18 @@ const AdminAddCoupon = () => {
       message.error("Có lỗi xảy ra");
     }
   };
+
+  useEffect(() => {
+    if (editingCoupon) {
+      // Ensure the date is converted to a moment object
+      form.setFieldsValue({
+        ...editingCoupon,
+        expiration_date: editingCoupon.expiration_date
+          ? moment(editingCoupon.expiration_date)
+          : null,
+      });
+    }
+  }, [editingCoupon, form]);
 
   // Handle delete
   const handleDelete = (id) => {
@@ -226,7 +252,17 @@ const AdminAddCoupon = () => {
           </Form.Item>
 
           <Form.Item label="Ngày hết hạn" name="expiration_date">
-            <DatePicker style={{ width: "100%" }} />
+            <DatePicker
+              style={{ width: "100%" }}
+              defaultValue={
+                editingCoupon ? moment(editingCoupon.expiration_date) : null
+              }
+              format="YYYY-MM-DD" // Explicitly set the format
+              disabledDate={(current) => {
+                // Optional: Prevent selecting past dates
+                return current && current < moment().startOf("day");
+              }}
+            />
           </Form.Item>
 
           <Form.Item

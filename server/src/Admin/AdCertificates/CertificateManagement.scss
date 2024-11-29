@@ -1,0 +1,42 @@
+$primary-color: none; // Màu chính
+$secondary-color: #1b1834; // Nền phụ
+$accent-color: #ff4d4f; // Điểm nhấn
+$text-color: #fafafa; // Màu chữ chính
+$table-header-bg: #fafafa; // Nền tiêu đề bảng
+$table-row-hover: #e6f7ff; // Nền hover dòng
+$button-hover: #e6356f;
+
+.ant-modal {
+  .ant-modal-header {
+    background-color: $primary-color;
+    color: white;
+  }
+}
+.ant-modal-footer {
+  background: #1b1834;
+  border: none;
+  &:hover {
+    background-color: $button-hover;
+  }
+}
+.btn_addcertificate {
+  background-color: $secondary-color;
+  color: $accent-color;
+  &:hover {
+    color: #e6f7ff;
+  }
+}
+
+.btn_title {
+  background: none;
+  color: #f05a28;
+  border: #3e4a59 2px solid;
+  transition: 0.3s ease;
+
+  &:hover {
+    border: #e6356f 2px solid;
+
+    background: #e6356f;
+    color: #ffffff;
+  }
+}

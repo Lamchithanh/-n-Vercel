@@ -1,0 +1,68 @@
+$title_color: #e7005e;
+$background_color: #1b1834;
+$text_white: #ffffff;
+
+.Dashboard_layout {
+  background-color: #2c285452;
+  color: #ffffff;
+  min-height: 100vh;
+  padding: 24px;
+  border-radius: 9px;
+
+  &--loading,
+  &--error,
+  &--noData {
+    text-align: center;
+    padding: 50px;
+  }
+
+  .Dashboard_title {
+    color: $title_color;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+
+  .Dashboard_cards {
+    margin-bottom: 24px;
+  }
+
+  .Dashboard_card {
+    background-color: $background_color;
+    border: none;
+    border-radius: 8px;
+
+    &Content {
+      text-align: center;
+    }
+
+    &Value {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    &Title {
+      font-size: 14px;
+      color: $title_color;
+      font-weight: bold;
+    }
+  }
+
+  .Dashboard_charts {
+    .Dashboard_chartCard {
+      background-color: $background_color;
+      border-radius: 8px;
+      padding: 16px;
+
+      .recharts-tooltip-wrapper {
+        background-color: #ffffff;
+        color: $title_color;
+      }
+    }
+  }
+  .custom-card-title {
+    color: $text_white;
+    font-weight: bold;
+  }
+}

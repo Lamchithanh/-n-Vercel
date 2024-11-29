@@ -70,7 +70,7 @@ const Introduce = () => {
               đầu
             </p>
             <Button
-              style={{ background: "#E7005E", fontSize: 18, fontWeight: 700 }}
+              style={{ background: "#1b1834", fontSize: 18, fontWeight: 700 }}
               type="primary"
               size="large"
               onClick={handleOnclick}

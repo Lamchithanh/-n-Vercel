@@ -1,0 +1,58 @@
+$primary-color: #4b47e0;
+$secondary-color: #303060;
+$background-color: #141443;
+$card-background: #2b2852;
+$text-color: #ffffff;
+$muted-text-color: #8c8c8c;
+$accent-color: #4be0ab;
+$bar-chart-color: #1890ff;
+$line-chart-color: #52c41a;
+
+.AdminDashboard_layout {
+  //   background-color: #1a183d;
+}
+
+.AdminDashboard_sider {
+  /* Style cho Sider */
+}
+
+.AdminDashboard_logo {
+  color: white;
+}
+
+.AdminDashboard_menu {
+  /* Style cho menu */
+}
+
+.AdminDashboard_menuItem {
+  /* Style cho từng item trong menu */
+}
+
+.Admindashboard_content {
+  margin: 0;
+  padding: 24px;
+  background-color: $background-color;
+  // background-image: url("	https://www.pluralsight.com/content/dam/pluralsight2/events/2024/reinvent-banner-right.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 280px;
+}
+.btn_logout {
+  background: none;
+  // border: #585fa2 2px solid;
+  padding: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: auto;
+  margin-right: 30px;
+
+  &:hover {
+    background: #d9d9da;
+  }
+  img {
+    width: 32px;
+    height: 32px;
+    margin: 10px;
+  }
+}

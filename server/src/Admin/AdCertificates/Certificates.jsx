@@ -4,6 +4,7 @@ import axios from "axios";
 import { format, parseISO, isValid } from "date-fns";
 import dayjs from "dayjs";
 import CertificateRequired from "./CertificateRequired";
+import "./CertificateManagement.scss";
 
 const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
   const [certificates, setCertificates] = useState([]);
@@ -189,17 +190,20 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Quản lý chứng chỉ</h2>
-        <Button
+        <button
           onClick={() => setIsModalVisible(true)}
-          className="bg-green-500 hover:bg-green-600 text-black"
+          className="btn_title"
           style={{ marginBottom: 15 }}
         >
           Cấp chứng chỉ mới
-        </Button>
-        <Button onClick={handleViewRequests} style={{ marginLeft: 5 }}>
+        </button>
+        <button
+          className="btn_title"
+          onClick={handleViewRequests}
+          style={{ marginLeft: 5 }}
+        >
           Xem yêu cầu
-        </Button>
+        </button>
       </div>
 
       <Table
@@ -274,19 +278,13 @@ const CertificateManagement = ({ fetchUsers, fetchCourses }) => {
             >
               Hủy
             </Button>
-            <Button
+            <button
               htmlType="submit"
-              style={{
-                backgroundColor: "#4caf50",
-                borderColor: "#4caf50",
-                marginLeft: 15,
-              }}
-              type="primary"
               loading={submitLoading}
-              className="bg-green-500 hover:bg-blue-600 text-white"
+              className="btn_addcertificate"
             >
               Tạo chứng chỉ
-            </Button>
+            </button>
           </div>
         </Form>
       </Modal>

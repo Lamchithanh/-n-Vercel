@@ -52,7 +52,7 @@ export const sendForgotPasswordEmail = async (email) => {
 export const updateFirstLogin = async (userId, token) => {
   try {
     const response = await axios.post(
-      `${API_URL}/auth/update-first-login`,
+      `${API_URL}/update-first-login`,
       { userId },
       {
         headers: {

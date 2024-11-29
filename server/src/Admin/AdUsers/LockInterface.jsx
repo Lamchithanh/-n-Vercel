@@ -101,7 +101,6 @@ const LockUserModal = ({ visible, onCancel, onConfirm, user }) => {
             ]}
           >
             <Select onChange={handleDurationChange}>
-              <Option value="1p">1 phút</Option>
               <Option value="1h">1 giờ</Option>
               <Option value="24h">24 giờ</Option>
               <Option value="7d">7 ngày</Option>

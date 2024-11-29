@@ -18,6 +18,7 @@ import axios from "axios";
 import { uploadCourseImage } from "../../Api/courseApi";
 import { API_URL } from "../../config/config";
 import defaultimage from "../../../.././client/src/assets/img/sach.png";
+import "./AdCourses.scss";
 const { Option } = Select;
 
 const Courses = () => {
@@ -227,12 +228,19 @@ const Courses = () => {
       key: "actions",
       render: (record) => (
         <span>
-          <Button onClick={() => editCourse(record)} style={{ marginRight: 5 }}>
-            Chỉnh Sửa
-          </Button>
-          <Button onClick={() => confirmDelete(record.id)} danger>
+          <button
+            className="btn_user_update"
+            onClick={() => editCourse(record)}
+            style={{ marginRight: 5 }}
+          >
+            Sửa
+          </button>
+          <button
+            className="btn_user_delete"
+            onClick={() => confirmDelete(record.id)}
+          >
             Xóa
-          </Button>
+          </button>
         </span>
       ),
     },
@@ -308,152 +316,155 @@ const Courses = () => {
   };
 
   return (
-    <Spin spinning={loading}>
-      <Button
-        onClick={() => {
-          setEditingCourse(null);
-          form.resetFields();
-          setPriceRequired(true);
-          setModalVisible(true);
-        }}
-        style={{ marginBottom: 16 }}
-      >
-        Thêm Khóa Học Mới
-      </Button>
-
-      <Table columns={columns} dataSource={courses} rowKey="id" />
-
-      <Modal
-        title={editingCourse ? "Chỉnh Sửa Khóa Học" : "Thêm Khóa Học Mới"}
-        open={modalVisible}
-        onOk={() => form.submit()}
-        onCancel={() => {
-          setModalVisible(false);
-          form.resetFields();
-          setUploadedFile(null);
-          setUploadProgress(0);
-          setIsUploading(false);
-        }}
-        confirmLoading={loading || isUploading}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleAddOrUpdateCourse}
-          initialValues={{
-            priceOption: "paid",
-            uploadMethod: "url",
+    <div className="ad-courses-container">
+      <Spin spinning={loading}>
+        <button
+          className="btn_title"
+          onClick={() => {
+            setEditingCourse(null);
+            form.resetFields();
+            setPriceRequired(true);
+            setModalVisible(true);
           }}
+          style={{ marginBottom: 16 }}
         >
-          <Form.Item
-            name="title"
-            label="Tiêu Đề"
-            rules={[
-              { required: true, message: "Vui lòng nhập tiêu đề khóa học!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="description"
-            label="Mô Tả"
-            rules={[
-              { required: true, message: "Vui lòng nhập mô tả khóa học!" },
-            ]}
-          >
-            <Input.TextArea rows={4} />
-          </Form.Item>
-          <Form.Item
-            name="priceOption"
-            label="Tùy Chọn Giá"
-            rules={[
-              { required: true, message: "Vui lòng chọn một tùy chọn giá!" },
-            ]}
-          >
-            <Select
-              onChange={(value) => {
-                setPriceRequired(value !== "free");
-                if (value === "free") {
-                  form.setFieldsValue({ price: "0" });
-                }
-              }}
-            >
-              <Option value="free">Miễn Phí</Option>
-              <Option value="paid">Có Phí</Option>
-            </Select>
-          </Form.Item>
+          Thêm Khóa Học Mới
+        </button>
 
-          <Form.Item
-            name="price"
-            label="Giá"
-            rules={[
-              {
-                required: true,
-                message: "Vui lòng nhập giá khóa học!",
-              },
-              {
-                validator: validatePrice,
-              },
-            ]}
+        <Table columns={columns} dataSource={courses} rowKey="id" />
+
+        <Modal
+          title={editingCourse ? "Chỉnh Sửa Khóa Học" : "Thêm Khóa Học Mới"}
+          open={modalVisible}
+          onOk={() => form.submit()}
+          onCancel={() => {
+            setModalVisible(false);
+            form.resetFields();
+            setUploadedFile(null);
+            setUploadProgress(0);
+            setIsUploading(false);
+          }}
+          confirmLoading={loading || isUploading}
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleAddOrUpdateCourse}
+            initialValues={{
+              priceOption: "paid",
+              uploadMethod: "url",
+            }}
           >
-            <Input
-              type="text"
-              value={price}
-              onChange={handlePriceChange}
-              placeholder="Nhập giá khóa học"
-              disabled={form.getFieldValue("priceOption") === "free"}
-            />
-          </Form.Item>
-          <Form.Item
-            name="level"
-            label="Cấp Độ"
-            rules={[
-              { required: true, message: "Vui lòng nhập cấp độ khóa học!" },
-            ]}
-          >
-            <Select>
-              <Option value="beginner">Người Mới Bắt Đầu</Option>
-              <Option value="intermediate">Trung Cấp</Option>
-              <Option value="advanced">Nâng Cao</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="category"
-            label="Danh Mục"
-            rules={[
-              {
-                required: true,
-                message: "Vui lòng chọn hoặc nhập danh mục khóa học!",
-              },
-            ]}
-          >
-            <Select
-              mode="tags"
-              placeholder="Chọn hoặc nhập danh mục mới"
-              allowClear
+            <Form.Item
+              name="title"
+              label="Tiêu Đề"
+              rules={[
+                { required: true, message: "Vui lòng nhập tiêu đề khóa học!" },
+              ]}
             >
-              <Option value="frontend">Frontend</Option>
-              <Option value="backend">Backend</Option>
-              <Option value="fullstack">Fullstack</Option>
-              <Option value="devops">DevOps</Option>
-              <Option value="mobile">Mobile Development</Option>
-              <Option value="database">Database</Option>
-              <Option value="cloud">Cloud Computing</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item name="videoUrl" label="URL Giới Thiệu Video">
-            <Input />
-          </Form.Item>
-          <Form.Item name="uploadMethod" label="Phương Thức Tải Ảnh">
-            <Radio.Group onChange={(e) => setUploadMethod(e.target.value)}>
-              <Radio value="url">URL</Radio>
-              <Radio value="file">File</Radio>
-            </Radio.Group>
-          </Form.Item>
-          {renderImageUploadField()}
-        </Form>
-      </Modal>
-    </Spin>
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="description"
+              label="Mô Tả"
+              rules={[
+                { required: true, message: "Vui lòng nhập mô tả khóa học!" },
+              ]}
+            >
+              <Input.TextArea rows={4} />
+            </Form.Item>
+            <Form.Item
+              name="priceOption"
+              label="Tùy Chọn Giá"
+              rules={[
+                { required: true, message: "Vui lòng chọn một tùy chọn giá!" },
+              ]}
+            >
+              <Select
+                onChange={(value) => {
+                  setPriceRequired(value !== "free");
+                  if (value === "free") {
+                    form.setFieldsValue({ price: "0" });
+                  }
+                }}
+              >
+                <Option value="free">Miễn Phí</Option>
+                <Option value="paid">Có Phí</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="price"
+              label="Giá"
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng nhập giá khóa học!",
+                },
+                {
+                  validator: validatePrice,
+                },
+              ]}
+            >
+              <Input
+                type="text"
+                value={price}
+                onChange={handlePriceChange}
+                placeholder="Nhập giá khóa học"
+                disabled={form.getFieldValue("priceOption") === "free"}
+              />
+            </Form.Item>
+            <Form.Item
+              name="level"
+              label="Cấp Độ"
+              rules={[
+                { required: true, message: "Vui lòng nhập cấp độ khóa học!" },
+              ]}
+            >
+              <Select>
+                <Option value="beginner">Người Mới Bắt Đầu</Option>
+                <Option value="intermediate">Trung Cấp</Option>
+                <Option value="advanced">Nâng Cao</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="category"
+              label="Danh Mục"
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng chọn hoặc nhập danh mục khóa học!",
+                },
+              ]}
+            >
+              <Select
+                mode="tags"
+                placeholder="Chọn hoặc nhập danh mục mới"
+                allowClear
+              >
+                <Option value="frontend">Frontend</Option>
+                <Option value="backend">Backend</Option>
+                <Option value="fullstack">Fullstack</Option>
+                <Option value="devops">DevOps</Option>
+                <Option value="mobile">Mobile Development</Option>
+                <Option value="database">Database</Option>
+                <Option value="cloud">Cloud Computing</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="videoUrl" label="URL Giới Thiệu Video">
+              <Input />
+            </Form.Item>
+            <Form.Item name="uploadMethod" label="Phương Thức Tải Ảnh">
+              <Radio.Group onChange={(e) => setUploadMethod(e.target.value)}>
+                <Radio value="url">URL</Radio>
+                <Radio value="file">File</Radio>
+              </Radio.Group>
+            </Form.Item>
+            {renderImageUploadField()}
+          </Form>
+        </Modal>
+      </Spin>
+    </div>
   );
 };
 

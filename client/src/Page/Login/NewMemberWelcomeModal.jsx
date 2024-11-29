@@ -65,6 +65,28 @@ const FirstLoginHandler = ({
         message.success(response.data.message);
         setIsCouponClaimed(true);
 
+        // Add API call to update first login status
+        const updateResponse = await axios.post(
+          `${API_URL}/update-first-login`,
+          { userId: user.id },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (updateResponse.data.success) {
+          // Update local storage
+          const storedUser = JSON.parse(localStorage.getItem("user"));
+          storedUser.is_first_login = false;
+          localStorage.setItem("user", JSON.stringify(storedUser));
+
+          // Update user state
+          setUserProp((prevUser) => ({ ...prevUser, is_first_login: false }));
+        }
+
         // Close the modal and navigate after 1 second
         setTimeout(() => {
           setIsModalVisible(false);
@@ -78,7 +100,6 @@ const FirstLoginHandler = ({
       message.error("Không thể nhận mã giảm giá.");
     }
   };
-
   const handleClose = async () => {
     try {
       const response = await axios.post(
