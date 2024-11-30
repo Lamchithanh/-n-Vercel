@@ -157,7 +157,7 @@ const Introduce = () => {
                   <Spin size="small" />
                 ) : (
                   <div className={styles.statContent}>
-                    Tỷ lệ ưu đãi và tốt nghiệp
+                    Ưu đãi
                     <Statistic value="8/10" valueStyle={{ color: "#ffffff" }} />
                     <div className={styles.progressBar}>
                       <div

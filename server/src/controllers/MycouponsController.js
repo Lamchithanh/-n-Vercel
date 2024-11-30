@@ -333,6 +333,27 @@ const validateCoupon = async (req, res) => {
   }
 };
 
+const checkCouponUsage = async (req, res) => {
+  const { userId, couponId } = req.query;
+
+  try {
+    const [existingUsage] = await pool.query(
+      `SELECT * FROM coupon_usage WHERE user_id = ? AND coupon_id = ?`,
+      [userId, couponId]
+    );
+
+    res.json({
+      success: true,
+      is_used: existingUsage.length > 0,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi kiểm tra mã giảm giá",
+    });
+  }
+};
+
 module.exports = {
   getMyCoupons,
   claimCoupon,
@@ -340,4 +361,5 @@ module.exports = {
   validateCoupon,
   getCoupon,
   checkCouponClaimed,
+  checkCouponUsage,
 };

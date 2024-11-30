@@ -19,4 +19,5 @@ router.get("/coupons/check-coupon", paymentApicontroller.checkCouponStatus);
 router.post("/coupons/remove-usage", paymentApicontroller.removeCouponUsage);
 router.post("/coupons/apply", paymentApicontroller.applyCoupon);
 router.get("/coupons/get-applied", paymentApicontroller.getAppliedCoupon);
+
 module.exports = router;

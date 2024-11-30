@@ -35,6 +35,9 @@ const FirstLoginHandler = ({
         );
         console.log("Mã giảm giá ngẫu nhiên:", response.data);
         setCoupon(response.data);
+
+        // Automatically save the coupon to user's mycoupons
+        await saveCouponToMyCoupons(response.data);
       } catch (error) {
         console.error("Lỗi khi lấy mã giảm giá:", error);
         message.error("Lỗi khi lấy mã giảm giá");
@@ -44,13 +47,13 @@ const FirstLoginHandler = ({
     fetchRandomCoupon();
   }, [token, user, navigate]);
 
-  const handleClaimCoupon = async () => {
+  const saveCouponToMyCoupons = async (couponData) => {
     try {
       const response = await axios.post(
         `${API_URL}/mycoupons/claim`,
         {
           user_id: user.id,
-          coupon_id: coupon?.id,
+          coupon_id: couponData?.id,
           course_id: null,
         },
         {
@@ -62,44 +65,52 @@ const FirstLoginHandler = ({
       );
 
       if (response.data && response.data.message) {
-        message.success(response.data.message);
-        setIsCouponClaimed(true);
+        console.log("Coupon automatically saved to mycoupons");
+      }
+    } catch (error) {
+      console.error("Error automatically saving coupon:", error);
+    }
+  };
 
-        // Add API call to update first login status
-        const updateResponse = await axios.post(
-          `${API_URL}/update-first-login`,
-          { userId: user.id },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+  const handleClaimCoupon = async () => {
+    try {
+      setIsCouponClaimed(true);
 
-        if (updateResponse.data.success) {
-          // Update local storage
-          const storedUser = JSON.parse(localStorage.getItem("user"));
-          storedUser.is_first_login = false;
-          localStorage.setItem("user", JSON.stringify(storedUser));
-
-          // Update user state
-          setUserProp((prevUser) => ({ ...prevUser, is_first_login: false }));
+      // Update first login status
+      const updateResponse = await axios.post(
+        `${API_URL}/update-first-login`,
+        { userId: user.id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
+      );
+
+      if (updateResponse.data.success) {
+        // Update local storage
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        storedUser.is_first_login = false;
+        localStorage.setItem("user", JSON.stringify(storedUser));
+
+        // Update user state
+        setUserProp((prevUser) => ({ ...prevUser, is_first_login: false }));
+
+        message.success("Mã giảm giá đã được lưu!");
 
         // Close the modal and navigate after 1 second
         setTimeout(() => {
           setIsModalVisible(false);
           navigate("/");
         }, 1000);
-      } else {
-        message.error("Lỗi khi nhận mã giảm giá.");
       }
     } catch (error) {
       console.error("Error claiming coupon:", error);
       message.error("Không thể nhận mã giảm giá.");
     }
   };
+
   const handleClose = async () => {
     try {
       const response = await axios.post(
@@ -124,6 +135,7 @@ const FirstLoginHandler = ({
 
         onUpdateFirstLogin && onUpdateFirstLogin();
         setIsModalVisible(false);
+        navigate("/");
       }
     } catch (error) {
       console.error("Update first login error:", error);
@@ -225,14 +237,19 @@ const FirstLoginHandler = ({
               {coupon.code}
             </Typography.Text>
 
-            <Button
-              type="primary"
-              onClick={handleClaimCoupon}
-              disabled={isCouponClaimed}
-            >
+            <Button onClick={handleClaimCoupon} disabled={isCouponClaimed}>
               {isCouponClaimed ? "Đã Nhận" : "Nhận"}
             </Button>
           </div>
+        )}
+
+        {isCouponClaimed && (
+          <Alert
+            message="Bạn đã nhận mã giảm giá thành công!"
+            type="success"
+            showIcon
+            style={{ width: "100%" }}
+          />
         )}
 
         {isCouponClaimed && (

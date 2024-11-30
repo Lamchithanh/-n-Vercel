@@ -86,9 +86,9 @@ const Header = () => {
           </div>
         ) : (
           <>
-            <NavLink to="/login">
+            {/* <NavLink to="/login">
               <button className="btn btn--outline">Đăng ký</button>
-            </NavLink>
+            </NavLink> */}
             <NavLink to="/login">
               <button className="btn btn--primary">Đăng nhập</button>
             </NavLink>

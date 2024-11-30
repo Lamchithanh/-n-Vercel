@@ -28,7 +28,7 @@ import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { useEffect, useState } from "react";
 import {
   CheckOutlined,
-  LeftCircleOutlined,
+  // LeftCircleOutlined,
   LeftOutlined,
 } from "@ant-design/icons";
 import "react-toastify/dist/ReactToastify.css";
@@ -819,7 +819,17 @@ const CourseDetail = () => {
 
   if (loading) return <Loader />;
   if (error) return <p>{error}</p>;
-  if (!course) return <p>Không tìm thấy khóa học.</p>;
+  if (!course)
+    return (
+      <p
+        style={{
+          alignItems: "center",
+          textAlign: "center",
+        }}
+      >
+        Không tìm thấy khóa học.
+      </p>
+    );
 
   return (
     <div className="course-detail container">

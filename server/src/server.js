@@ -23,6 +23,7 @@ const CertificateRequestRoutes = require("./routes/CertificateRequestRoutes.js")
 const dashboardRoutes = require("./routes/IntroduceRotues.js");
 const AdcouponRoutes = require("./routes/AdcouponRoutes.js");
 const MyCouponsRouters = require("./routes/MycouponsRouters.js");
+const ZaloPay = require("./routes/ZaloPayRoutes.js");
 
 const app = express();
 const port = process.env.PORT || 9001;
@@ -85,6 +86,7 @@ app.use("/api", CertificateRequestRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api", AdcouponRoutes);
 app.use("/api", MyCouponsRouters);
+app.use("/api/payments", ZaloPay);
 
 // Middleware xử lý lỗi
 app.use(handleMulterError);

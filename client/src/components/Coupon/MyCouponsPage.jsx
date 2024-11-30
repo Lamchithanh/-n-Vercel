@@ -125,21 +125,78 @@ const MyCoupons = () => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const fetchMyCoupons = async () => {
+    try {
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user?.id;
+
+      if (!userId) {
+        console.error("Không tìm thấy userId");
+        return;
+      }
+
+      const response = await axios.get(`${API_URL}/mycoupons/${userId}`);
+      setCoupons(response.data);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách coupon:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMyCoupons = async () => {
-      try {
-        setLoading(true);
+    fetchMyCoupons();
+  }, []);
 
-        const user = JSON.parse(localStorage.getItem("user"));
-        const userId = user?.id;
+  const checkCouponUsage = async (couponId) => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user?.id; // Lấy userId từ thông tin người dùng trong localStorage
 
-        if (!userId) {
-          console.error("Không tìm thấy userId");
-          return;
+      if (!userId) {
+        console.error("Không tìm thấy userId");
+        return false;
+      }
+
+      const response = await axios.get(
+        `${API_URL}/mycoupons/checkCouponUsage`,
+        {
+          params: {
+            userId,
+            couponId,
+          },
         }
+      );
+      return response.data.is_used;
+    } catch (error) {
+      console.error("Lỗi kiểm tra mã giảm giá:", error);
+      return false;
+    }
+  };
 
+  useEffect(() => {
+    const fetchCouponsWithUsage = async () => {
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user?.id;
+
+      if (!userId) {
+        console.error("Không tìm thấy userId");
+        setLoading(false);
+        return;
+      }
+
+      try {
         const response = await axios.get(`${API_URL}/mycoupons/${userId}`);
-        setCoupons(response.data);
+        const couponsWithUsage = await Promise.all(
+          response.data.map(async (coupon) => {
+            const isUsed = await checkCouponUsage(coupon.id);
+            return { ...coupon, is_used: isUsed };
+          })
+        );
+        setCoupons(couponsWithUsage);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách coupon:", error);
       } finally {
@@ -147,7 +204,7 @@ const MyCoupons = () => {
       }
     };
 
-    fetchMyCoupons();
+    fetchCouponsWithUsage();
   }, []);
 
   if (loading)

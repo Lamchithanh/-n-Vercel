@@ -134,6 +134,7 @@ $text-color: #ffffff;
         background: $primary-color;
         border: none;
         border-radius: 8px;
+        color: #ffffff;
 
         &:hover {
           background: darken($primary-color, 10%);
