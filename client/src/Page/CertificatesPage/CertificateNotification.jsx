@@ -4,6 +4,7 @@ import { Modal, Button, notification } from "antd";
 import { TrophyOutlined } from "@ant-design/icons";
 import axios from "axios";
 import PropTypes from "prop-types";
+import "./CertificatesPage.scss";
 
 const CertificateNotification = ({ currentUser }) => {
   const [newCertificates, setNewCertificates] = useState([]);
@@ -116,18 +117,7 @@ const CertificateNotification = ({ currentUser }) => {
       }
       open={isModalVisible}
       onCancel={handleModalClose}
-      footer={[
-        <Button
-          key="close"
-          type="primary"
-          onClick={() => {
-            handleModalClose();
-            navigate("/certificates");
-          }}
-        >
-          Xem chứng chỉ của tôi
-        </Button>,
-      ]}
+      footer={[]}
       centered
       width={600}
     >
@@ -150,6 +140,17 @@ const CertificateNotification = ({ currentUser }) => {
           </p>
         </div>
       )}
+      <div className="btn_viewcertificates">
+        <Button
+          key="close"
+          onClick={() => {
+            handleModalClose();
+            navigate("/certificates");
+          }}
+        >
+          Xem chứng chỉ của tôi
+        </Button>
+      </div>
     </Modal>
   );
 };

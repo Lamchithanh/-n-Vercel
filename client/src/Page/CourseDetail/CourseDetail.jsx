@@ -74,7 +74,6 @@ const CourseDetail = () => {
       if (!user) return;
 
       try {
-        // First, check localStorage for enrolled courses
         const enrolledCoursesData =
           JSON.parse(localStorage.getItem("enrolledCourses")) || {};
         const userEnrolledCourses = enrolledCoursesData[user.id] || [];
@@ -84,7 +83,6 @@ const CourseDetail = () => {
           return;
         }
 
-        // If not in localStorage, check API
         const status = await getEnrollmentStatusAPI(user.id, courseId);
         setIsEnrolled(
           status === "enrolled" || status === true || status === "active"
@@ -94,9 +92,6 @@ const CourseDetail = () => {
       }
     };
 
-    checkEnrollmentStatus();
-
-    // Hàm tải dữ liệu khóa học
     const fetchCourseData = async () => {
       try {
         setLoading(true);
@@ -135,8 +130,13 @@ const CourseDetail = () => {
       }
     };
 
-    // Tải dữ liệu khóa học khi `courseId` thay đổi
-    fetchCourseData();
+    // Chạy đồng thời
+    const runEffect = async () => {
+      await checkEnrollmentStatus();
+      await fetchCourseData();
+    };
+
+    runEffect();
   }, [courseId]);
 
   useEffect(() => {
@@ -145,9 +145,11 @@ const CourseDetail = () => {
         const user = JSON.parse(localStorage.getItem("user"));
         if (user && courseId) {
           const progress = await getProgressAPI(user.id, courseId);
-          setWatchedLessons(
-            progress.filter((p) => p.watched).map((p) => p.lessonId)
-          );
+          if (Array.isArray(progress)) {
+            setWatchedLessons(
+              progress.filter((p) => p.watched).map((p) => p.lessonId)
+            );
+          }
         }
       } catch (error) {
         console.error("Error fetching watched lessons:", error);
@@ -159,28 +161,32 @@ const CourseDetail = () => {
 
   useEffect(() => {
     const calculateAvailableLessons = () => {
+      if (!Array.isArray(modules) || !modules.length) {
+        setAvailableLessons([]);
+        setNewLessons([]);
+        return;
+      }
+
+      if (!Array.isArray(watchedLessons)) {
+        console.error("watchedLessons is not a valid array:", watchedLessons);
+        setAvailableLessons([]);
+        setNewLessons([]);
+        return;
+      }
+
       let available = [];
       let newOnes = [];
       let lastWatchedOrder = 0;
 
-      // Tìm bài học có order cao nhất đã xem
       modules.forEach((module) => {
         module.lessons.forEach((lesson) => {
+          // Xác định bài học đã xem có thứ tự cao nhất
           if (watchedLessons.includes(lesson.id)) {
             lastWatchedOrder = Math.max(lastWatchedOrder, lesson.order);
           }
-        });
-      });
 
-      // Xác định các bài học khả dụng và bài học mới
-      modules.forEach((module) => {
-        module.lessons.forEach((lesson) => {
-          // Bài học đầu tiên luôn khả dụng
-          if (lesson.order === 1) {
-            available.push(lesson.id);
-          }
-          // Các bài học tiếp theo chỉ khả dụng nếu bài học trước đã hoàn thành
-          else if (lesson.order <= lastWatchedOrder + 1) {
+          // Xác định bài học khả dụng và mới
+          if (lesson.order === 1 || lesson.order <= lastWatchedOrder + 1) {
             available.push(lesson.id);
             if (
               lesson.order <= lastWatchedOrder &&
@@ -212,9 +218,10 @@ const CourseDetail = () => {
           });
 
           if (response.success) {
+            // Multiple side effects are triggered:
             message.success("Tiến độ đã được cập nhật!");
 
-            // Cập nhật danh sách bài học đã xem
+            // Update watched lessons
             setWatchedLessons((prev) => {
               if (!prev.includes(lessonId)) {
                 return [...prev, lessonId];
@@ -222,15 +229,15 @@ const CourseDetail = () => {
               return prev;
             });
 
-            // Trigger useEffect để tính toán lại availableLessons
+            // Trigger re-calculation of available lessons
             setProgressUpdateTrigger((prev) => prev + 1);
 
-            // Tính toán tổng tiến độ
+            // Calculate total progress
             const totalProgress =
               ((watchedLessons.length + 1) / totalLessons) * 100;
             setProgress(totalProgress);
 
-            // Tự động mở rộng danh sách bài học khả dụng
+            // Automatically expand available lessons
             const currentLesson = modules
               .flatMap((m) => m.lessons)
               .find((l) => l.id === lessonId);
@@ -243,8 +250,6 @@ const CourseDetail = () => {
                 setAvailableLessons((prev) => [...prev, nextLesson.id]);
               }
             }
-          } else {
-            message.error("Cập nhật tiến độ thất bại.");
           }
         } catch (error) {
           console.error("Error updating progress:", error);
@@ -833,9 +838,6 @@ const CourseDetail = () => {
 
   return (
     <div className="course-detail container">
-      {/* <CertificateNotification
-        currentUser={JSON.parse(localStorage.getItem("user"))}
-      /> */}
       <Button
         className="btn-back"
         onClick={() => navigate(-1)}

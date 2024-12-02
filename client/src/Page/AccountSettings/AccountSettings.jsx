@@ -3,6 +3,8 @@ import { Card, Form, Input, Button, message, Upload } from "antd";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import defaultAvatar from "../../assets/img/avarta.png";
+import "./AccountSettings.scss";
+import { LeftCircleOutlined, LeftOutlined } from "@ant-design/icons";
 
 const AccountSettings = () => {
   const [form] = Form.useForm();
@@ -163,13 +165,13 @@ const AccountSettings = () => {
 
   // Phần return giữ nguyên như cũ
   return (
-    <>
+    <div className="container AccountSettings_form">
       <Button
         className="btn-back"
         onClick={() => navigate(-1)}
-        style={{ margin: 10, marginLeft: 100 }}
+        style={{ margin: 10 }}
       >
-        ← Quay lại
+        <LeftOutlined />
       </Button>
       <Card
         title="Thông tin cơ bản"
@@ -232,7 +234,7 @@ const AccountSettings = () => {
 
               <Form.Item>
                 <div className="flex gap-4">
-                  <Button type="primary" htmlType="submit" loading={loading}>
+                  <Button htmlType="submit" loading={loading}>
                     Lưu thay đổi
                   </Button>
                   <Button onClick={() => navigate("/profile")}>Hủy</Button>
@@ -242,7 +244,7 @@ const AccountSettings = () => {
           </div>
         </div>
       </Card>
-    </>
+    </div>
   );
 };
 

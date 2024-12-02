@@ -1,0 +1,90 @@
+.form_infouser {
+  .background_avatar {
+    height: 150px;
+    background: linear-gradient(90deg, #f093fb, #f5576c);
+    border-radius: 9px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  .date_user {
+    font-weight: 500;
+    color: #666;
+  }
+  .user_role {
+    display: inline-block;
+    background: #242145;
+    color: #f05a28;
+    padding: 5px 10px;
+    border-radius: 9px;
+  }
+}
+
+.background_avatar_img {
+  width: 500px;
+}
+
+.card-container {
+  background: #242145;
+  text-align: left;
+  height: 100%;
+  width: 350px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: pointer;
+
+  &.intermediate {
+    background: linear-gradient(to right, #e8f5e9, #a5d6a7);
+  }
+}
+.card-image-container {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  border-radius: 9px;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.card-title {
+  margin: 0;
+  color: #ff5297;
+}
+
+.card-body {
+  padding: 16px;
+  color: #ffffff;
+}
+
+.card-body .course-title {
+  margin-bottom: 8px;
+  font-size: 18px;
+  color: #ff5297;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-body .course-description {
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #ffffff;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-body .course-level {
+  color: #666;
+  font-style: italic;
+  font-size: 12px;
+}

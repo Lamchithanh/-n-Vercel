@@ -387,13 +387,13 @@ const Users = () => {
             rowKey="id"
           />
         </TabPane>
-        <TabPane tab="Giảng Viên" key="2">
+        {/* <TabPane tab="Giảng Viên" key="2">
           <Table
             columns={columns}
             dataSource={users.filter((user) => user.role === "instructor")}
             rowKey="id"
           />
-        </TabPane>
+        </TabPane> */}
       </Tabs>
 
       <Modal

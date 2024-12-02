@@ -369,6 +369,7 @@ exports.getAllUsers = async (req, res) => {
       .json({ message: "Lỗi server, không thể lấy danh sách người dùng." });
   }
 };
+
 exports.logout = (req, res) => {
   // Implement logout logic here
 };
@@ -376,21 +377,22 @@ exports.logout = (req, res) => {
 // Tạo hàm getUserProfile để lấy thông tin người dùng
 exports.getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const [results] = await pool.query(
-      "SELECT id, username, email, role, isLocked, created_at as createdAt, updated_at as updatedAt FROM users WHERE id = ?",
+    const userId = req.user.id; // Lấy ID từ token middleware
+    const [user] = await pool.query(
+      `SELECT id, username, email, role, avatar, bio, created_at FROM users WHERE id = ?`,
       [userId]
     );
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: "Người dùng không tồn tại" });
+    // console.log("Created At from DB:", user[0].created_at);
+    if (!user.length) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const user = results[0];
-    res.status(200).json({ user });
-  } catch (err) {
-    console.error("Database query error:", err);
-    return res.status(500).json({ error: "Đã xảy ra lỗi. Vui lòng thử lại." });
+    res.json(user[0]); // Trả về thông tin người dùng
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin user profile:", error);
+    res
+      .status(500)
+      .json({ message: "Không thể lấy thông tin cá nhân người dùng." });
   }
 };
 

@@ -151,17 +151,15 @@ const Testimonials = ({ courseId }) => {
           ))}
         </div>
 
-        {hasMore && (
+        {/* {hasMore && (
           <div className={styles.loadMoreContainer}>
             <button
               onClick={handleLoadMore}
               className={styles.loadMoreButton}
               disabled={loading}
-            >
-              {loading ? "Đang tải..." : "Xem thêm đánh giá"}
-            </button>
+            ></button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

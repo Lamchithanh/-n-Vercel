@@ -13,7 +13,7 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
-import styles from "./BlogManagement.module.scss";
+import "./BlogManagement.module.scss";
 
 const { TextArea } = Input;
 
@@ -46,7 +46,6 @@ const BlogManagement = () => {
     const errors = [];
     if (!formData.title?.trim()) errors.push("Tiêu đề là bắt buộc");
     if (!formData.excerpt?.trim()) errors.push("Tóm tắt là bắt buộc");
-    if (!formData.date) errors.push("Ngày là bắt buộc");
     return errors;
   };
 
@@ -66,7 +65,6 @@ const BlogManagement = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        timeout: 5000, // Giới hạn thời gian chờ
       });
 
       // Kiểm tra dữ liệu trả về
@@ -123,8 +121,8 @@ const BlogManagement = () => {
       const formData = {
         title: values.title.trim(),
         excerpt: values.excerpt.trim(),
-        date: values.date.format("YYYY-MM-DD"),
-        image: values.image || editingPost?.image || null, // Giữ lại URL cũ nếu không có thay đổi
+        date: dayjs().format("YYYY-MM-DD"), // Sử dụng ngày hiện tại
+        image: values.image || editingPost?.image || null,
       };
 
       // Xác thực dữ liệu form
@@ -164,10 +162,18 @@ const BlogManagement = () => {
         message.success("Tạo bài viết mới thành công");
       }
 
+      if (editingPost) {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === editingPost.id ? { ...post, ...formData } : post
+          )
+        );
+      } else {
+        setPosts((prevPosts) => [...prevPosts, response.data]);
+      }
       setModalVisible(false);
       form.resetFields();
       setEditingPost(null);
-      fetchPosts();
     } catch (error) {
       logError(error, "handleSubmit");
 
@@ -265,7 +271,7 @@ const BlogManagement = () => {
       setEditingPost(record);
       form.setFieldsValue({
         ...record,
-        date: dayjs(record.date),
+        date: record.date ? dayjs(record.date) : null,
       });
       setModalVisible(true);
     } catch (error) {
@@ -301,18 +307,27 @@ const BlogManagement = () => {
       width: "15%",
       render: (_, record) => (
         <Space size="middle">
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            type="primary"
-          />
+          <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa bài viết này?"
             onConfirm={() => handleDelete(record.id)}
             okText="Có"
+            okButtonProps={{
+              style: { color: "green", background: "none" },
+            }}
             cancelText="Không"
+            cancelButtonProps={{
+              style: { color: "red" },
+            }}
           >
-            <Button icon={<DeleteOutlined />} type="danger" />
+            <Button
+              icon={<DeleteOutlined />}
+              style={{
+                backgroundColor: "#f5222d",
+                color: "white",
+                borderColor: "#f5222d",
+              }}
+            />
           </Popconfirm>
         </Space>
       ),
@@ -320,67 +335,74 @@ const BlogManagement = () => {
   ];
 
   return (
-    <div className={styles.container}>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={() => setModalVisible(true)}
+    <>
+      <div
+        style={{
+          marginBottom: 20,
+        }}
       >
-        Thêm mới bài viết
-      </Button>
-      <Table
-        dataSource={posts}
-        columns={columns}
-        rowKey="id"
-        loading={loading}
-        pagination={false}
-      />
-      <Modal
-        title={editingPost ? "Chỉnh sửa bài viết" : "Thêm bài viết mới"}
-        visible={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-        destroyOnClose
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={editingPost || {}}
+        {" "}
+        <Button
+          className="btn_addblog"
+          icon={<PlusOutlined />}
+          onClick={() => setModalVisible(true)}
         >
-          <Form.Item label="Tiêu đề" name="title" rules={[{ required: true }]}>
-            <Input placeholder="Nhập tiêu đề" />
-          </Form.Item>
-          <Form.Item
-            label="Tóm tắt"
-            name="excerpt"
-            rules={[{ required: true }]}
+          Thêm mới bài viết
+        </Button>
+      </div>
+      <div>
+        <Table
+          className="table_blog"
+          dataSource={posts}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+        />
+        <Modal
+          title={editingPost ? "Chỉnh sửa bài viết" : "Thêm bài viết mới"}
+          visible={modalVisible}
+          onCancel={() => {
+            setModalVisible(false);
+            setEditingPost(null);
+            form.resetFields();
+          }}
+          footer={null}
+          destroyOnClose
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            initialValues={editingPost || {}}
           >
-            <TextArea placeholder="Nhập tóm tắt" rows={4} />
-          </Form.Item>
-          <Form.Item label="Ngày" name="date" rules={[{ required: true }]}>
-            <DatePicker
-              style={{ width: "100%" }}
-              format="DD/MM/YYYY"
-              defaultValue={editingPost ? dayjs(editingPost.date) : undefined}
-            />
-          </Form.Item>
-          <Form.Item label="Ảnh" name="image" rules={[{ required: false }]}>
-            <Input placeholder="Nhập URL ảnh" />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-              loading={submitLoading}
+            <Form.Item
+              label="Tiêu đề"
+              name="title"
+              rules={[{ required: true }]}
             >
-              {editingPost ? "Cập nhật" : "Tạo mới"}
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </div>
+              <Input placeholder="Nhập tiêu đề" />
+            </Form.Item>
+            <Form.Item
+              label="Tóm tắt"
+              name="excerpt"
+              rules={[{ required: true }]}
+            >
+              <TextArea placeholder="Nhập tóm tắt" rows={4} />
+            </Form.Item>
+            {/* Loại bỏ Form.Item của ngày */}
+            <Form.Item label="Ảnh" name="image" rules={[{ required: false }]}>
+              <Input placeholder="Nhập URL ảnh" />
+            </Form.Item>
+            <Form.Item>
+              <Button htmlType="submit" block loading={submitLoading}>
+                {editingPost ? "Cập nhật" : "Tạo mới"}
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </div>
+    </>
   );
 };
 

@@ -8,6 +8,16 @@ $table-header-color: #3e4a59;
 $table-row-color: #212529;
 $table-hover-row-color: #f5f5f5;
 
+.btn_title {
+  background: none;
+  color: #f05a28;
+  border: #3e4a59 2px solid;
+
+  &:hover {
+    color: #ffffff;
+  }
+}
+
 .btn_user_update,
 .btn_user_delete {
   border: 2px solid $button-border;

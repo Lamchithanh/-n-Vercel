@@ -211,7 +211,7 @@ CREATE TABLE coupons (
     discount_amount DECIMAL(10,2) NOT NULL,
     max_usage INT NOT NULL DEFAULT 1,
     min_purchase_amount DECIMAL(10,2),
-    expiration_date DATETIME,
+    expiration_date DATE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

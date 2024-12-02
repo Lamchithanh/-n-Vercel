@@ -4,21 +4,14 @@ const userController = require("../controllers/userController");
 const { forgotPassword } = require("../controllers/ForgotPassword");
 const { authMiddleware } = require("../middleware/auth");
 
-// Route để lấy danh sách người dùng (không cần xác thực nữa)
-router.get("/users", userController.getAllUsers);
-// tạo tài khoản
-router.get("/users", userController.createUser);
+// Routes không yêu cầu xác thực
+router.get("/users", userController.getAllUsers); // Lấy danh sách người dùng
+router.post("/users", userController.createUser); // Tạo tài khoản mới
+router.post("/users/login", userController.login); // Đăng nhập
+router.post("/users/register", userController.register); // Đăng ký
+router.post("/forgot-password", forgotPassword); // Lấy lại mật khẩu
 
-// Route để đăng nhập
-router.post("/users/login", userController.login);
-
-// Route để đăng ký
-router.post("/users/register", userController.register);
-
-// Route để lấy lại mật khẩu
-router.post("/forgot-password", forgotPassword);
-
-// Route to fetch current logged-in user's profile based on token
+// Route lấy thông tin user profile
 router.get("/users/profile", authMiddleware, userController.getUserProfile);
 router.post(
   "/update-first-login",
@@ -26,12 +19,13 @@ router.post(
   userController.updateFirstLogin
 );
 
-// Route để đăng xuất
-router.post("/logout", userController.logout);
-router.post("/users", userController.createUser);
+// Routes quản lý người dùng
 router.put("/users/:id", userController.updateUser);
 router.delete("/users/:id", userController.deleteUser);
 router.put("/users/:id/lock", userController.toggleUserLock);
 router.get("/users/coupons/random", userController.getRandomCoupon);
+
+// Route để đăng xuất
+router.post("/logout", userController.logout);
 
 module.exports = router;

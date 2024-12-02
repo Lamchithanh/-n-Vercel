@@ -2,14 +2,25 @@ import "./Bannerone.scss";
 import bannerone from "../../assets/img/BoostRiskSkills_Hero.webp";
 import { useEffect } from "react";
 import Aos from "aos";
+
 const Banner = () => {
   useEffect(() => {
     Aos.init({
-      duration: 1000, // Thời gian hiệu ứng
-      easing: "ease-in-out", // Phương thức easing
-      once: true, // Chỉ chạy hiệu ứng một lần khi cuộn
+      duration: 1000,
+      easing: "ease-in-out",
+      once: true,
     });
   }, []);
+
+  const handleScrollToCourses = () => {
+    const coursesSection = document.querySelector(".content_homepage");
+    if (coursesSection) {
+      coursesSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
 
   return (
     <div className="banner">
@@ -37,6 +48,7 @@ const Banner = () => {
           className="banner_button"
           data-aos="fade-up"
           data-aos-delay="800"
+          onClick={handleScrollToCourses}
         >
           LET'S GO
         </button>

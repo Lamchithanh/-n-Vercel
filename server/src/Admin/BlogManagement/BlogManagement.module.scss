@@ -45,3 +45,15 @@
     }
   }
 }
+.btn_addblog {
+  background: none;
+  color: #f05a28;
+  border: #3e4a59 2px solid;
+  margin-bottom: 20px;
+  &:hover {
+    color: #ffffff;
+  }
+}
+.table_blog {
+  margin-top: 20px;
+}

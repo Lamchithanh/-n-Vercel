@@ -20,17 +20,27 @@ export const login = async (email, password) => {
       email,
       password,
     });
+
+    console.log("Login Response:", response.data); // Log the full response
+
     if (response.data.token) {
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          token: response.data.token,
-          ...response.data.user,
-        })
-      );
+      const userDataToStore = {
+        token: response.data.token,
+        ...response.data.user,
+      };
+
+      console.log("Storing User Data:", userDataToStore); // Log what's being stored
+
+      localStorage.setItem("user", JSON.stringify(userDataToStore));
+
+      // Verify storage
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      console.log("Stored User from LocalStorage:", storedUser);
     }
+
     return response.data;
   } catch (error) {
+    console.error("Login Error:", error.response?.data || error.message);
     throw error;
   }
 };
@@ -64,6 +74,42 @@ export const updateFirstLogin = async (userId, token) => {
     return response.data;
   } catch (error) {
     console.error("Detailed Error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const fetchUserProfile = async () => {
+  try {
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found");
+      throw new Error("User is not authenticated");
+    }
+
+    const response = await axios.get(`${API_URL}/users/profile`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("Profile Fetch Response:", response.data);
+
+    return {
+      id: response.data.id,
+      username: response.data.username,
+      email: response.data.email,
+      role: response.data.role,
+      avatar: response.data.avatar,
+      bio: response.data.bio,
+      created_at: response.data.created_at, // Add this line
+    };
+  } catch (error) {
+    console.error(
+      "Failed to fetch user profile:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };

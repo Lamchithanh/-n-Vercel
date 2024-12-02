@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, Form, Input, Button, Alert, message, Modal } from "antd";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
-
+import "./ChangePassword.scss";
 const ChangePassword = () => {
   const [user, setUser] = useState(null);
   const [newPassword, setNewPassword] = useState("");
@@ -116,75 +116,72 @@ const ChangePassword = () => {
   }
 
   return (
-    <Card title="Đổi mật khẩu">
-      <Button
-        className="btn-back"
-        onClick={() => navigate(-1)}
-        style={{ margin: 10 }}
-      >
-        ← Quay lại
-      </Button>
-      {error && (
-        <Alert message="Lỗi" description={error} type="error" showIcon />
-      )}
-      {success && (
-        <Alert
-          message="Thành công"
-          description="Mật khẩu đã được đổi thành công!"
-          type="success"
-          showIcon
-        />
-      )}
-      <Form layout="vertical" onFinish={handleChangePassword}>
-        <Form.Item
-          label="Mật khẩu mới"
-          name="newPassword"
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới!" }]}
+    <div className="container ChangePassword_form ">
+      <Card title="Đổi mật khẩu">
+        <Button
+          className="btn-back"
+          onClick={() => navigate(-1)}
+          style={{ margin: 10 }}
         >
-          <Input.Password
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+          ← Quay lại
+        </Button>
+        {error && (
+          <Alert message="Lỗi" description={error} type="error" showIcon />
+        )}
+        {success && (
+          <Alert
+            message="Thành công"
+            description="Mật khẩu đã được đổi thành công!"
+            type="success"
+            showIcon
           />
-        </Form.Item>
-        <Form.Item
-          label="Xác nhận mật khẩu mới"
-          name="confirmPassword"
-          rules={[
-            { required: true, message: "Vui lòng xác nhận mật khẩu mới!" },
-          ]}
-        >
-          <Input.Password
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </Form.Item>
-        <Form.Item>
-          <Button
-            style={{ backgroundColor: "#4caf50", borderColor: "#4caf50" }}
-            type="primary"
-            htmlType="submit"
-            loading={loading}
+        )}
+        <Form layout="vertical" onFinish={handleChangePassword}>
+          <Form.Item
+            label="Mật khẩu mới"
+            name="newPassword"
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới!" }]}
           >
-            Đổi mật khẩu
-          </Button>
-        </Form.Item>
-      </Form>
+            <Input.Password
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Xác nhận mật khẩu mới"
+            name="confirmPassword"
+            rules={[
+              { required: true, message: "Vui lòng xác nhận mật khẩu mới!" },
+            ]}
+          >
+            <Input.Password
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button htmlType="submit" loading={loading}>
+              Đổi mật khẩu
+            </Button>
+          </Form.Item>
+        </Form>
 
-      {/* Modal yêu cầu đăng nhập lại */}
-      <Modal
-        title="Thông báo"
-        visible={isModalVisible}
-        onOk={handleLoginAgain}
-        onCancel={handleLater}
-        okText="Đăng nhập lại"
-        cancelText="Để sau"
-      >
-        <p>
-          Đổi mật khẩu thành công! Vui lòng đăng nhập lại để tiếp tục hoặc chọn
-          "Để sau".
-        </p>
-      </Modal>
-    </Card>
+        {/* Modal yêu cầu đăng nhập lại */}
+        <Modal
+          title="Thông báo"
+          visible={isModalVisible}
+          onOk={handleLoginAgain}
+          onCancel={handleLater}
+          okText="Đăng nhập lại"
+          cancelText="Để sau"
+        >
+          <p>
+            Đổi mật khẩu thành công! Vui lòng đăng nhập lại để tiếp tục hoặc
+            chọn "Để sau".
+          </p>
+        </Modal>
+      </Card>
+    </div>
   );
 };
 

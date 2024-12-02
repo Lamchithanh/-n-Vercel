@@ -38,7 +38,6 @@ const CourseProgress = ({ modules, userId, courseId }) => {
         throw new Error("Không thể lấy thông tin mã giảm giá");
       }
       const data = await response.json();
-
       setAvailableCoupon(
         data
           ? {
@@ -129,7 +128,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             };
             setDisplayedMilestones(newDisplayedMilestones);
             localStorage.setItem(
-              `displayedMilestones-${courseId}-${userId}`,
+              `displayed Milestones-${courseId}-${userId}`,
               JSON.stringify(newDisplayedMilestones)
             );
           }
@@ -156,9 +155,9 @@ const CourseProgress = ({ modules, userId, courseId }) => {
 
       const data = await response.json();
       if (data.success && data.is_claimed) {
-        setIsCouponClaimed(true); // Đánh dấu mã đã nhận
+        setIsCouponClaimed(true);
       } else {
-        setIsCouponClaimed(false); // Mã chưa nhận
+        setIsCouponClaimed(false);
       }
     } catch (error) {
       console.error("Error checking coupon claimed status:", error);
@@ -166,56 +165,81 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     }
   };
 
-  useEffect(() => {
-    const fetchProgress = async () => {
-      try {
-        const response = await getProgressAPI(userId, courseId);
-        const watched = response.filter(
-          (p) => p.watched === true || p.progress >= 90
-        );
-        const watchedLessonIds = watched.map((p) => p.lessonId);
-        localStorage.setItem(
-          `watchedLessons-${courseId}-${userId}`,
-          JSON.stringify(watchedLessonIds)
-        );
+  const fetchProgress = async () => {
+    try {
+      const response = await getProgressAPI(userId, courseId);
+      const watched = response.filter(
+        (p) => p.watched === true || p.progress >= 90
+      );
+      const watchedLessonIds = watched.map((p) => p.lessonId);
+      localStorage.setItem(
+        `watchedLessons-${courseId}-${userId}`,
+        JSON.stringify(watchedLessonIds)
+      );
 
-        const progressPercentage =
-          (watchedLessonIds.length / totalLessons) * 100;
+      const progressPercentage = (watchedLessonIds.length / totalLessons) * 100;
 
-        setWatchedLessons(watchedLessonIds);
-        setProgress(progressPercentage);
+      setWatchedLessons(watchedLessonIds);
+      setProgress(progressPercentage);
 
-        if (progressPercentage >= 100) {
-          setCanRequestCertificate(true);
-          fetchCoupon();
-        } else {
-          setCanRequestCertificate(false);
-        }
-
-        checkProgressMilestones(progressPercentage);
-        checkCouponClaimed(); // Thêm kiểm tra mã giảm giá
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu tiến độ:", error);
-        if (error.response && error.response.status !== 404) {
-          message.error(
-            "Không thể cập nhật tiến độ học tập. Vui lòng thử lại sau."
-          );
-        }
-        localStorage.removeItem(`watchedLessons-${courseId}-${userId}`);
-        setWatchedLessons([]);
-        setProgress(0);
+      if (progressPercentage >= 100) {
+        setCanRequestCertificate(true);
+        fetchCoupon();
+      } else {
         setCanRequestCertificate(false);
       }
-    };
 
+      checkProgressMilestones(progressPercentage);
+      checkCouponClaimed();
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu tiến độ:", error);
+      if (error.response && error.response.status !== 404) {
+        message.error(
+          "Không thể cập nhật tiến độ học tập. Vui lòng thử lại sau."
+        );
+      }
+      localStorage.removeItem(`watchedLessons-${courseId}-${userId}`);
+      setWatchedLessons([]);
+      setProgress(0);
+      setCanRequestCertificate(false);
+    }
+  };
+
+  const fetchCertificateStatus = async () => {
+    if (!userId || !courseId) return;
+    try {
+      const response = await getCertificateStatusAPI(userId, courseId);
+      if (response.data && response.data.status) {
+        setCertificateStatus(response.data.status);
+
+        if (response.data.status === "Đã cấp chứng chỉ") {
+          setCanRequestCertificate(false);
+        } else if (response.data.status === "Đang chờ xử lý") {
+          setCanRequestCertificate(false);
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy trạng thái chứng chỉ:", error);
+    }
+  };
+
+  useEffect(() => {
     if (userId && courseId) {
       fetchProgress();
+      fetchCertificateStatus();
     }
 
     return () => {
       localStorage.removeItem(`watchedLessons-${courseId}-${userId}`);
     };
   }, [userId, courseId, totalLessons]);
+
+  useEffect(() => {
+    if (progress > 0) {
+      checkProgressMilestones(progress);
+      checkCouponClaimed();
+    }
+  }, [progress, checkProgressMilestones]);
 
   const getProgressColor = (percent) => {
     if (percent >= 100) return "#52c41a";
@@ -233,7 +257,6 @@ const CourseProgress = ({ modules, userId, courseId }) => {
   const handleRequestCertificate = async () => {
     setIsRequestingCertificate(true);
     try {
-      // Kiểm tra nếu người dùng đã hoàn thành khóa học (Tiến độ 100%)
       if (progress >= 100) {
         const response = await requestCertificateAPI(userId, courseId);
         if (response.data.accepted === false) {
@@ -243,7 +266,6 @@ const CourseProgress = ({ modules, userId, courseId }) => {
         } else {
           message.success("Yêu cầu cấp chứng chỉ thành công! 🎓");
           setCanRequestCertificate(false);
-          // Cập nhật trạng thái chứng chỉ sau khi yêu cầu thành công
           const statusResponse = await getCertificateStatusAPI(
             userId,
             courseId
@@ -305,19 +327,30 @@ const CourseProgress = ({ modules, userId, courseId }) => {
           {watchedLessons.length}/{totalLessons} bài học
         </span>
         <p>
-          {canRequestCertificate &&
-            certificateStatus === null &&
-            progress === 100 && (
-              <Button
-                type="primary"
-                onClick={handleRequestCertificate}
-                className="mt-4"
-                loading={isRequestingCertificate}
-              >
-                Yêu cầu cấp chứng chỉ
-              </Button>
-            )}
+          {progress === 100 && certificateStatus === null && (
+            <Button
+              type="primary"
+              onClick={handleRequestCertificate}
+              className="mt-4"
+              loading={isRequestingCertificate}
+            >
+              Yêu cầu cấp chứng chỉ
+            </Button>
+          )}
+          <p></p>
+          {certificateStatus === "Đã cấp chứng chỉ" && (
+            <span style={{ color: "green" }}>
+              Bạn đã nhận được chứng chỉ!🏆
+            </span>
+          )}
+          {certificateStatus ===
+            "Yêu cầu chứng chỉ đã được chấp nhận, nhưng chứng chỉ chưa được cấp" && (
+            <span style={{ color: "orange" }}>
+              Yêu cầu chứng chỉ đã được chấp nhận, chứng chỉ sẽ được cấp sớm.
+            </span>
+          )}
         </p>
+
         {!isCouponClaimed && availableCoupon ? (
           <Button type="primary" onClick={handleClaimCoupon}>
             Nhận mã: {availableCoupon.code}
@@ -330,23 +363,6 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             <p>Giảm {availableCoupon.discount_amount || 0}%</p>
           </div>
         ) : null}
-
-        {certificateStatus !== null && (
-          <div className="certificate-status">
-            {certificateStatus === "Đã cấp chứng chỉ" ? (
-              <span style={{ color: "green" }}>
-                Bạn đã nhận được chứng chỉ!🏆
-              </span>
-            ) : certificateStatus ===
-              "Yêu cầu chứng chỉ đã được chấp nhận, nhưng chứng chỉ chưa được cấp" ? (
-              <span style={{ color: "orange" }}>
-                Yêu cầu chứng chỉ đã được chấp nhận, chứng chỉ sẽ được cấp sớm.
-              </span>
-            ) : (
-              <span>Yêu cầu chứng chỉ đang được xử lý...</span>
-            )}
-          </div>
-        )}
       </div>
     </Card>
   );

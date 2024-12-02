@@ -132,3 +132,11 @@ $background_hover: #e11d48;
     font-size: 12px;
   }
 }
+
+.btn_viewcertificates {
+  display: flex;
+  justify-content: flex-end;
+  &:hover {
+    background: none;
+  }
+}
