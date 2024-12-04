@@ -94,12 +94,10 @@ export const updateFirstLogin = async (userId, token) => {
 
 export const fetchUserProfile = async () => {
   try {
-    const userData = JSON.parse(localStorage.getItem("user"));
     const token = localStorage.getItem("token");
 
     if (!token) {
-      console.error("No token found");
-      throw new Error("User is not authenticated");
+      throw new Error("Không tìm thấy token");
     }
 
     const response = await axios.get(`${API_URL}/users/profile`, {
@@ -108,22 +106,13 @@ export const fetchUserProfile = async () => {
       },
     });
 
-    console.log("Profile Fetch Response:", response.data);
-
-    return {
-      id: response.data.id,
-      username: response.data.username,
-      email: response.data.email,
-      role: response.data.role,
-      avatar: response.data.avatar,
-      bio: response.data.bio,
-      created_at: response.data.created_at, // Add this line
-    };
+    return response.data;
   } catch (error) {
-    console.error(
-      "Failed to fetch user profile:",
-      error.response?.data || error.message
-    );
+    console.error("Chi tiết lỗi:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
     throw error;
   }
 };

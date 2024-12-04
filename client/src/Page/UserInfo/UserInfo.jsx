@@ -191,8 +191,10 @@ const UserInfo = () => {
           </Row>
         ) : (
           <div style={{ textAlign: "center", margin: "20px 0" }}>
-            <Paragraph>Bạn chưa đăng ký khóa học nào</Paragraph>
-            <Button type="primary" onClick={() => navigate("/allcourses")}>
+            <Paragraph style={{ color: "#666", fontWeight: "bold" }}>
+              Bạn chưa đăng ký khóa học nào
+            </Paragraph>
+            <Button onClick={() => navigate("/allcourses")}>
               Khám phá khóa học
             </Button>
           </div>

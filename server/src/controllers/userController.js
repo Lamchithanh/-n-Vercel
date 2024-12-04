@@ -103,6 +103,7 @@ exports.login = async (req, res) => {
         role: user.role,
         isLocked: user.isLocked === 1,
         is_first_login: user.is_first_login,
+        google_id: user.google_id,
       },
       process.env.SECRET_KEY,
       { expiresIn: "1d" }
@@ -178,100 +179,6 @@ exports.register = async (req, res) => {
     return res.status(500).json({ error: "Lỗi nội bộ máy chủ" });
   }
 };
-
-// Google Login
-// exports.googleLogin = async (req, res) => {
-//   // const { tokenId, googleId, googleName, googleEmail } = req.body;
-//   const { credential } = req.body;
-
-//   try {
-//     // Verify Google Token
-//     const ticket = await client.verifyIdToken({
-//       idToken: credential,
-//       audience: process.env.VITE_GOOGLE_CLIENT_ID,
-//     });
-
-//     const payload = ticket.getPayload();
-//     const { sub: googleId, email, name, picture } = payload;
-
-//     let connection;
-//     try {
-//       connection = await pool.getConnection();
-
-//       // Check if user exists by Google ID or Email
-//       const [existingUsers] = await connection.query(
-//         "SELECT * FROM users WHERE google_id = ? OR google_email = ?",
-//         [googleId, email]
-//       );
-
-//       let user;
-//       if (existingUsers.length > 0) {
-//         // Update existing user
-//         user = existingUsers[0];
-//         await connection.query(
-//           "UPDATE users SET google_name = ?, avatar = ? WHERE id = ?",
-//           [name, picture, user.id]
-//         );
-//       } else {
-//         // Create new user
-//         const defaultPassword = bcrypt.hashSync(googleId, 10);
-//         const [result] = await connection.query(
-//           `INSERT INTO users
-//           (username, email, password_hash, role, google_id, google_name, google_email, avatar)
-//           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-//           [
-//             name,
-//             email,
-//             defaultPassword,
-//             "student", // Default role
-//             googleId,
-//             name,
-//             email,
-//             picture,
-//           ]
-//         );
-
-//         // Fetch the newly created user
-//         const [newUsers] = await connection.query(
-//           "SELECT * FROM users WHERE id = ?",
-//           [result.insertId]
-//         );
-//         user = newUsers[0];
-//       }
-
-//       // Generate JWT token
-//       const token = jwt.sign(
-//         {
-//           id: user.id,
-//           username: user.username,
-//           email: user.email,
-//           role: user.role,
-//         },
-//         process.env.SECRET_KEY,
-//         { expiresIn: "7d" }
-//       );
-
-//       res.json({
-//         user: {
-//           id: user.id,
-//           username: user.username,
-//           email: user.email,
-//           role: user.role,
-//           avatar: user.avatar,
-//           is_first_login: user.is_first_login,
-//         },
-//         token,
-//       });
-//     } finally {
-//       if (connection) connection.release();
-//     }
-//   } catch (error) {
-//     console.error("Google Login Error:", error);
-//     res
-//       .status(400)
-//       .json({ error: "Google login failed", details: error.message });
-//   }
-// };
 
 // Kiểm tra người dùng (cần thiết để kiểm tra email hoặc username đã tồn tại)
 exports.checkUserExists = async (email) => {
@@ -461,22 +368,59 @@ exports.logout = (req, res) => {
 // Tạo hàm getUserProfile để lấy thông tin người dùng
 exports.getUserProfile = async (req, res) => {
   try {
-    const userId = req.user.id; // Lấy ID từ token middleware
-    const [user] = await pool.query(
-      `SELECT id, username, email, role, avatar, bio, created_at FROM users WHERE id = ?`,
-      [userId]
-    );
-    // console.log("Created At from DB:", user[0].created_at);
-    if (!user.length) {
-      return res.status(404).json({ message: "User not found" });
+    // Log toàn bộ thông tin từ token
+    console.log("Token Decoded Information:", {
+      userId: req.user.id,
+      role: req.user.role,
+      google_id: req.user.google_id,
+    });
+
+    const userId = req.user.id;
+    const googleId = req.user.google_id;
+
+    console.log("Searching for user with:", { userId, googleId });
+
+    let user;
+    // Ưu tiên tìm theo google_id
+    if (googleId) {
+      [user] = await pool.query(`SELECT * FROM users WHERE google_id = ?`, [
+        googleId,
+      ]);
+      console.log("Search by Google ID result:", user);
     }
 
-    res.json(user[0]); // Trả về thông tin người dùng
+    // Nếu không tìm thấy bằng google_id, thử tìm bằng userId
+    if (!user || user.length === 0) {
+      [user] = await pool.query(`SELECT * FROM users WHERE id = ?`, [userId]);
+      console.log("Search by User ID result:", user);
+    }
+
+    // Nếu vẫn không tìm thấy, thử tìm theo email
+    if (!user || user.length === 0) {
+      [user] = await pool.query(`SELECT * FROM users WHERE email = ?`, [
+        req.user.email,
+      ]);
+      console.log("Search by Email result:", user);
+    }
+
+    if (!user || user.length === 0) {
+      console.log("No user found with provided information");
+      return res.status(404).json({
+        message: "Không tìm thấy người dùng",
+        details: { userId, googleId },
+      });
+    }
+
+    // Loại bỏ mật khẩu trước khi trả về
+    const { password, ...userWithoutPassword } = user[0];
+
+    res.json(userWithoutPassword);
   } catch (error) {
-    console.error("Lỗi khi lấy thông tin user profile:", error);
-    res
-      .status(500)
-      .json({ message: "Không thể lấy thông tin cá nhân người dùng." });
+    console.error("Detailed Profile Fetch Error:", error);
+    res.status(500).json({
+      message: "Lỗi máy chủ khi lấy thông tin người dùng",
+      error: error.message,
+    });
   }
 };
 

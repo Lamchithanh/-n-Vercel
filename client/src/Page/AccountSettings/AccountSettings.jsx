@@ -237,7 +237,7 @@ const AccountSettings = () => {
                   <Button htmlType="submit" loading={loading}>
                     Lưu thay đổi
                   </Button>
-                  <Button onClick={() => navigate("/profile")}>Hủy</Button>
+                  <Button onClick={() => navigate("/user-info")}>Hủy</Button>
                 </div>
               </Form.Item>
             </Form>
