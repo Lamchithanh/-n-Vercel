@@ -4,6 +4,7 @@ const multer = require("multer");
 const bodyParser = require("body-parser");
 const path = require("path");
 require("dotenv").config();
+const helmet = require("helmet");
 
 // Import routes
 const userRoutes = require("./routes/userRoutes.js");
@@ -24,9 +25,25 @@ const dashboardRoutes = require("./routes/IntroduceRotues.js");
 const AdcouponRoutes = require("./routes/AdcouponRoutes.js");
 const MyCouponsRouters = require("./routes/MycouponsRouters.js");
 const ZaloPay = require("./routes/ZaloPayRoutes.js");
+const googleLoginRoutes = require("./routes/googleAuthRoutes");
 
 const app = express();
 const port = process.env.PORT || 9001;
+
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: { policy: "same-origin" },
+    crossOriginEmbedderPolicy: { policy: "require-corp" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+        connectSrc: ["'self'", "https://accounts.google.com"],
+        frameSrc: ["'self'", "https://accounts.google.com"],
+      },
+    },
+  })
+);
 
 // Cấu hình CORS
 app.use(cors());
@@ -87,6 +104,7 @@ app.use("/api", dashboardRoutes);
 app.use("/api", AdcouponRoutes);
 app.use("/api", MyCouponsRouters);
 app.use("/api/payments", ZaloPay);
+app.use("/api", googleLoginRoutes);
 
 // Middleware xử lý lỗi
 app.use(handleMulterError);

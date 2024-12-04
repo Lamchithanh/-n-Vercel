@@ -21,7 +21,27 @@ export const login = async (email, password) => {
       password,
     });
 
-    console.log("Login Response:", response.data); // Log the full response
+    if (response.data.token) {
+      const userDataToStore = {
+        token: response.data.token,
+        ...response.data.user,
+      };
+
+      localStorage.setItem("user", JSON.stringify(userDataToStore));
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Login Error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const googleLogin = async (credentialResponse) => {
+  try {
+    const response = await axios.post(`${API_URL}/users/google-login`, {
+      credential: credentialResponse.credential,
+    });
 
     if (response.data.token) {
       const userDataToStore = {
@@ -29,18 +49,12 @@ export const login = async (email, password) => {
         ...response.data.user,
       };
 
-      console.log("Storing User Data:", userDataToStore); // Log what's being stored
-
       localStorage.setItem("user", JSON.stringify(userDataToStore));
-
-      // Verify storage
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      console.log("Stored User from LocalStorage:", storedUser);
     }
 
     return response.data;
   } catch (error) {
-    console.error("Login Error:", error.response?.data || error.message);
+    console.error("Google login error:", error.response?.data || error.message);
     throw error;
   }
 };

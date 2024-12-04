@@ -6,15 +6,13 @@ import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
 import { fetchLessonsAPI } from "../../../../server/src/Api/lessonApi";
 import defaultImage from "../../assets/img/sach.png";
 import Loader from "../../context/Loader";
+import PaymentQRModal from "./ModalQR"; // Import the new modal component
 import {
   ClockCircleOutlined,
   BookOutlined,
   VideoCameraOutlined,
-  CreditCardOutlined,
-  BankOutlined,
-  WalletOutlined,
-  PayCircleOutlined,
   ShoppingOutlined,
+  QrcodeOutlined,
 } from "@ant-design/icons";
 import { useMediaQuery } from "react-responsive";
 import {
@@ -29,25 +27,10 @@ const { Title, Text } = Typography;
 
 // Define valid payment methods according to database schema
 const PAYMENT_METHODS = {
-  credit_card: {
-    key: "credit_card",
-    label: "Thẻ tín dụng",
-    icon: <CreditCardOutlined />,
-  },
-  bank_transfer: {
-    key: "bank_transfer",
-    label: "Chuyển khoản ngân hàng",
-    icon: <BankOutlined />,
-  },
-  ewallet: {
-    key: "ewallet",
-    label: "Ví điện tử",
-    icon: <WalletOutlined />,
-  },
   paypal: {
     key: "paypal",
-    label: "PayPal",
-    icon: <PayCircleOutlined />,
+    label: "Mã QR",
+    icon: <QrcodeOutlined />,
   },
 };
 
@@ -89,6 +72,11 @@ const PaymentPage = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [finalPrice, setFinalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
+
+  // New state for QR Modal
+  const [isQRModalVisible, setIsQRModalVisible] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [paymentId, setPaymentId] = useState(null);
 
   // Responsive breakpoints
   const isMobile = useMediaQuery({ maxWidth: 767 });
@@ -136,6 +124,7 @@ const PaymentPage = () => {
       try {
         setLoading(true);
         const user = JSON.parse(localStorage.getItem("user"));
+        setCurrentUser(user);
 
         if (user && !hasHandledPaymentCheck) {
           const paymentStatus = await checkPaymentStatusAPI(user.id, courseId);
@@ -206,8 +195,7 @@ const PaymentPage = () => {
   const handleConfirmPayment = async () => {
     if (!validateSelection()) return;
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
+    if (!currentUser) {
       message.error("Vui lòng đăng nhập để thanh toán");
       return;
     }
@@ -215,18 +203,26 @@ const PaymentPage = () => {
     try {
       setLoading(true);
       const initiateResponse = await initiatePayment({
-        userId: user.id,
+        userId: currentUser.id,
         courseId,
         amount: finalPrice,
         paymentMethod,
         couponCode: appliedCoupon?.code,
       });
 
-      const mockTransactionId = `TRANS_${Date.now()}`;
-      await confirmPayment(initiateResponse.paymentId, mockTransactionId);
+      // Store payment ID for QR modal
+      setPaymentId(initiateResponse.paymentId);
 
-      message.success("Thanh toán thành công!");
-      navigate(`/courses/${courseId}?fromPaymentPage=true`);
+      // For QR payment method, show QR modal instead of direct confirmation
+      if (paymentMethod === "paypal") {
+        setIsQRModalVisible(true);
+      } else {
+        const mockTransactionId = `TRANS_${Date.now()}`;
+        await confirmPayment(initiateResponse.paymentId, mockTransactionId);
+
+        message.success("Thanh toán thành công!");
+        navigate(`/courses/${courseId}?fromPaymentPage=true`);
+      }
     } catch (error) {
       message.error(
         error.message || "Có lỗi xảy ra trong quá trình thanh toán"
@@ -235,6 +231,10 @@ const PaymentPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseQRModal = () => {
+    setIsQRModalVisible(false);
   };
 
   const handlePaymentMethodSelect = (method) => {
@@ -290,6 +290,16 @@ const PaymentPage = () => {
       <div
         style={{ background: "#fafafa", padding: "20px", borderRadius: "8px" }}
       >
+        {currentUser && (
+          <PaymentQRModal
+            visible={isQRModalVisible}
+            onClose={handleCloseQRModal}
+            userId={currentUser.id}
+            courseId={courseId}
+            amount={finalPrice}
+            paymentId={paymentId}
+          />
+        )}
         <CouponInput
           onApplyCoupon={setAppliedCoupon}
           onRemoveCoupon={() => setAppliedCoupon(null)}

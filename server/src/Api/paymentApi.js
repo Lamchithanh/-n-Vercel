@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_URL } from "../config/config";
-import CryptoJS from "crypto-js";
+// import CryptoJS from "crypto-js";
 import { getAuthHeader } from "../utils/utils";
 
 export const initiatePayment = async (paymentData) => {

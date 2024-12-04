@@ -24,10 +24,15 @@ CREATE TABLE users (
   total_coupon_used INT DEFAULT 0,
   last_coupon_used_at TIMESTAMP,
   favorite_coupons JSON,
+  google_id VARCHAR(255) UNIQUE NULL,
+ goohle_name VARCHAR(255) NULL,
+ google_email VARCHAR(100) UNIQUE NULL,
   coupon_notification_enabled BOOLEAN DEFAULT TRUE,
   total_savings DECIMAL(10,2) DEFAULT 0.00,
   CONSTRAINT chk_locked CHECK (isLocked IN (0,1))
 );
+
+
 
 
 

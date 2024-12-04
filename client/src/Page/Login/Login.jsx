@@ -13,7 +13,12 @@ import {
   LoginOutlined,
   UserAddOutlined,
 } from "@ant-design/icons";
-import { login, register } from "../../../../server/src/Api/authAPI";
+import {
+  login,
+  register,
+  googleLogin,
+} from "../../../../server/src/Api/authAPI";
+import { GoogleLogin } from "@react-oauth/google";
 import "./Login.scss";
 
 const { Text } = Typography;
@@ -22,7 +27,7 @@ const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
-  const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);
+  // const [showFirstLoginModal, setShowFirstLoginModal] = useState(false);
   const [token, setToken] = useState(null);
 
   const navigate = useNavigate();
@@ -131,6 +136,23 @@ const Login = () => {
     setIsLoading(false);
   };
 
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    try {
+      const response = await googleLogin(credentialResponse);
+      toast.success("Đăng nhập Google thành công!");
+      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("token", response.token);
+      navigateBasedOnRole(response.user);
+    } catch (error) {
+      toast.error("Đăng nhập Google thất bại. Vui lòng thử lại.");
+      console.error("Google Login Error:", error);
+    }
+  };
+
+  const handleGoogleLoginError = () => {
+    toast.error("Đăng nhập Google thất bại.");
+  };
+
   const navigateBasedOnRole = (user) => {
     if (user.role === "instructor") {
       navigate("/instructor");
@@ -230,6 +252,13 @@ const Login = () => {
                   <LoginOutlined /> Đăng nhập
                 </Button>
               </Form.Item>
+              {isLogin && (
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginError}
+                  buttonText="Đăng nhập với Google"
+                />
+              )}
             </Form>
           ) : (
             <Form

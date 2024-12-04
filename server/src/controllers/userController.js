@@ -3,6 +3,8 @@ const connection = require("../config/pool"); // Import kết nối cơ sở d�
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt"); // Thư viện để hash mật khẩu
 const cron = require("node-cron");
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
 
 // Cron job chạy mỗi phút kiểm tra các tài khoản bị khóa
 exports.startCronJob = () => {
@@ -33,6 +35,7 @@ exports.startCronJob = () => {
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const [results] = await pool.query(
       "SELECT id, username, email, role, password_hash, isLocked, lockReason, lockedAt, lockedUntil, is_first_login FROM users WHERE email = ?",
@@ -45,41 +48,22 @@ exports.login = async (req, res) => {
 
     const user = results[0];
 
-    // Kiểm tra trạng thái khóa
-    // Kiểm tra trạng thái khóa
+    // Kiểm tra trạng thái khóa tài khoản
     if (user.isLocked === 1) {
       const now = new Date();
       const lockedUntil = user.lockedUntil ? new Date(user.lockedUntil) : null;
 
-      // Kiểm tra nếu tài khoản đang bị khóa
       if (!lockedUntil || now < lockedUntil) {
-        // Định dạng thời gian mở khóa
         const lockUntilFormatted = lockedUntil
           ? new Date(lockedUntil.getTime() + 7 * 60 * 60 * 1000).toLocaleString(
               "vi-VN",
-              {
-                timeZone: "Asia/Ho_Chi_Minh",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false, // Sử dụng định dạng 24 giờ
-              }
+              { timeZone: "Asia/Ho_Chi_Minh", hour12: false }
             )
           : "vĩnh viễn";
 
-        // Format thời gian bị khóa
         const lockedAtFormatted = user.lockedAt
-          ? new Date(
-              new Date(user.lockedAt).getTime() + 7 * 60 * 60 * 1000
-            ).toLocaleString("vi-VN", {
+          ? new Date(user.lockedAt).toLocaleString("vi-VN", {
               timeZone: "Asia/Ho_Chi_Minh",
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
               hour12: false,
             })
           : null;
@@ -89,17 +73,12 @@ exports.login = async (req, res) => {
           lockInfo: {
             isLocked: true,
             reason: user.lockReason || "Không có lý do cụ thể",
-            lockedAt: lockedAtFormatted
-              ? new Date(user.lockedAt).toISOString()
-              : null,
-            lockedUntil: lockedUntil ? lockedUntil.toISOString() : null,
-            formattedLockedUntil: lockUntilFormatted,
+            lockedAt: lockedAtFormatted,
+            lockedUntil: lockUntilFormatted,
           },
         });
       }
 
-      // Nếu đã hết thời gian khóa, để cho cron job xử lý việc mở khóa
-      // KHÔNG tự động mở khóa tại đây
       if (lockedUntil && now >= lockedUntil) {
         return res.status(403).json({
           error:
@@ -123,7 +102,7 @@ exports.login = async (req, res) => {
         userId: user.id,
         role: user.role,
         isLocked: user.isLocked === 1,
-        is_first_login: user.is_first_login, // Thêm is_first_login vào token
+        is_first_login: user.is_first_login,
       },
       process.env.SECRET_KEY,
       { expiresIn: "1d" }
@@ -137,7 +116,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         isLocked: user.isLocked === 1,
-        is_first_login: user.is_first_login, // Thêm is_first_login vào user object
+        is_first_login: user.is_first_login,
         lockInfo:
           user.isLocked === 1
             ? {
@@ -180,7 +159,6 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Chèn người dùng mới vào cơ sở dữ liệu
-    // Thêm is_first_login với giá trị mặc định là TRUE
     const result = await connection.query(
       `INSERT INTO users (username, email, password_hash, role, is_first_login) VALUES (?, ?, ?, ?, ?)`,
       [username, email, hashedPassword, role, true]
@@ -198,6 +176,112 @@ exports.register = async (req, res) => {
   } catch (error) {
     console.error("Lỗi khi đăng ký người dùng: ", error);
     return res.status(500).json({ error: "Lỗi nội bộ máy chủ" });
+  }
+};
+
+// Google Login
+// exports.googleLogin = async (req, res) => {
+//   // const { tokenId, googleId, googleName, googleEmail } = req.body;
+//   const { credential } = req.body;
+
+//   try {
+//     // Verify Google Token
+//     const ticket = await client.verifyIdToken({
+//       idToken: credential,
+//       audience: process.env.VITE_GOOGLE_CLIENT_ID,
+//     });
+
+//     const payload = ticket.getPayload();
+//     const { sub: googleId, email, name, picture } = payload;
+
+//     let connection;
+//     try {
+//       connection = await pool.getConnection();
+
+//       // Check if user exists by Google ID or Email
+//       const [existingUsers] = await connection.query(
+//         "SELECT * FROM users WHERE google_id = ? OR google_email = ?",
+//         [googleId, email]
+//       );
+
+//       let user;
+//       if (existingUsers.length > 0) {
+//         // Update existing user
+//         user = existingUsers[0];
+//         await connection.query(
+//           "UPDATE users SET google_name = ?, avatar = ? WHERE id = ?",
+//           [name, picture, user.id]
+//         );
+//       } else {
+//         // Create new user
+//         const defaultPassword = bcrypt.hashSync(googleId, 10);
+//         const [result] = await connection.query(
+//           `INSERT INTO users
+//           (username, email, password_hash, role, google_id, google_name, google_email, avatar)
+//           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+//           [
+//             name,
+//             email,
+//             defaultPassword,
+//             "student", // Default role
+//             googleId,
+//             name,
+//             email,
+//             picture,
+//           ]
+//         );
+
+//         // Fetch the newly created user
+//         const [newUsers] = await connection.query(
+//           "SELECT * FROM users WHERE id = ?",
+//           [result.insertId]
+//         );
+//         user = newUsers[0];
+//       }
+
+//       // Generate JWT token
+//       const token = jwt.sign(
+//         {
+//           id: user.id,
+//           username: user.username,
+//           email: user.email,
+//           role: user.role,
+//         },
+//         process.env.SECRET_KEY,
+//         { expiresIn: "7d" }
+//       );
+
+//       res.json({
+//         user: {
+//           id: user.id,
+//           username: user.username,
+//           email: user.email,
+//           role: user.role,
+//           avatar: user.avatar,
+//           is_first_login: user.is_first_login,
+//         },
+//         token,
+//       });
+//     } finally {
+//       if (connection) connection.release();
+//     }
+//   } catch (error) {
+//     console.error("Google Login Error:", error);
+//     res
+//       .status(400)
+//       .json({ error: "Google login failed", details: error.message });
+//   }
+// };
+
+// Kiểm tra người dùng (cần thiết để kiểm tra email hoặc username đã tồn tại)
+exports.checkUserExists = async (email) => {
+  try {
+    const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]);
+    return rows.length > 0;
+  } catch (error) {
+    throw error;
   }
 };
 

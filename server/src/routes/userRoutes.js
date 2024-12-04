@@ -9,6 +9,7 @@ router.get("/users", userController.getAllUsers); // Lấy danh sách người d
 router.post("/users", userController.createUser); // Tạo tài khoản mới
 router.post("/users/login", userController.login); // Đăng nhập
 router.post("/users/register", userController.register); // Đăng ký
+// router.post("/users/google-login", userController.googleLogin);
 router.post("/forgot-password", forgotPassword); // Lấy lại mật khẩu
 
 // Route lấy thông tin user profile
