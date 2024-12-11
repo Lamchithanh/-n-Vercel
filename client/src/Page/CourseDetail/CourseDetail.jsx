@@ -892,8 +892,9 @@ const CourseDetail = () => {
                       level={4}
                       style={{ fontSize: 25, marginTop: 20, marginLeft: 10 }}
                     >
-                      {selectedLesson.title}
+                      Bài: {selectedLesson.title}
                     </Title>
+
                     <Paragraph
                       style={{
                         marginTop: "16px",
@@ -902,8 +903,10 @@ const CourseDetail = () => {
                         color: "#666",
                       }}
                     >
-                      {selectedLesson.description ||
-                        "Chưa có mô tả cho bài học này."}
+                      <span>
+                        {selectedLesson.description ||
+                          "Chưa có mô tả cho bài học này."}
+                      </span>
                     </Paragraph>
                   </>
                 ) : (

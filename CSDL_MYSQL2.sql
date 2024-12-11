@@ -32,20 +32,7 @@ CREATE TABLE users (
   CONSTRAINT chk_locked CHECK (isLocked IN (0,1))
 );
 
-
-
-
 ALTER TABLE users MODIFY COLUMN avatar MEDIUMTEXT;
-
--- Bảng lưu lịch sử khóa tài khoản người dùng (tùy chọn)
-CREATE TABLE user_lock_history (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id BIGINT UNSIGNED,
-    action_type ENUM('LOCK', 'UNLOCK'),
-    reason VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
 
 -- Bảng Courses
 CREATE TABLE courses (
@@ -112,23 +99,6 @@ CREATE TABLE enrollments (
   completed_at TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-);
-
-
-
--- Bảng Progress (Theo dõi tiến độ học tập)
-CREATE TABLE progress (
-  id SERIAL PRIMARY KEY,
-  user_id BIGINT UNSIGNED,
-  lesson_id BIGINT UNSIGNED,
-  status ENUM('not_started', 'in_progress', 'completed') NOT NULL,
-  last_watched_position INTEGER,
-  total_time_watched INT DEFAULT 0,
-  watched_percentage DECIMAL(5, 2) DEFAULT 0,
-  first_watch_completed BOOLEAN DEFAULT FALSE,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
 );
 
 -- Bảng Certificates (Chứng chỉ khóa học)

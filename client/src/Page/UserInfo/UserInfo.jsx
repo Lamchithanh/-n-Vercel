@@ -163,6 +163,10 @@ const UserInfo = () => {
                 : "Học viên"}{" "}
             </p>
             <p className="date_user">Gia nhập: {formatDate(user.created_at)}</p>
+            <span className="date_user">Số chứng chỉ: </span>
+            <Button type="link" onClick={() => navigate("/certificates")}>
+              Xem chứng chỉ
+            </Button>
           </Paragraph>
         </div>
 

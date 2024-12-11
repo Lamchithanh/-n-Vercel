@@ -123,7 +123,7 @@ const ChangePassword = () => {
           onClick={() => navigate(-1)}
           style={{ margin: 10 }}
         >
-          ← Quay lại
+          <LeftOutlined />
         </Button>
         {error && (
           <Alert message="Lỗi" description={error} type="error" showIcon />

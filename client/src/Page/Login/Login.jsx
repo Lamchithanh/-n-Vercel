@@ -243,7 +243,6 @@ const Login = () => {
 
               <Form.Item>
                 <Button
-                  type="primary"
                   htmlType="submit"
                   loading={isLoading}
                   className="login-button"
@@ -252,12 +251,26 @@ const Login = () => {
                   <LoginOutlined /> Đăng nhập
                 </Button>
               </Form.Item>
+
               {isLogin && (
-                <GoogleLogin
-                  onSuccess={handleGoogleLoginSuccess}
-                  onError={handleGoogleLoginError}
-                  buttonText="Đăng nhập với Google"
-                />
+                <div className="google-login-container">
+                  <div className="divider">
+                    <span className="divider-text">Hoặc</span>
+                  </div>
+
+                  <div className="google-login-wrapper">
+                    <GoogleLogin
+                      onSuccess={handleGoogleLoginSuccess}
+                      onError={handleGoogleLoginError}
+                      type="standard"
+                      size="large"
+                      text="signin_with"
+                      logo_alignment="center"
+                      width="350"
+                      className="custom-google-login"
+                    />
+                  </div>
+                </div>
               )}
             </Form>
           ) : (
