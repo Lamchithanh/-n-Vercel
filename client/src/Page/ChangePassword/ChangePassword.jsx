@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, Form, Input, Button, Alert, message, Modal } from "antd";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "./ChangePassword.scss";
+import { LeftOutlined } from "@ant-design/icons";
 const ChangePassword = () => {
   const [user, setUser] = useState(null);
   const [newPassword, setNewPassword] = useState("");
