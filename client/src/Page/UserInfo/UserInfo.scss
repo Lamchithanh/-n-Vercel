@@ -2,8 +2,12 @@
   .background_avatar {
     height: 150px;
     background: linear-gradient(90deg, #f093fb, #f5576c);
+    // background-image: url("../../assets/img/green-and-digital-photo-2024.webp");
+    background-size: cover; /* Đảm bảo hình nền phủ kín phần tử */
+    background-position: center; /* Căn chỉnh hình nền ở giữa */
     border-radius: 9px;
     display: flex;
+    // padding-left: 15%;
     justify-content: center;
     align-items: flex-end;
   }

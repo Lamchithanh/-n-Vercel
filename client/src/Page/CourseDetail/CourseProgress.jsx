@@ -26,12 +26,26 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     return saved ? JSON.parse(saved) : {};
   });
 
+  const getProgressColor = (percent) => {
+    if (percent >= 100) return "#52c41a";
+    if (percent >= 75) return "#1890ff";
+    if (percent >= 50) return "#722ed1";
+    return "#108ee9";
+  };
+
+  // Định nghĩa hàm getProgressStatus
+  const getProgressStatus = (percent) => {
+    if (percent >= 100) return "success";
+    if (percent > 0) return "active";
+    return "normal";
+  };
+
   const totalLessons = modules.reduce(
     (total, module) => total + module.lessons.length,
     0
   );
 
-  const fetchCoupon = async () => {
+  const fetchCoupon = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/mycoupons`);
       if (!response.ok) {
@@ -50,9 +64,9 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       console.error("Error fetching coupon:", error);
       message.error("Không thể lấy thông tin mã giảm giá");
     }
-  };
+  }, []);
 
-  const handleClaimCoupon = async () => {
+  const handleClaimCoupon = useCallback(async () => {
     try {
       if (!userId || !courseId || !availableCoupon) {
         message.error("Thông tin không đầy đủ để nhận mã giảm giá");
@@ -83,7 +97,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       console.error("Error claiming coupon:", error);
       message.error("Không thể nhận mã giảm giá");
     }
-  };
+  }, [userId, courseId, availableCoupon]);
 
   const checkProgressMilestones = useCallback(
     (currentProgress) => {
@@ -128,7 +142,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             };
             setDisplayedMilestones(newDisplayedMilestones);
             localStorage.setItem(
-              `displayed Milestones-${courseId}-${userId}`,
+              `displayedMilestones-${courseId}-${userId}`,
               JSON.stringify(newDisplayedMilestones)
             );
           }
@@ -137,10 +151,10 @@ const CourseProgress = ({ modules, userId, courseId }) => {
 
       setLastMilestoneReached(highestMilestoneReached);
     },
-    [lastMilestoneReached, displayedMilestones, courseId, userId]
+    [lastMilestoneReached, displayedMilestones, courseId, userId, fetchCoupon]
   );
 
-  const checkCouponClaimed = async () => {
+  const checkCouponClaimed = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/mycoupons/check`, {
         method: "POST",
@@ -163,9 +177,9 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       console.error("Error checking coupon claimed status:", error);
       message.error("Không thể kiểm tra trạng thái mã giảm giá.");
     }
-  };
+  }, [userId, courseId]);
 
-  const fetchProgress = async () => {
+  const fetchProgress = useCallback(async () => {
     try {
       const response = await getProgressAPI(userId, courseId);
       const watched = response.filter(
@@ -184,13 +198,11 @@ const CourseProgress = ({ modules, userId, courseId }) => {
 
       if (progressPercentage >= 100) {
         setCanRequestCertificate(true);
-        fetchCoupon();
       } else {
         setCanRequestCertificate(false);
       }
 
       checkProgressMilestones(progressPercentage);
-      checkCouponClaimed();
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu tiến độ:", error);
       if (error.response && error.response.status !== 404) {
@@ -203,9 +215,9 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       setProgress(0);
       setCanRequestCertificate(false);
     }
-  };
+  }, [userId, courseId, totalLessons, checkProgressMilestones]);
 
-  const fetchCertificateStatus = async () => {
+  const fetchCertificateStatus = useCallback(async () => {
     if (!userId || !courseId) return;
     try {
       const response = await getCertificateStatusAPI(userId, courseId);
@@ -221,40 +233,9 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     } catch (error) {
       console.error("Lỗi khi lấy trạng thái chứng chỉ:", error);
     }
-  };
+  }, [userId, courseId]);
 
-  useEffect(() => {
-    if (userId && courseId) {
-      fetchProgress();
-      fetchCertificateStatus();
-    }
-
-    return () => {
-      localStorage.removeItem(`watchedLessons-${courseId}-${userId}`);
-    };
-  }, [userId, courseId, totalLessons]);
-
-  useEffect(() => {
-    if (progress > 0) {
-      checkProgressMilestones(progress);
-      checkCouponClaimed();
-    }
-  }, [progress, checkProgressMilestones]);
-
-  const getProgressColor = (percent) => {
-    if (percent >= 100) return "#52c41a";
-    if (percent >= 75) return "#1890ff";
-    if (percent >= 50) return "#722ed1";
-    return "#108ee9";
-  };
-
-  const getProgressStatus = (percent) => {
-    if (percent >= 100) return "success";
-    if (percent > 0) return "active";
-    return "normal";
-  };
-
-  const handleRequestCertificate = async () => {
+  const handleRequestCertificate = useCallback(async () => {
     setIsRequestingCertificate(true);
     try {
       if (progress >= 100) {
@@ -266,13 +247,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
         } else {
           message.success("Yêu cầu cấp chứng chỉ thành công! 🎓");
           setCanRequestCertificate(false);
-          const statusResponse = await getCertificateStatusAPI(
-            userId,
-            courseId
-          );
-          if (statusResponse.data && statusResponse.data.status) {
-            setCertificateStatus(statusResponse.data.status);
-          }
+          fetchCertificateStatus();
         }
       } else {
         message.error(
@@ -287,7 +262,24 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     } finally {
       setIsRequestingCertificate(false);
     }
-  };
+  }, [userId, courseId, progress, fetchCertificateStatus]);
+
+  useEffect(() => {
+    if (userId && courseId) {
+      fetchProgress();
+    }
+
+    return () => {
+      localStorage.removeItem(`watchedLessons-${courseId}-${userId}`);
+    };
+  }, [userId, courseId, fetchProgress]);
+
+  useEffect(() => {
+    if (progress === 100) {
+      fetchCertificateStatus();
+      checkCouponClaimed();
+    }
+  }, [progress, fetchCertificateStatus, checkCouponClaimed]);
 
   return (
     <Card className="course-progress-card">

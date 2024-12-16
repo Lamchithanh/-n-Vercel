@@ -13,6 +13,7 @@ import {
   VideoCameraOutlined,
   ShoppingOutlined,
   QrcodeOutlined,
+  LeftOutlined,
 } from "@ant-design/icons";
 import { useMediaQuery } from "react-responsive";
 import {
@@ -370,7 +371,7 @@ const PaymentPage = () => {
               gap: "8px",
             }}
           >
-            ← Quay lại
+            <LeftOutlined />
           </Button>
           <h2>
             Payment <ShoppingOutlined className="shoppe_payment" />

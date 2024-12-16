@@ -283,7 +283,7 @@ const HomePage = () => {
       key: "2",
       icon: <UserOutlined style={{ fontSize: "18px", color: "#52c41a" }} />,
       label: "Giới thiệu",
-      children: [{ label: "Mở rộng", path: "/" }],
+      children: [{ label: "Mở rộng", path: "/AIFutureArticle" }],
     },
     {
       key: "3",

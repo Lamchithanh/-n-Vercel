@@ -24,6 +24,7 @@ import BlogPage from "./Page/BlogPage/BlogPage";
 import Introduce from "./Page/Introduce/Introduce";
 import CertificateNotification from "./Page/CertificatesPage/CertificateNotification";
 import MyCoupons from "./components/Coupon/MyCouponsPage";
+import AIFutureArticle from "./Page/Home/AIFutureArticle";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -73,6 +74,7 @@ const App = () => {
               <Route path="courses/:id" element={<CourseDetail />} />
               <Route path="/blogpage" element={<BlogPage />} />
               <Route path="/MyCoupons" element={<MyCoupons />} />
+              <Route path="/AIFutureArticle" element={<AIFutureArticle />} />
             </Route>
 
             <Route path="/login" element={<Login />} />

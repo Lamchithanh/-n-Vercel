@@ -50,18 +50,22 @@ const AdminAddCoupon = () => {
 
   const handleSubmit = async (values) => {
     try {
-      // Deep clone values to avoid mutation
       const submissionValues = { ...values };
 
-      // Handle expiration_date
+      // Đảm bảo chuyển đổi ngày một cách an toàn
       if (submissionValues.expiration_date) {
-        // Convert to ISO string format for consistent backend handling
+        // Sử dụng format ISO hoặc định dạng phù hợp với backend
         submissionValues.expiration_date = moment(
           submissionValues.expiration_date
-        ).format("YYYY-MM-DD");
+        ).format("YYYY-MM-DD HH:mm:ss");
       } else {
         // Explicitly set to null if no date is selected
         submissionValues.expiration_date = null;
+      }
+
+      // Handle default max_usage if not provided
+      if (!submissionValues.max_usage) {
+        submissionValues.max_usage = 100; // Mặc định là 100 nếu không có giá trị nhập vào
       }
 
       if (editingCoupon) {
@@ -109,22 +113,16 @@ const AdminAddCoupon = () => {
 
   // Handle edit
   const handleEdit = (record) => {
-    // Create a copy of record to avoid direct modifications
     const editRecord = { ...record };
 
-    // Handle expiration_date for editing
+    // Chuyển đổi ngày một cách an toàn
     if (editRecord.expiration_date) {
       editRecord.expiration_date = moment(editRecord.expiration_date);
     }
 
-    // Reset form and set values
     form.resetFields();
     form.setFieldsValue(editRecord);
-
-    // Set editing coupon
     setEditingCoupon(record);
-
-    // Open modal
     setModalVisible(true);
   };
 
@@ -218,7 +216,10 @@ const AdminAddCoupon = () => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={editingCoupon || {}}
+          initialValues={{
+            ...editingCoupon,
+            max_usage: editingCoupon?.max_usage || 100,
+          }}
         >
           <Form.Item
             label="Mã giảm giá"
@@ -269,16 +270,36 @@ const AdminAddCoupon = () => {
           <Form.Item label="Số tiền mua tối thiểu" name="min_purchase_amount">
             <InputNumber style={{ width: "100%" }} min={0} />
           </Form.Item>
+
+          <Form.Item label="Gia hạn">
+            <Select
+              placeholder="Chọn thời gian gia hạn"
+              allowClear
+              onChange={(value) => {
+                let newExpirationDate = null;
+                if (value) {
+                  newExpirationDate = moment().add(value, "days");
+                }
+                form.setFieldsValue({
+                  expiration_date: newExpirationDate,
+                });
+              }}
+            >
+              <Option value={7}>7 Ngày</Option>
+              <Option value={30}>30 Ngày</Option>
+              <Option value={90}>90 Ngày</Option>
+              <Option value={365}>1 Năm</Option>
+            </Select>
+          </Form.Item>
+
           <Form.Item label="Ngày hết hạn" name="expiration_date">
             <DatePicker
               style={{ width: "100%" }}
               format="YYYY-MM-DD"
               allowClear
-              disabledDate={(current) =>
-                current && current < moment().startOf("day")
-              }
             />
           </Form.Item>
+
           <Form.Item>
             <Space style={{ width: "100%", justifyContent: "flex-end" }}>
               <Button onClick={handleModalClose}>Hủy</Button>

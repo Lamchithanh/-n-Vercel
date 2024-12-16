@@ -4,7 +4,7 @@ $nameweb_color: #e7005e;
   height: 12vh;
   z-index: 1000;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   padding: 10px 20px;
   background-color: #242145;
@@ -30,7 +30,7 @@ $nameweb_color: #e7005e;
       // margin-right: 5px;
 
       img {
-        width: 100px;
+        width: 200px;
         height: auto;
       }
     }

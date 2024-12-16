@@ -5,6 +5,7 @@ import { Form, Input, Button, Select } from "antd";
 import { register } from "../../../../server/src/Api/authAPI";
 import AOS from "aos"; // Import AOS
 import "aos/dist/aos.css"; // Import AOS styles
+import { LeftOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
@@ -66,7 +67,7 @@ const Register = () => {
         data-aos-duration="1200"
       >
         <Button onClick={() => navigate(-1)} style={{ marginBottom: 16 }}>
-          Quay lại
+          <LeftOutlined />
         </Button>
         <Form
           className="form-Register"

@@ -7,6 +7,11 @@ import styles from "./MyCourses.module.scss";
 import defaultImage from "../../assets/img/sach.png";
 import MyCourseProgress from "./MyCourseProgress";
 import { Button } from "antd";
+import {
+  LeftCircleOutlined,
+  LeftOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
 
 const CourseCard = ({ course, userId }) => {
   const navigate = useNavigate();
@@ -209,7 +214,7 @@ const MyCourses = () => {
           onClick={() => navigate(-1)}
           style={{ margin: 10 }}
         >
-          ← Quay lại
+          <LeftOutlined />
         </Button>
         <h1 className="text-2xl font-bold">
           Khóa học của tôi ({courses.length})
@@ -235,21 +240,23 @@ const MyCourses = () => {
       ) : (
         <div className="relative overflow-hidden">
           <button
+            style={{ color: "#E35629" }}
             onClick={() => handleScroll("left")}
-            className={`absolute left-0 top-1/2 z-20 -translate-y-1/2 p-2 bg-white rounded-full shadow-lg transition-opacity duration-300 hover:bg-gray-100 ${
+            className={`absolute left-0 top-1/2 z-20 -translate-y-1/2 p-2 rounded-full shadow-lg transition-opacity duration-300 hover:bg-gray-100 ${
               showLeftButton ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           >
-            <ChevronLeft className="w-6 h-6 text-gray-600" />
+            <LeftOutlined color="#666" />
           </button>
-
+          <span></span>
           <button
+            style={{ marginLeft: 20, color: "#E35629" }}
             onClick={() => handleScroll("right")}
-            className={`absolute right-0 top-1/2 z-20 -translate-y-1/2 p-2 bg-white rounded-full shadow-lg transition-opacity duration-300 hover:bg-gray-100 ${
+            className={`absolute right-0 top-1/2 z-20 -translate-y-1/2 p-2  rounded-full shadow-lg transition-opacity duration-300 hover:bg-gray-100 ${
               showRightButton ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           >
-            <ChevronRight className="w-6 h-6 text-gray-600" />
+            <RightOutlined />
           </button>
 
           <div

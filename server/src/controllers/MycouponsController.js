@@ -354,6 +354,64 @@ const checkCouponUsage = async (req, res) => {
   }
 };
 
+// Trong file controller hoặc route handler
+const checkCouponStatus = async (req, res) => {
+  const { userId, couponId, courseId } = req.query;
+
+  try {
+    // Kiểm tra thông tin coupon từ bảng coupons
+    const [couponDetails] = await pool.query(
+      `SELECT 
+        id, 
+        code, 
+        discount_type, 
+        discount_amount, 
+        min_purchase_amount, 
+        expiration_date 
+      FROM coupons 
+      WHERE id = ?`,
+      [couponId]
+    );
+
+    if (!couponDetails) {
+      return res.status(404).json({
+        error: true,
+        message: "Mã giảm giá không tồn tại",
+      });
+    }
+
+    // Kiểm tra xem coupon đã hết hạn chưa
+    const isExpired = couponDetails.expiration_date
+      ? new Date(couponDetails.expiration_date) < new Date()
+      : false;
+
+    // Kiểm tra xem coupon đã được sử dụng chưa
+    const [usageRecord] = await pool.query(
+      `SELECT 1 FROM coupon_usage 
+       WHERE user_id = ? AND coupon_id = ? AND course_id = ?`,
+      [userId, couponId, courseId]
+    );
+
+    const isUsed = !!usageRecord;
+
+    return res.status(200).json({
+      coupon_id: couponDetails.id,
+      code: couponDetails.code,
+      is_expired: isExpired,
+      is_used: isUsed,
+      discount_type: couponDetails.discount_type,
+      discount_amount: couponDetails.discount_amount,
+      expiration_date: couponDetails.expiration_date,
+    });
+  } catch (error) {
+    console.error("Lỗi kiểm tra trạng thái mã giảm giá:", error);
+    res.status(500).json({
+      error: true,
+      message: "Đã có lỗi xảy ra khi kiểm tra mã giảm giá",
+    });
+  }
+};
+
 module.exports = {
   getMyCoupons,
   claimCoupon,
@@ -362,4 +420,5 @@ module.exports = {
   getCoupon,
   checkCouponClaimed,
   checkCouponUsage,
+  checkCouponStatus,
 };

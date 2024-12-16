@@ -6,6 +6,7 @@ import Loader from "../../context/Loader";
 import { useNavigate } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { LeftOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 
@@ -78,13 +79,13 @@ const CertificatesPage = () => {
   }
 
   return (
-    <div className="certificates-scroll-view">
+    <div className="certificates-scroll-view container">
       <Button
         className="btn-back"
         onClick={() => navigate(-1)}
         style={{ margin: 10 }}
       >
-        ← Quay lại
+        <LeftOutlined />
       </Button>
       <div className="certificates-content-container">
         {certificates.length > 0 ? (

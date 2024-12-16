@@ -5,7 +5,7 @@ import CourseSearch from "./Search.jsx";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./Header.scss";
-import logo from "../../assets/img/Logo.png";
+import logo from "../../assets/img/QT_E3.png";
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ const Header = () => {
         <span className="logo-icon">
           <img src={logo} alt="classroom" />
         </span>
-        <span className="logo-text">QT Learning</span>
+        {/* <span className="logo-text">QT Learning</span> */}
       </NavLink>
 
       <button className="menu-toggle" onClick={toggleMobileMenu}>

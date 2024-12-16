@@ -62,7 +62,8 @@ const getAllCoupons = async (req, res) => {
   }
 };
 
-const moment = require("moment"); // Import moment.js hoặc bạn có thể sử dụng Date từ JavaScript chuẩn
+const moment = require("moment");
+
 const createCoupon = async (req, res) => {
   const connection = await pool.getConnection();
   try {
@@ -70,10 +71,10 @@ const createCoupon = async (req, res) => {
       code,
       discount_amount,
       discount_type,
-      max_usage,
+      max_usage = 100, // Mặc định số lần dùng tối đa là 100
       min_purchase_amount,
       expiration_date, // Ngày giờ sẽ được chuyển đổi ở đây
-      is_active = true, // Mặc định là true nếu không gửi từ client
+      is_active = true, // Mặc định trạng thái là mở (true)
     } = req.body;
 
     // Chuyển đổi expiration_date thành định dạng phù hợp với MySQL (YYYY-MM-DD HH:mm:ss)
@@ -105,10 +106,10 @@ const createCoupon = async (req, res) => {
         code,
         discount_amount,
         discount_type,
-        max_usage,
+        max_usage, // Sử dụng giá trị max_usage từ request hoặc mặc định là 100
         min_purchase_amount,
         formattedExpirationDate, // Sử dụng giá trị đã được định dạng
-        is_active,
+        is_active, // Mặc định là true nếu không gửi từ client
       ]
     );
 

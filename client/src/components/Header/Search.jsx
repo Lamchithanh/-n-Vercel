@@ -108,8 +108,8 @@ const CourseSearch = () => {
             position: "absolute",
             zIndex: 1001,
             marginTop: 20,
-            background: "#8C42F6",
-
+            background: "rgba(36, 30, 70, 0.889)", // Nền banner con với độ trong suốt cao
+            backdropfilter: blur(5),
             padding: 20,
             borderRadius: 8,
             left: 0,
@@ -118,7 +118,7 @@ const CourseSearch = () => {
         >
           <Empty
             description={
-              <Text strong>
+              <Text strong style={{ color: "#e6356f" }}>
                 Không tìm thấy khóa học nào phù hợp với từ khóa "{searchQuery}"
               </Text>
             }

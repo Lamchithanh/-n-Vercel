@@ -63,6 +63,7 @@ const CourseDetail = () => {
   const [isNewLessonModalVisible, setIsNewLessonModalVisible] = useState(false);
   const [selectedLockedLesson, setSelectedLockedLesson] = useState(null);
   const [newLessonDetails, setNewLessonDetails] = useState(null);
+  const [shownNewLessons, setShownNewLessons] = useState([]);
   const [progress, setProgress] = useState(0);
   const [progressUpdateTrigger, setProgressUpdateTrigger] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -159,52 +160,6 @@ const CourseDetail = () => {
     fetchWatchedLessons();
   }, [courseId]);
 
-  useEffect(() => {
-    const calculateAvailableLessons = () => {
-      if (!Array.isArray(modules) || !modules.length) {
-        setAvailableLessons([]);
-        setNewLessons([]);
-        return;
-      }
-
-      if (!Array.isArray(watchedLessons)) {
-        console.error("watchedLessons is not a valid array:", watchedLessons);
-        setAvailableLessons([]);
-        setNewLessons([]);
-        return;
-      }
-
-      let available = [];
-      let newOnes = [];
-      let lastWatchedOrder = 0;
-
-      modules.forEach((module) => {
-        module.lessons.forEach((lesson) => {
-          // Xác định bài học đã xem có thứ tự cao nhất
-          if (watchedLessons.includes(lesson.id)) {
-            lastWatchedOrder = Math.max(lastWatchedOrder, lesson.order);
-          }
-
-          // Xác định bài học khả dụng và mới
-          if (lesson.order === 1 || lesson.order <= lastWatchedOrder + 1) {
-            available.push(lesson.id);
-            if (
-              lesson.order <= lastWatchedOrder &&
-              !watchedLessons.includes(lesson.id)
-            ) {
-              newOnes.push(lesson.id);
-            }
-          }
-        });
-      });
-
-      setAvailableLessons(available);
-      setNewLessons(newOnes);
-    };
-
-    calculateAvailableLessons();
-  }, [modules, watchedLessons, progressUpdateTrigger]);
-
   const handleVideoProgress = async (lessonId, progress) => {
     if (progress >= 90) {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -260,25 +215,82 @@ const CourseDetail = () => {
   };
 
   useEffect(() => {
+    const calculateAvailableLessons = () => {
+      if (!Array.isArray(modules) || !modules.length) {
+        setAvailableLessons([]);
+        setNewLessons([]);
+        return;
+      }
+
+      if (!Array.isArray(watchedLessons)) {
+        console.error("watchedLessons is not a valid array:", watchedLessons);
+        setAvailableLessons([]);
+        setNewLessons([]);
+        return;
+      }
+
+      let available = [];
+      let newOnes = [];
+      let lastWatchedOrder = 0;
+
+      modules.forEach((module) => {
+        module.lessons.forEach((lesson) => {
+          // Xác định bài học đã xem có thứ tự cao nhất
+          if (watchedLessons.includes(lesson.id)) {
+            lastWatchedOrder = Math.max(lastWatchedOrder, lesson.order);
+          }
+
+          // Xác định bài học khả dụng và mới
+          if (lesson.order === 1 || lesson.order <= lastWatchedOrder + 1) {
+            available.push(lesson.id);
+            if (
+              lesson.order <= lastWatchedOrder &&
+              !watchedLessons.includes(lesson.id)
+            ) {
+              newOnes.push(lesson.id);
+            }
+          }
+        });
+      });
+
+      setAvailableLessons(available);
+      setNewLessons(newOnes);
+    };
+
+    calculateAvailableLessons();
+  }, [modules, watchedLessons, progressUpdateTrigger]);
+
+  useEffect(() => {
     const checkNewLessons = () => {
-      if (newLessons.length > 0) {
-        // Tìm thông tin chi tiết của bài học mới đầu tiên
+      // Only process new lessons that haven't been shown before
+      const unshownNewLessons = newLessons.filter(
+        (lessonId) => !shownNewLessons.includes(lessonId)
+      );
+
+      if (unshownNewLessons.length > 0) {
         let newLessonInfo = null;
-        modules.forEach((module) => {
-          module.lessons.forEach((lesson) => {
-            if (newLessons.includes(lesson.id)) {
+
+        // Find the first unshown new lesson
+        for (const module of modules) {
+          for (const lesson of module.lessons) {
+            if (unshownNewLessons.includes(lesson.id)) {
               newLessonInfo = {
                 lesson: lesson,
                 module: module,
                 previousLesson: findPreviousLesson(lesson.order),
               };
+              break;
             }
-          });
-        });
+          }
+          if (newLessonInfo) break;
+        }
 
         if (newLessonInfo) {
           setNewLessonDetails(newLessonInfo);
           setIsNewLessonModalVisible(true);
+
+          // Mark this lesson as shown
+          setShownNewLessons((prev) => [...prev, newLessonInfo.lesson.id]);
         }
       }
     };

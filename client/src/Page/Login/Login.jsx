@@ -43,6 +43,10 @@ const Login = () => {
     }
 
     let formattedEmail = values.email.trim();
+    formattedEmail = removeVietnameseTones(formattedEmail); // Xử lý bỏ dấu
+
+    console.log("Email sau khi bỏ dấu: ", formattedEmail); // Kiểm tra email sau khi bỏ dấu
+
     if (!formattedEmail.includes("@")) {
       formattedEmail += "@gmail.com";
     }
@@ -73,10 +77,33 @@ const Login = () => {
     }
   }, []);
 
+  const removeVietnameseTones = (str) => {
+    const vietnameseTonesMap = {
+      a: /á|à|ả|ã|ạ|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/g,
+      e: /é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/g,
+      i: /í|ì|ỉ|ĩ|ị/g,
+      o: /ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/g,
+      u: /ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/g,
+      y: /ý|ỳ|ỷ|ỹ|ỵ/g,
+      d: /đ/g,
+    };
+
+    for (let letter in vietnameseTonesMap) {
+      const regex = vietnameseTonesMap[letter];
+      str = str.replace(regex, letter);
+    }
+    return str;
+  };
+
   const handleLogin = async (values) => {
     setIsLoading(true);
+    let formattedEmail = values.email.trim();
+    formattedEmail = removeVietnameseTones(formattedEmail); // Xử lý bỏ dấu
+
+    console.log("Email sau khi bỏ dấu: ", formattedEmail); // Kiểm tra email sau khi bỏ dấu
+
     try {
-      const response = await login(values.email, values.password);
+      const response = await login(formattedEmail, values.password);
 
       if (response && response.user && response.token) {
         // Chuyển đổi is_first_login từ số sang boolean
@@ -140,8 +167,18 @@ const Login = () => {
     try {
       const response = await googleLogin(credentialResponse);
       toast.success("Đăng nhập Google thành công!");
+
+      // Chuyển đổi is_first_login từ số sang boolean (nếu cần)
+      if (response.user.is_first_login === 1) {
+        response.user.is_first_login = true;
+      } else if (response.user.is_first_login === 0) {
+        response.user.is_first_login = false;
+      }
+
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("token", response.token);
+
+      // Sử dụng hàm navigateBasedOnRole để xử lý điều hướng giống như đăng nhập thường
       navigateBasedOnRole(response.user);
     } catch (error) {
       toast.error("Đăng nhập Google thất bại. Vui lòng thử lại.");
@@ -154,11 +191,11 @@ const Login = () => {
   };
 
   const navigateBasedOnRole = (user) => {
-    if (user.role === "instructor") {
-      navigate("/instructor");
+    if (user.is_first_login === false) {
+      navigate("/allcourses");
+    } else if (user.role === "admin") {
+      navigate("/admin");
     } else if (user.role === "student") {
-      navigate("/");
-    } else {
       navigate("/");
     }
   };

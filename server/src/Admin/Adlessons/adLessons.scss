@@ -1,4 +1,11 @@
 .from_card_lesson {
-  height: 53vh;
+  height: 45vh;
   margin: 10px;
+}
+.from_card_lesson .ant-card-body p {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import YouTube from "react-youtube";
 import { message } from "antd";
 import {
@@ -14,12 +14,10 @@ const VideoProgressTracker = ({
   modules,
   onProgressUpdate,
   resetNotification = false,
-  unlockNextLesson, // Thêm tham số unlockNextLesson
+  unlockNextLesson,
 }) => {
   const [hasNotifiedCompletion, setHasNotifiedCompletion] = useState(false);
   const [player, setPlayer] = useState(null);
-  const progressUpdateRef = useRef(false);
-  const progressInterval = useRef(null);
 
   const getYoutubeId = (url) => {
     const match = url.match(
@@ -40,50 +38,51 @@ const VideoProgressTracker = ({
     if (resetNotification) {
       setHasNotifiedCompletion(false);
     }
-  }, [lessonId, resetNotification]);
+  }, [resetNotification]); // Bỏ lessonId khỏi dependency array
 
   const onReady = (event) => {
     setPlayer(event.target);
   };
 
-  const updateWatchProgress = async (currentTime, videoDuration) => {
-    const percentage = (currentTime / videoDuration) * 100;
+  const updateWatchProgress = useCallback(
+    async (currentTime, videoDuration) => {
+      const percentage = (currentTime / videoDuration) * 100;
 
-    if (percentage >= 90 && !hasNotifiedCompletion) {
-      // message.success("Bạn đã hoàn thành 90% thời lượng bài học! 🎉");
-      setHasNotifiedCompletion(true);
+      if (percentage >= 90 && !hasNotifiedCompletion) {
+        setHasNotifiedCompletion(true);
 
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user) {
-        await updateProgressAPI({
-          userId: user.id,
-          lessonId: lessonId,
-          watched: true,
-          watchedDuration: currentTime,
-        });
-        onProgressUpdate(lessonId);
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) {
+          try {
+            await updateProgressAPI({
+              userId: user.id,
+              lessonId: lessonId,
+              watched: true,
+              watchedDuration: currentTime,
+            });
+            onProgressUpdate(lessonId);
 
-        // Mở khóa bài học tiếp theo khi hoàn thành 90% bài học hiện tại
-        if (unlockNextLesson) {
-          unlockNextLesson(lessonId);
+            if (typeof unlockNextLesson === "function") {
+              unlockNextLesson(lessonId);
+            }
+          } catch (error) {
+            console.error("Lỗi khi cập nhật tiến độ:", error);
+          }
         }
       }
-    }
-  };
+    },
+    [lessonId, onProgressUpdate, unlockNextLesson, hasNotifiedCompletion]
+  );
 
   const onStateChange = (event) => {
-    if (progressInterval.current) {
-      clearInterval(progressInterval.current);
-      progressInterval.current = null;
-    }
-
-    if (event.data === YouTube.PlayerState.PLAYING) {
-      progressInterval.current = setInterval(() => {
-        if (player && !progressUpdateRef.current) {
-          const currentTime = player.getCurrentTime();
-          updateWatchProgress(currentTime, player.getDuration());
-        }
-      }, 1000);
+    if (
+      event.data === YouTube.PlayerState.ENDED ||
+      event.data === YouTube.PlayerState.PAUSED
+    ) {
+      if (player) {
+        const currentTime = player.getCurrentTime();
+        updateWatchProgress(currentTime, player.getDuration());
+      }
     }
   };
 
@@ -128,14 +127,7 @@ const VideoProgressTracker = ({
     };
 
     checkPreviousLessons();
-
-    return () => {
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
-        progressInterval.current = null;
-      }
-    };
-  }, [lessonId, modules]);
+  }, [lessonId]); // Bỏ modules khỏi dependency array nếu nó không thay đổi
 
   return (
     <div className="video-container">
@@ -161,7 +153,7 @@ VideoProgressTracker.propTypes = {
     })
   ).isRequired,
   onProgressUpdate: PropTypes.func.isRequired,
-  unlockNextLesson: PropTypes.func, // Hàm mở khóa bài học tiếp theo
+  unlockNextLesson: PropTypes.func,
   resetNotification: PropTypes.bool,
 };
 

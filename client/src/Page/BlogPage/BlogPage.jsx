@@ -14,6 +14,7 @@ import styled from "styled-components";
 // Import the CSS module here
 import styles from "./BlogPage.module.scss";
 import { useLocation, useNavigate } from "react-router-dom";
+import { LeftOutlined } from "@ant-design/icons";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -166,7 +167,7 @@ const BlogPage = () => {
           onClick={() => navigate(-1)}
           style={{ margin: 10, marginLeft: 100 }}
         >
-          ← Quay lại
+          <LeftOutlined />
         </Button>
       </div>
       <Container>
