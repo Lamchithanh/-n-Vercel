@@ -17,7 +17,7 @@ const CourseCard = ({ course, newlyAddedCourses = [] }) => {
   const handleCardClick = () => {
     navigate(`/courses/${course.id}`);
   };
-
+  // định dạng giá tiền
   const formatPrice = (price) => {
     return parseFloat(price)
       .toLocaleString("vi-VN", { style: "currency", currency: "VND" })
@@ -32,7 +32,7 @@ const CourseCard = ({ course, newlyAddedCourses = [] }) => {
       <div
         className="course-card-container"
         onClick={handleCardClick}
-        data-aos="fade-up" // Add animation here
+        data-aos="fade-up"
       >
         <div className="course-image-wrapper" data-aos="zoom-in">
           <img
@@ -64,7 +64,7 @@ const CourseCard = ({ course, newlyAddedCourses = [] }) => {
     </div>
   );
 };
-
+// ép kiểu
 CourseCard.propTypes = {
   course: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

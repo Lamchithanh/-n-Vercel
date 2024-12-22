@@ -11,7 +11,7 @@ const Banner = () => {
       once: true,
     });
   }, []);
-
+// cuộn trang đến phần tất cả khóa học
   const handleScrollToCourses = () => {
     const coursesSection = document.querySelector(".content_homepage");
     if (coursesSection) {

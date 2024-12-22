@@ -15,9 +15,9 @@ $button-hover: #e6356f;
 .ant-modal-footer {
   background: #1b1834;
   border: none;
-  &:hover {
-    background-color: $button-hover;
-  }
+  // &:hover {
+  //   background-color: $button-hover;
+  // }
 }
 .btn_addcertificate {
   background-color: $secondary-color;
@@ -35,7 +35,6 @@ $button-hover: #e6356f;
 
   &:hover {
     border: #e6356f 2px solid;
-
     background: #e6356f;
     color: #ffffff;
   }

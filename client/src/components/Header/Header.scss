@@ -30,7 +30,7 @@ $nameweb_color: #e7005e;
       // margin-right: 5px;
 
       img {
-        width: 200px;
+        width: 150px;
         height: auto;
       }
     }
@@ -87,14 +87,14 @@ $nameweb_color: #e7005e;
 
       .btn--logout {
         background: none;
-        border: #585fa2 2px solid;
+        // border: #585fa2 2px solid;
         padding: 5px;
         cursor: pointer;
         display: flex;
         align-items: center;
 
         &:hover {
-          background: #d9d9da;
+          color: #d9d9da;
         }
 
         img {

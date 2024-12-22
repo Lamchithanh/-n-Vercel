@@ -29,10 +29,9 @@ const CouponCard = ({ coupon }) => {
       : `${coupon.discount_amount.toLocaleString("vi-VN")} đ`;
   };
 
-  // Chỉ cho phép sao chép mã nếu coupon chưa hết hạn
   const handleCopyCode = async () => {
-    if (coupon.is_expired) {
-      return; // Không làm gì nếu coupon đã hết hạn
+    if (coupon.is_expired || coupon.is_used) {
+      return; // Không sao chép mã nếu coupon đã hết hạn hoặc đã sử dụng
     }
 
     try {
@@ -52,13 +51,17 @@ const CouponCard = ({ coupon }) => {
           onClick={handleCopyCode}
           title="Click to copy coupon code"
           style={
-            coupon.is_expired
+            coupon.is_expired || coupon.is_used
               ? { cursor: "not-allowed", opacity: 0.5, userSelect: "none" }
               : {}
           }
         >
           <TicketPercent size={24} />
-          <span style={coupon.is_expired ? { userSelect: "none" } : {}}>
+          <span
+            style={
+              coupon.is_expired || coupon.is_used ? { userSelect: "none" } : {}
+            }
+          >
             {coupon.code}
           </span>
           <CopyIcon size={18} className="coupon-card__header-copy-icon" />
@@ -115,7 +118,7 @@ const CouponCard = ({ coupon }) => {
         )}
 
         <div className="coupon-card__content-details text-sm text-gray-500 mt-2">
-          Tiết kiệm tối đa: {coupon.calculated_discount.toLocaleString("vi-VN")}
+          Tiết kiệm tối đa: {coupon.calculated_discount.toLocaleString("vi-VN")}{" "}
           đ
         </div>
       </div>
@@ -153,14 +156,11 @@ const MyCoupons = () => {
         return;
       }
 
-      // Lấy danh sách coupon của người dùng
       const response = await axios.get(`${API_URL}/mycoupons/${userId}`);
 
-      // Kiểm tra trạng thái từng coupon
       const couponsWithStatus = await Promise.all(
         response.data.map(async (coupon) => {
           try {
-            // Kiểm tra ngày hết hạn và cập nhật trạng thái is_expired
             const isExpired = coupon.expiration_date
               ? new Date(coupon.expiration_date) < new Date()
               : false;
@@ -169,16 +169,15 @@ const MyCoupons = () => {
               `${API_URL}/mycoupons/checkCouponStatus`,
               {
                 params: {
-                  userId,
+                  userId: userId,
                   couponId: coupon.id,
-                  courseId: null, // Truyền null nếu không có courseId cụ thể
                 },
               }
             );
 
             return {
               ...coupon,
-              is_expired: isExpired || statusResponse.data.is_expired, // Xử lý trạng thái hết hạn
+              is_expired: isExpired || statusResponse.data.is_expired,
               is_used: statusResponse.data.is_used,
             };
           } catch (error) {
@@ -186,7 +185,7 @@ const MyCoupons = () => {
               `Lỗi kiểm tra trạng thái coupon ${coupon.id}:`,
               error
             );
-            return coupon; // Trả về coupon gốc nếu không thể kiểm tra
+            return coupon;
           }
         })
       );
@@ -210,6 +209,53 @@ const MyCoupons = () => {
       </div>
     );
   }
+
+  const renderUsageDetails = (coupon) => {
+    if (
+      coupon.is_used &&
+      coupon.usage_details &&
+      coupon.usage_details.length > 0
+    ) {
+      const usageDetail = coupon.usage_details[0]; // Giả sử một mã giảm giá chỉ dùng cho một khóa
+      return (
+        coupon.is_used &&
+        coupon.usage_details && (
+          <div className="coupon-card__content-usage-details">
+            {coupon.usage_details.map((usageDetail) => (
+              <div
+                key={usageDetail.id}
+                className="coupon-card__content-usage-course"
+              >
+                <img
+                  src={usageDetail.course_thumbnail}
+                  alt={usageDetail.course_title}
+                  className="coupon-card__content-usage-thumbnail"
+                />
+                <div className="coupon-card__content-usage-info">
+                  <p className="coupon-card__content-usage-course-title">
+                    {usageDetail.course_title}
+                  </p>
+                  <p className="coupon-card__content-usage-date">
+                    Đã sử dụng vào:{" "}
+                    {new Date(usageDetail.created_at).toLocaleDateString(
+                      "vi-VN"
+                    )}
+                  </p>
+                  <p className="coupon-card__content-usage-discount">
+                    Giảm giá:{" "}
+                    {usageDetail.discount_amount.toLocaleString("vi-VN")} đ
+                    {` (Từ ${usageDetail.original_amount.toLocaleString(
+                      "vi-VN"
+                    )} đ)`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      );
+    }
+  };
 
   return (
     <div className="my-coupons__container">
@@ -240,7 +286,10 @@ const MyCoupons = () => {
       ) : (
         <div className="my-coupons__grid">
           {coupons.map((coupon) => (
-            <CouponCard key={coupon.id} coupon={coupon} />
+            <div key={coupon.id}>
+              <CouponCard coupon={coupon} />
+              {renderUsageDetails(coupon)}
+            </div>
           ))}
         </div>
       )}

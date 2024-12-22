@@ -33,29 +33,37 @@ const CouponInput = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          code: code.trim(), // Lọc khoảng trắng thừa ở đầu và cuối mã
-          totalAmount: coursePrice, // Giá trị đơn hàng
+          code: code.trim(),
+          totalAmount: coursePrice,
           userId,
           courseId,
         }),
       });
 
-      // Kiểm tra xem phản hồi có thành công không
       if (!response.ok) {
-        const error = await response.json(); // Lấy thông báo lỗi từ backend
+        const error = await response.json();
+        console.error("Error from validate API:", error); // In ra lỗi chi tiết từ API
         throw new Error(error.message || "Lỗi khi kiểm tra mã giảm giá.");
       }
 
-      // Trả về kết quả từ backend
       const result = await response.json();
+      if (
+        result.success &&
+        result.coupon &&
+        result.coupon.status === "disabled"
+      ) {
+        throw new Error("Mã giảm giá đã bị vô hiệu hóa.");
+      }
+
       return result; // Dữ liệu mã giảm giá hợp lệ
     } catch (error) {
-      // Quản lý lỗi
       if (error.name === "AbortError") {
         console.log("Request was cancelled");
-        return null; // Trả về null nếu yêu cầu bị hủy
+        return null;
       }
-      throw new Error(error.message || "Không thể kiểm tra mã giảm giá"); // Thông báo lỗi khác
+      throw new Error(
+        error.message || "Không thể kiểm tra mã giảm giá. Vui lòng thử lại sau."
+      );
     }
   };
 
@@ -89,8 +97,7 @@ const CouponInput = ({
   // Fetch applied coupon from the backend
   const fetchAppliedCoupon = useCallback(
     debounce(async () => {
-      if (isFetching || !userId || !courseId) return;
-
+      if (isFetching || appliedCoupon) return; // Kiểm tra điều kiện rõ ràng
       setIsFetching(true);
 
       try {
@@ -102,9 +109,8 @@ const CouponInput = ({
           }
         );
 
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error("Không thể lấy thông tin mã giảm giá");
-        }
 
         const couponData = await response.json();
 
@@ -114,37 +120,36 @@ const CouponInput = ({
             code: appliedCoupon.code,
             type: appliedCoupon.discount_type,
             discount: parseFloat(appliedCoupon.discount_amount),
-            calculatedDiscount: parseFloat(appliedCoupon.discount_amount),
           };
 
           setAppliedCoupon(normalizedCoupon);
           onApplyCoupon(normalizedCoupon);
         } else {
-          // Không có mã giảm giá nào được áp dụng
           setAppliedCoupon(null);
           onRemoveCoupon();
         }
       } catch (error) {
-        console.error("Lỗi khi lấy mã giảm giá: ", error.message);
+        console.error("Lỗi khi lấy mã giảm giá:", error.message);
       } finally {
         setIsFetching(false);
       }
-    }, 500), // Debounce thời gian 500ms
+    }, 1000), // Debounce tăng lên 1 giây
     [userId, courseId, onApplyCoupon, onRemoveCoupon, isFetching]
   );
 
   useEffect(() => {
-    if (isFetching || appliedCoupon) return;
-
-    fetchAppliedCoupon();
+    // Only fetch the applied coupon once when the component mounts
+    if (!isFetching && appliedCoupon === null) {
+      fetchAppliedCoupon();
+    }
 
     return () => {
-      fetchAppliedCoupon.cancel(); // Hủy debounce khi component unmount
+      fetchAppliedCoupon.cancel();
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchAppliedCoupon, isFetching, appliedCoupon]);
+  }, [fetchAppliedCoupon, isFetching]); // Remove appliedCoupon from the dependency array
 
   useEffect(() => {
     if (appliedCoupon) {
@@ -193,21 +198,33 @@ const CouponInput = ({
     }
 
     setLoading(true);
+
     try {
-      // Validate coupon first
+      // Kiểm tra mã giảm giá trước khi áp dụng
       const couponData = await validateCoupon(couponCode);
       if (!couponData || !couponData.code) {
-        // message.error("Mã giảm giá không hợp lệ.");
+        message.error("Mã giảm giá không hợp lệ.");
         return;
       }
 
-      // Apply coupon and get applied data
+      if (appliedCoupon) {
+        message.info("Mã giảm giá đã được áp dụng.");
+        return;
+      }
+
+      // Nếu mã giảm giá đã bị vô hiệu hóa, thông báo cho người dùng
+      if (couponData.status === "disabled") {
+        message.error("Mã giảm giá đã bị vô hiệu hóa.");
+        return;
+      }
+
+      // Áp dụng mã giảm giá
       const appliedData = await applyCouponToBackend(couponData);
       if (!appliedData || !appliedData.code) {
         throw new Error("Không thể áp dụng mã giảm giá.");
       }
 
-      // Standardize coupon object structure
+      // Normalized coupon data
       const normalizedCoupon = {
         code: appliedData.code || couponCode,
         type: appliedData.discountType || couponData.type,
@@ -217,17 +234,15 @@ const CouponInput = ({
         calculatedDiscount: parseFloat(
           appliedData.discountAmount || couponData.discount || 0
         ),
-        couponId: couponData.couponId || appliedData.couponId, // Add coupon ID for removal
+        couponId: couponData.couponId || appliedData.couponId,
       };
 
-      // Validate normalized coupon data
       if (isNaN(normalizedCoupon.discount) || normalizedCoupon.discount <= 0) {
         throw new Error("Giá trị giảm giá không hợp lệ.");
       }
 
-      // Set and propagate coupon data immediately
+      // Cập nhật trạng thái mã giảm giá đã áp dụng
       setAppliedCoupon(normalizedCoupon);
-
       message.success("Mã giảm giá đã được áp dụng thành công!");
     } catch (error) {
       console.error("Coupon Application Error:", error);
@@ -235,8 +250,6 @@ const CouponInput = ({
         error.message ||
           "Không thể áp dụng mã giảm giá. Vui lòng kiểm tra và thử lại."
       );
-
-      // Reset coupon state on error
       setAppliedCoupon(null);
       onRemoveCoupon();
     } finally {

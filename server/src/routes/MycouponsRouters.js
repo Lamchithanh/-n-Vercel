@@ -7,7 +7,7 @@ router.get("/mycoupons/:userId", MycouponsController.getMyCoupons);
 router.get("/mycoupons", MycouponsController.getCoupon);
 router.post("/mycoupons/claim", MycouponsController.claimCoupon);
 router.post("/mycoupons/check", MycouponsController.checkCouponClaimed);
-router.get("/mycoupons/checkCouponUsage", MycouponsController.checkCouponUsage);
+// router.get("/mycoupons/checkCouponUsage", MycouponsController.checkCouponUsage);
 router.get(
   "/mycoupons/checkCouponStatus",
   MycouponsController.checkCouponStatus

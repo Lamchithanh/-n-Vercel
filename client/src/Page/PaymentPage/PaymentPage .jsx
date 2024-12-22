@@ -214,9 +214,9 @@ const PaymentPage = () => {
       // Store payment ID for QR modal
       setPaymentId(initiateResponse.paymentId);
 
-      // For QR payment method, show QR modal instead of direct confirmation
-      if (paymentMethod === "paypal") {
-        setIsQRModalVisible(true);
+      if (paymentMethod === "paypal" && !isQRModalVisible) {
+        setPaymentId(initiateResponse.paymentId);
+        setIsQRModalVisible(true); // Chỉ mở modal nếu chưa mở
       } else {
         const mockTransactionId = `TRANS_${Date.now()}`;
         await confirmPayment(initiateResponse.paymentId, mockTransactionId);
@@ -291,8 +291,9 @@ const PaymentPage = () => {
       <div
         style={{ background: "#fafafa", padding: "20px", borderRadius: "8px" }}
       >
-        {currentUser && (
+        {currentUser && isQRModalVisible && paymentMethod === "paypal" && (
           <PaymentQRModal
+            key={paymentId}
             visible={isQRModalVisible}
             onClose={handleCloseQRModal}
             userId={currentUser.id}
@@ -301,6 +302,7 @@ const PaymentPage = () => {
             paymentId={paymentId}
           />
         )}
+
         <CouponInput
           onApplyCoupon={setAppliedCoupon}
           onRemoveCoupon={() => setAppliedCoupon(null)}

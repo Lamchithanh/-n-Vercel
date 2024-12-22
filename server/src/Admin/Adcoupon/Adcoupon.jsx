@@ -145,6 +145,20 @@ const AdminAddCoupon = () => {
     form.resetFields();
   };
 
+  const handleToggleStatus = async (coupon) => {
+    try {
+      const updatedStatus = coupon.is_active === 1 ? 0 : 1; // Toggle status (1 => 0, 0 => 1)
+      const updatedCoupon = { ...coupon, is_active: updatedStatus };
+
+      await axios.put(`${API_URL}/updatecoupons/${coupon.id}`, updatedCoupon);
+
+      message.success("Cập nhật trạng thái thành công");
+      fetchCoupons(); // Làm mới lại bảng dữ liệu
+    } catch (error) {
+      message.error("Có lỗi khi cập nhật trạng thái: " + error.message);
+    }
+  };
+
   const columns = [
     {
       title: "Mã giảm giá",
@@ -171,6 +185,12 @@ const AdminAddCoupon = () => {
         date ? moment(date).format("YYYY-MM-DD") : "Không giới hạn",
     },
     {
+      title: "Trạng thái",
+      dataIndex: "is_active", // Dùng is_active thay vì status
+      key: "is_active",
+      render: (is_active) => (is_active === 1 ? "Đang sử dụng" : "Vô hiệu hóa"),
+    },
+    {
       title: "Thao tác",
       key: "action",
       render: (_, record) => (
@@ -180,6 +200,9 @@ const AdminAddCoupon = () => {
           </Button>
           <Button type="link" danger onClick={() => handleDelete(record.id)}>
             Xóa
+          </Button>
+          <Button type="link" onClick={() => handleToggleStatus(record)}>
+            {record.is_active === 1 ? "Vô hiệu hóa" : "Kích hoạt"}
           </Button>
         </Space>
       ),
@@ -298,6 +321,18 @@ const AdminAddCoupon = () => {
               format="YYYY-MM-DD"
               allowClear
             />
+          </Form.Item>
+
+          {/* Thêm trường trạng thái cho coupon */}
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+            initialValue={editingCoupon?.status || "active"}
+          >
+            <Select>
+              <Option value="active">Đang sử dụng</Option>
+              <Option value="inactive">Vô hiệu hóa</Option>
+            </Select>
           </Form.Item>
 
           <Form.Item>

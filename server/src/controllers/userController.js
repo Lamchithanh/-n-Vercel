@@ -145,14 +145,12 @@ exports.register = async (req, res) => {
 
     // Kiểm tra xem tên người dùng đã tồn tại chưa
     const [existingUser] = await connection.query(
-      "SELECT * FROM users WHERE username = ? OR email = ?",
+      "SELECT * FROM users WHERE email = ?",
       [username, email]
     );
 
     if (existingUser.length > 0) {
-      return res
-        .status(400)
-        .json({ error: "Tên người dùng hoặc email đã tồn tại!" });
+      return res.status(400).json({ error: "Email đã tồn tại!" });
     }
 
     // Mã hóa mật khẩu

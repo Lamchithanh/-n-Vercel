@@ -16,6 +16,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
   const [lastMilestoneReached, setLastMilestoneReached] = useState(0);
   const [canRequestCertificate, setCanRequestCertificate] = useState(false);
   const [certificateStatus, setCertificateStatus] = useState(null);
+  const [certificateRequested, setCertificateRequested] = useState(false);
   const [isRequestingCertificate, setIsRequestingCertificate] = useState(false);
   const [availableCoupon, setAvailableCoupon] = useState(null);
   const [isCouponClaimed, setIsCouponClaimed] = useState(false);
@@ -224,9 +225,9 @@ const CourseProgress = ({ modules, userId, courseId }) => {
       if (response.data && response.data.status) {
         setCertificateStatus(response.data.status);
 
-        if (response.data.status === "Đã cấp chứng chỉ") {
-          setCanRequestCertificate(false);
-        } else if (response.data.status === "Đang chờ xử lý") {
+        if (response.data.status === "Đang chờ xử lý") {
+          setCertificateRequested(true); // Đã gửi yêu cầu
+        } else if (response.data.status === "Đã cấp chứng chỉ") {
           setCanRequestCertificate(false);
         }
       }
@@ -239,15 +240,29 @@ const CourseProgress = ({ modules, userId, courseId }) => {
     setIsRequestingCertificate(true);
     try {
       if (progress >= 100) {
-        const response = await requestCertificateAPI(userId, courseId);
-        if (response.data.accepted === false) {
-          message.error(
-            "Yêu cầu cấp chứng chỉ không thành công. Vui lòng kiểm tra lại điều kiện yêu cầu chứng chỉ."
+        const response = await fetch(`${API_URL}/certificates/request`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userId,
+            courseId: courseId,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          message.success(data.message || "Yêu cầu cấp chứng chỉ thành công!");
+          setCertificateRequested(true);
+          // Lưu trạng thái vào localStorage
+          localStorage.setItem(
+            `certificateRequested-${courseId}-${userId}`,
+            "true"
           );
         } else {
-          message.success("Yêu cầu cấp chứng chỉ thành công! 🎓");
-          setCanRequestCertificate(false);
-          fetchCertificateStatus();
+          message.error(data.message || "Không thể gửi yêu cầu cấp chứng chỉ.");
         }
       } else {
         message.error(
@@ -255,24 +270,27 @@ const CourseProgress = ({ modules, userId, courseId }) => {
         );
       }
     } catch (error) {
-      console.error("Lỗi khi gửi yêu cầu cấp chứng chỉ:", error);
+      console.error("Error sending certificate request:", error);
       message.error(
         "Không thể gửi yêu cầu cấp chứng chỉ. Vui lòng thử lại sau."
       );
     } finally {
       setIsRequestingCertificate(false);
     }
-  }, [userId, courseId, progress, fetchCertificateStatus]);
+  }, [userId, courseId, progress]);
 
   useEffect(() => {
     if (userId && courseId) {
+      // Gọi API kiểm tra mã giảm giá và tiến độ
       fetchProgress();
+      fetchCoupon();
+      checkCouponClaimed();
     }
 
     return () => {
       localStorage.removeItem(`watchedLessons-${courseId}-${userId}`);
     };
-  }, [userId, courseId, fetchProgress]);
+  }, [userId, courseId, fetchProgress, fetchCoupon, checkCouponClaimed]);
 
   useEffect(() => {
     if (progress === 100) {
@@ -319,20 +337,26 @@ const CourseProgress = ({ modules, userId, courseId }) => {
           {watchedLessons.length}/{totalLessons} bài học
         </span>
         <p>
-          {progress === 100 && certificateStatus === null && (
-            <Button
-              type="primary"
-              onClick={handleRequestCertificate}
-              className="mt-4"
-              loading={isRequestingCertificate}
-            >
-              Yêu cầu cấp chứng chỉ
-            </Button>
+          {progress === 100 &&
+            certificateStatus === null &&
+            !certificateRequested && (
+              <Button
+                style={{ background: "#86DC47" }}
+                onClick={handleRequestCertificate}
+                className="mt-4"
+                loading={isRequestingCertificate}
+              >
+                Yêu cầu cấp chứng chỉ
+              </Button>
+            )}
+          {certificateRequested && (
+            <span style={{ color: "orange" }}>
+              Yêu cầu của bạn đã được gửi đến quản trị viên. 🎉
+            </span>
           )}
-          <p></p>
           {certificateStatus === "Đã cấp chứng chỉ" && (
             <span style={{ color: "green" }}>
-              Bạn đã nhận được chứng chỉ!🏆
+              Bạn đã nhận được chứng chỉ! 🏆
             </span>
           )}
           {certificateStatus ===
@@ -344,7 +368,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
         </p>
 
         {!isCouponClaimed && availableCoupon ? (
-          <Button type="primary" onClick={handleClaimCoupon}>
+          <Button style={{ background: "#86DC47" }} onClick={handleClaimCoupon}>
             Nhận mã: {availableCoupon.code}
           </Button>
         ) : isCouponClaimed && availableCoupon ? (
@@ -354,7 +378,9 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             </span>
             <p>Giảm {availableCoupon.discount_amount || 0}%</p>
           </div>
-        ) : null}
+        ) : (
+          <span style={{ color: "gray" }}>Không có mã giảm giá khả dụng.</span>
+        )}
       </div>
     </Card>
   );

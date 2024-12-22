@@ -5,7 +5,8 @@ import CourseSearch from "./Search.jsx";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./Header.scss";
-import logo from "../../assets/img/QT_E3.png";
+import logo from "../../assets/img/QT_E6.png";
+import logout from "../../assets/img/logout3.png";
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -76,12 +77,7 @@ const Header = () => {
               <span>{user.username}</span>
             </button>
             <button onClick={handleLogout} className="btn btn--logout">
-              <img
-                width="32"
-                height="32"
-                src="https://img.icons8.com/stencil/32/exit.png"
-                alt="exit"
-              />
+              <img width="32" height="32" src={logout} alt="exit" />
             </button>
           </div>
         ) : (

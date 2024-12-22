@@ -401,7 +401,7 @@ const HomePage = () => {
       </div>
       <div
         className="homepage_FeaturedCourses"
-        style={{ height: "120vh" }}
+        style={{ height: "110vh" }}
         data-aos="fade-up"
         data-aos-delay="300"
       >

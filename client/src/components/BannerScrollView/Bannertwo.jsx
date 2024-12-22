@@ -5,9 +5,9 @@ import Aos from "aos";
 const Bannertwo = () => {
   useEffect(() => {
     Aos.init({
-      duration: 1000, // Thời gian hiệu ứng
-      easing: "ease-in-out", // Phương thức easing
-      once: true, // Chỉ chạy hiệu ứng một lần khi cuộn
+      duration: 1000,
+      easing: "ease-in-out",
+      once: true,
     });
   }, []);
 

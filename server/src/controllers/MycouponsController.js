@@ -52,13 +52,16 @@ const getMyCoupons = async (req, res) => {
   }
 };
 
+// lấy mã giảm giá ngẫu nhiên 20%
 const getCoupon = async (req, res) => {
   try {
-    // Lọc mã giảm giá 20% với các điều kiện chi tiết
     const [coupons] = await pool.query(
       `SELECT * FROM coupons
        WHERE discount_type = 'percentage'
-         AND discount_amount = 20.0`
+         AND discount_amount = 20.0
+         AND expiration_date > CURDATE()  
+         AND is_active = TRUE        
+      `
     );
 
     if (coupons.length === 0) {
@@ -356,10 +359,35 @@ const checkCouponUsage = async (req, res) => {
 
 // Trong file controller hoặc route handler
 const checkCouponStatus = async (req, res) => {
-  const { userId, couponId, courseId } = req.query;
+  // Log toàn bộ query để kiểm tra
+  console.log("Full Query:", req.query);
+
+  // Destructure và parse tham số
+  const userId = parseInt(req.query.userId);
+  const couponId = parseInt(req.query.couponId);
+  const courseId = req.query.courseId ? parseInt(req.query.courseId) : null;
+
+  // Log các tham số sau khi parse
+  console.log("Parsed Parameters:", {
+    userId,
+    couponId,
+    courseId,
+    rawUserId: req.query.userId,
+    rawCouponId: req.query.couponId,
+    rawCourseId: req.query.courseId,
+  });
+
+  // Kiểm tra tính hợp lệ của tham số
+  if (isNaN(userId) || isNaN(couponId)) {
+    return res.status(400).json({
+      error: true,
+      message: "Invalid userId or couponId",
+      receivedParams: req.query,
+    });
+  }
 
   try {
-    // Kiểm tra thông tin coupon từ bảng coupons
+    // Kiểm tra coupon details
     const [couponDetails] = await pool.query(
       `SELECT 
         id, 
@@ -373,10 +401,13 @@ const checkCouponStatus = async (req, res) => {
       [couponId]
     );
 
+    // Kiểm tra xem coupon có tồn tại không
     if (!couponDetails) {
       return res.status(404).json({
         error: true,
         message: "Mã giảm giá không tồn tại",
+        userId,
+        couponId,
       });
     }
 
@@ -385,14 +416,30 @@ const checkCouponStatus = async (req, res) => {
       ? new Date(couponDetails.expiration_date) < new Date()
       : false;
 
-    // Kiểm tra xem coupon đã được sử dụng chưa
-    const [usageRecord] = await pool.query(
-      `SELECT 1 FROM coupon_usage 
-       WHERE user_id = ? AND coupon_id = ? AND course_id = ?`,
-      [userId, couponId, courseId]
-    );
+    // Truy vấn kiểm tra coupon usage
+    const usageQuery = courseId
+      ? `SELECT 1 FROM coupon_usage 
+         WHERE user_id = ? AND coupon_id = ? AND course_id = ?`
+      : `SELECT 1 FROM coupon_usage 
+         WHERE user_id = ? AND coupon_id = ?`;
 
-    const isUsed = !!usageRecord;
+    const usageParams = courseId
+      ? [userId, couponId, courseId]
+      : [userId, couponId];
+
+    const [usageRecords] = await pool.query(usageQuery, usageParams);
+
+    // Kiểm tra xem coupon đã được sử dụng chưa
+    const isUsed = usageRecords.length > 0;
+
+    // Log kết quả
+    console.log("Coupon Status:", {
+      couponId,
+      userId,
+      courseId,
+      isExpired,
+      isUsed,
+    });
 
     return res.status(200).json({
       coupon_id: couponDetails.id,
@@ -404,10 +451,20 @@ const checkCouponStatus = async (req, res) => {
       expiration_date: couponDetails.expiration_date,
     });
   } catch (error) {
-    console.error("Lỗi kiểm tra trạng thái mã giảm giá:", error);
+    // Logging chi tiết lỗi
+    console.error("Lỗi kiểm tra trạng thái mã giảm giá:", {
+      error: error.message,
+      stack: error.stack,
+      userId,
+      couponId,
+      courseId,
+    });
+
     res.status(500).json({
       error: true,
       message: "Đã có lỗi xảy ra khi kiểm tra mã giảm giá",
+      errorDetails: error.message,
+      params: { userId, couponId, courseId },
     });
   }
 };

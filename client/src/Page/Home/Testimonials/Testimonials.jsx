@@ -138,28 +138,14 @@ const Testimonials = ({ courseId }) => {
                   icon={<UserOutlined />}
                   className={styles.avatar}
                 />
-                {/* <div className={styles.reviewRating}>
-                  {[...Array(review.rating)].map((_, index) => (
-                    <StarFilled key={index} style={{ color: "#ffc107" }} />
-                  ))}
-                </div> */}
               </div>
+              <div className={styles.reviewerName}>{review.full_name}</div>
               <p data-aos="fade-right" className={styles.reviewText}>
                 {review.review_text}
               </p>
             </div>
           ))}
         </div>
-
-        {/* {hasMore && (
-          <div className={styles.loadMoreContainer}>
-            <button
-              onClick={handleLoadMore}
-              className={styles.loadMoreButton}
-              disabled={loading}
-            ></button>
-          </div>
-        )} */}
       </div>
     </div>
   );
