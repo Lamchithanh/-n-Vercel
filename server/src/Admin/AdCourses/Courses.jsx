@@ -67,7 +67,6 @@ const Courses = () => {
         if (uploadMethod === "file" && uploadedFile) {
           try {
             setIsUploading(true);
-            // Truyền courseId nếu đang chỉnh sửa khóa học
             const courseId = editingCourse ? editingCourse.id : null;
             imageUrl = await uploadCourseImage(uploadedFile, courseId);
           } catch (uploadError) {
@@ -78,9 +77,12 @@ const Courses = () => {
           }
         }
 
+        // Loại bỏ dấu chấm trong giá trước khi gửi
+        const rawPrice = values.price.replace(/\./g, "");
+
         const courseData = {
           ...values,
-          price: values.priceOption === "free" ? "0" : values.price.toString(),
+          price: values.priceOption === "free" ? "0" : rawPrice, // Giá không có dấu chấm
           image: imageUrl || (editingCourse ? editingCourse.image : ""),
           intro_video_url: values.videoUrl,
         };
@@ -296,22 +298,36 @@ const Courses = () => {
       </Form.Item>
     );
   };
+
   const [price, setPrice] = useState("");
   const handlePriceChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
     const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     setPrice(formattedValue);
+    form.setFieldsValue({ price: formattedValue });
   };
+
   const validatePrice = (_, value) => {
-    // Kiểm tra nếu đang ở chế độ miễn phí thì không cần validate
-    if (form.getFieldValue("priceOption") === "free") {
+    const priceOption = form.getFieldValue("priceOption");
+
+    // Nếu đang trong chế độ miễn phí, không cần validate
+    if (priceOption === "free") {
       return Promise.resolve();
     }
 
-    const rawValue = value ? value.replace(/\./g, "") : ""; // Loại bỏ dấu chấm để kiểm tra
-    if (!rawValue || rawValue.length < 4) {
-      return Promise.reject(new Error("Giá phải có ít nhất 4 chữ số!"));
+    // Nếu đang chỉnh sửa khóa học và giá không thay đổi
+    if (editingCourse && value === editingCourse.price) {
+      return Promise.resolve();
     }
+
+    // Nếu là khóa học có phí và giá được thay đổi
+    if (priceOption === "paid") {
+      const rawValue = value ? value.replace(/\./g, "") : "";
+      if (!rawValue || rawValue.length < 4) {
+        return Promise.reject(new Error("Giá phải có ít nhất 4 chữ số!"));
+      }
+    }
+
     return Promise.resolve();
   };
 

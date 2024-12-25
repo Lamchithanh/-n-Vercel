@@ -40,7 +40,7 @@ import FeaturesWith from "./FeaturesWith";
 const { Header, Content } = Layout;
 
 const filterExpiredNotifications = (notifications) => {
-  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; // 7 ngày tính bằng milliseconds
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
   const currentTime = new Date().getTime();
 
   return notifications.filter((notification) => {
@@ -110,7 +110,6 @@ const HomePage = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Cuộn lên đầu trang mỗi khi URL thay đổi
     window.scrollTo(0, 0);
   }, [location]);
 
@@ -126,7 +125,7 @@ const HomePage = () => {
   useEffect(() => {
     const shouldShowToast = localStorage.getItem("showSuccessToast");
     if (shouldShowToast) {
-      localStorage.removeItem("showSuccessToast"); // Xóa trạng thái sau khi hiển thị để tránh hiển thị lại khi tải lại trang
+      localStorage.removeItem("showSuccessToast");
     }
   }, []);
 

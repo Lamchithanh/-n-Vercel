@@ -191,10 +191,10 @@ const Login = () => {
   };
 
   const navigateBasedOnRole = (user) => {
-    if (user.is_first_login === false) {
-      navigate("/allcourses");
-    } else if (user.role === "admin") {
+    if (user.role === "admin") {
       navigate("/admin");
+    } else if (user.is_first_login === false) {
+      navigate("/allcourses");
     } else if (user.role === "student") {
       navigate("/");
     }

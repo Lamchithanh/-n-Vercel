@@ -25,7 +25,7 @@ import {
   getModuleDurationAPI,
 } from "../../../../server/src/Api/lessonApi";
 import { fetchModulesAPI } from "../../../../server/src/Api/moduleApi";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   CheckOutlined,
   // LeftCircleOutlined,
@@ -68,6 +68,10 @@ const CourseDetail = () => {
   const [progressUpdateTrigger, setProgressUpdateTrigger] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   useEffect(() => {
     const checkEnrollmentStatus = async () => {
@@ -160,6 +164,50 @@ const CourseDetail = () => {
     fetchWatchedLessons();
   }, [courseId]);
 
+  const calculateAvailableLessons = () => {
+    if (!Array.isArray(modules) || !modules.length) {
+      setAvailableLessons([]);
+      setNewLessons([]);
+      return;
+    }
+
+    if (!Array.isArray(watchedLessons)) {
+      console.error("watchedLessons is not a valid array:", watchedLessons);
+      setAvailableLessons([]);
+      setNewLessons([]);
+      return;
+    }
+
+    let available = [];
+    let newOnes = [];
+    let lastWatchedOrder = 0;
+
+    modules.forEach((module) => {
+      module.lessons.forEach((lesson) => {
+        if (watchedLessons.includes(lesson.id)) {
+          lastWatchedOrder = Math.max(lastWatchedOrder, lesson.order);
+        }
+
+        if (lesson.order === 1 || lesson.order <= lastWatchedOrder + 1) {
+          available.push(lesson.id);
+          if (
+            lesson.order <= lastWatchedOrder &&
+            !watchedLessons.includes(lesson.id)
+          ) {
+            newOnes.push(lesson.id);
+          }
+        }
+      });
+    });
+
+    setAvailableLessons(available);
+    setNewLessons(newOnes);
+  };
+  useEffect(() => {
+    // Gọi hàm calculateAvailableLessons khi modules hoặc watchedLessons thay đổi
+    calculateAvailableLessons();
+  }, [modules, watchedLessons]);
+
   const handleVideoProgress = async (lessonId, progress) => {
     if (progress >= 90) {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -173,10 +221,7 @@ const CourseDetail = () => {
           });
 
           if (response.success) {
-            // Multiple side effects are triggered:
-            message.success("Tiến độ đã được cập nhật!");
-
-            // Update watched lessons
+            // Cập nhật watchedLessons
             setWatchedLessons((prev) => {
               if (!prev.includes(lessonId)) {
                 return [...prev, lessonId];
@@ -184,27 +229,19 @@ const CourseDetail = () => {
               return prev;
             });
 
-            // Trigger re-calculation of available lessons
-            setProgressUpdateTrigger((prev) => prev + 1);
+            // Mở khóa bài học tiếp theo
+            const nextLesson = findNextLesson(lessonId);
+            if (nextLesson) {
+              setAvailableLessons((prevAvailable) => [
+                ...prevAvailable,
+                nextLesson.id,
+              ]);
 
-            // Calculate total progress
-            const totalProgress =
-              ((watchedLessons.length + 1) / totalLessons) * 100;
-            setProgress(totalProgress);
-
-            // Automatically expand available lessons
-            const currentLesson = modules
-              .flatMap((m) => m.lessons)
-              .find((l) => l.id === lessonId);
-            if (currentLesson) {
-              const nextLesson = modules
-                .flatMap((m) => m.lessons)
-                .find((l) => l.order === currentLesson.order + 1);
-
-              if (nextLesson) {
-                setAvailableLessons((prev) => [...prev, nextLesson.id]);
-              }
+              // Tự động chọn bài học tiếp theo
+              setSelectedLesson(nextLesson);
             }
+
+            message.success("Tiến độ đã được cập nhật!");
           }
         } catch (error) {
           console.error("Error updating progress:", error);
@@ -258,7 +295,7 @@ const CourseDetail = () => {
     };
 
     calculateAvailableLessons();
-  }, [modules, watchedLessons, progressUpdateTrigger]);
+  }, [modules, watchedLessons]);
 
   useEffect(() => {
     const checkNewLessons = () => {
@@ -821,6 +858,16 @@ const CourseDetail = () => {
     console.log("Yêu cầu chứng chỉ cho user:", userId, "khóa học:", courseId);
   };
 
+  const findNextLesson = (currentLessonId) => {
+    const allLessons = modules.flatMap((module) => module.lessons);
+    const currentIndex = allLessons.findIndex(
+      (lesson) => lesson.id === currentLessonId
+    );
+    return currentIndex !== -1 && currentIndex < allLessons.length - 1
+      ? allLessons[currentIndex + 1]
+      : null;
+  };
+
   // Add this state
   const [hasPaid, setHasPaid] = useState(false);
 
@@ -832,6 +879,31 @@ const CourseDetail = () => {
     return match && match[2].length === 11
       ? `https://www.youtube.com/embed/${match[2]}`
       : null;
+  };
+
+  const getLessonNumberAndTitle = (currentLesson) => {
+    if (!currentLesson || !modules) return { number: 0, fullTitle: "" };
+
+    let lessonNumber = 1; // Start from 1
+    let found = false;
+
+    for (const module of modules) {
+      for (const lesson of module.lessons) {
+        if (lesson.id === currentLesson.id) {
+          found = true;
+          return {
+            number: lessonNumber,
+            fullTitle: `Bài ${lessonNumber}: ${currentLesson.title}`,
+          };
+        }
+        lessonNumber++;
+      }
+    }
+
+    return {
+      number: 0,
+      fullTitle: currentLesson.title,
+    };
   };
 
   if (loading) return <Loader />;
@@ -852,7 +924,7 @@ const CourseDetail = () => {
     <div className="course-detail container">
       <Button
         className="btn-back"
-        onClick={() => navigate(-1)}
+        onClick={handleGoBack}
         style={{ margin: 10 }}
       >
         <LeftOutlined />
@@ -895,16 +967,34 @@ const CourseDetail = () => {
                     <VideoProgressTracker
                       lessonId={selectedLesson.id}
                       videoUrl={selectedLesson.video_url}
-                      duration={selectedLesson.duration}
-                      courseId={courseId}
+                      modules={modules}
                       onProgressUpdate={handleVideoProgress}
-                      requiredProgress={90}
+                      onLessonComplete={(lessonId) => {
+                        console.log("Lesson completed:", lessonId); // Thêm log để debug
+                        setWatchedLessons((prev) => {
+                          const updated = prev.includes(lessonId)
+                            ? prev
+                            : [...prev, lessonId];
+                          console.log("Updated watched lessons:", updated); // Thêm log để debug
+                          return updated;
+                        });
+                      }}
+                      unlockNextLesson={(lessonId) => {
+                        const nextLesson = findNextLesson(lessonId);
+                        if (nextLesson) {
+                          setAvailableLessons((prev) => [
+                            ...prev,
+                            nextLesson.id,
+                          ]);
+                        }
+                      }}
+                      resetNotification={false}
                     />
                     <Title
                       level={4}
                       style={{ fontSize: 25, marginTop: 20, marginLeft: 10 }}
                     >
-                      Bài: {selectedLesson.title}
+                      {getLessonNumberAndTitle(selectedLesson).fullTitle}
                     </Title>
 
                     <Paragraph
@@ -1047,7 +1137,7 @@ const CourseDetail = () => {
           )}
         </Modal>
 
-        <Modal
+        {/* <Modal
           title="Bài học mới được thêm vào"
           open={isNewLessonModalVisible}
           onCancel={() => setIsNewLessonModalVisible(false)}
@@ -1092,7 +1182,7 @@ const CourseDetail = () => {
               )}
             </div>
           )}
-        </Modal>
+        </Modal> */}
         {/* <RandomCoupon /> */}
       </>
     </div>

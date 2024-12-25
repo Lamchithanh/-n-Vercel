@@ -40,7 +40,7 @@ CREATE TABLE courses (
   title VARCHAR(255) NOT NULL,
   description TEXT,
   instructor_id BIGINT UNSIGNED,
-  price DECIMAL(10, 2) NOT NULL,
+  price INT NOT NULL,
   discount_price DECIMAL(10, 2) DEFAULT NULL,
   level ENUM('beginner', 'intermediate', 'advanced') NOT NULL,
   category VARCHAR(100) NOT NULL,
@@ -54,6 +54,8 @@ CREATE TABLE courses (
   FOREIGN KEY (instructor_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+ALTER TABLE courses
+MODIFY COLUMN price INT NOT NULL;
 
 ALTER TABLE payments
 ADD COLUMN coupon_code VARCHAR(50) DEFAULT NULL AFTER status;

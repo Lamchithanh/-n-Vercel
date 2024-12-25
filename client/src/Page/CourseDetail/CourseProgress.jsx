@@ -367,7 +367,7 @@ const CourseProgress = ({ modules, userId, courseId }) => {
           )}
         </p>
 
-        {!isCouponClaimed && availableCoupon ? (
+        {!isCouponClaimed && availableCoupon && progress === 100 ? (
           <Button style={{ background: "#86DC47" }} onClick={handleClaimCoupon}>
             Nhận mã: {availableCoupon.code}
           </Button>
@@ -379,7 +379,9 @@ const CourseProgress = ({ modules, userId, courseId }) => {
             <p>Giảm {availableCoupon.discount_amount || 0}%</p>
           </div>
         ) : (
-          <span style={{ color: "gray" }}>Không có mã giảm giá khả dụng.</span>
+          <span style={{ color: "gray" }}>
+            Hoàn thành khóa học sớm để nhận quà nhé!
+          </span>
         )}
       </div>
     </Card>

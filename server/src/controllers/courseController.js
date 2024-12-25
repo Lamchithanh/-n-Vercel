@@ -225,7 +225,6 @@ exports.searchCourses = async (req, res) => {
     });
   }
 };
-// Thêm vào courseController.js
 
 exports.getProgress = async (req, res) => {
   const { userId, courseId } = req.params;

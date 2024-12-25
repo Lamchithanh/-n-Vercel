@@ -185,13 +185,20 @@ const PaymentPage = () => {
   useEffect(() => {
     if (!course?.price) return;
 
-    const basePrice = parseFloat(course.price);
-    const { finalPrice: newFinalPrice, discount: newDiscount } =
-      calculatePrices(basePrice, appliedCoupon);
+    // Calculate prices only when appliedCoupon changes
+    if (appliedCoupon) {
+      const basePrice = parseFloat(course.price);
+      const { finalPrice: newFinalPrice, discount: newDiscount } =
+        calculatePrices(basePrice, appliedCoupon);
 
-    setFinalPrice(newFinalPrice);
-    setDiscount(newDiscount);
-  }, [course?.price, appliedCoupon, calculatePrices]);
+      setFinalPrice(newFinalPrice);
+      setDiscount(newDiscount);
+    } else {
+      // Reset to original price if no coupon is applied
+      setFinalPrice(parseFloat(course.price));
+      setDiscount(0);
+    }
+  }, [course?.price, appliedCoupon]); // Removed calculatePrices from dependency array
 
   const handleConfirmPayment = async () => {
     if (!validateSelection()) return;

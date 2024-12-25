@@ -16,6 +16,7 @@ const CouponInput = ({
   const [loading, setLoading] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
   // const fetchedRef = useRef(false);
   const abortControllerRef = useRef(null);
   // Validate coupon with the backend
@@ -138,8 +139,7 @@ const CouponInput = ({
   );
 
   useEffect(() => {
-    // Only fetch the applied coupon once when the component mounts
-    if (!isFetching && appliedCoupon === null) {
+    if (!isFetching && !isApplying && appliedCoupon === null) {
       fetchAppliedCoupon();
     }
 
@@ -149,13 +149,13 @@ const CouponInput = ({
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchAppliedCoupon, isFetching]); // Remove appliedCoupon from the dependency array
+  }, [isFetching, isApplying, fetchAppliedCoupon]); // Remove appliedCoupon from the dependency array
 
-  useEffect(() => {
-    if (appliedCoupon) {
-      onApplyCoupon(appliedCoupon);
-    }
-  }, [appliedCoupon, onApplyCoupon]);
+  // useEffect(() => {
+  //   if (appliedCoupon) {
+  //     onApplyCoupon(appliedCoupon);
+  //   }
+  // }, [appliedCoupon, onApplyCoupon]);
   // Remove applied coupon
   const handleRemoveCoupon = async () => {
     if (!appliedCoupon || !appliedCoupon.couponId) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import YouTube from "react-youtube";
 import { message } from "antd";
 import {
@@ -15,6 +15,7 @@ const VideoProgressTracker = ({
   onProgressUpdate,
   resetNotification = false,
   unlockNextLesson,
+  onLessonComplete, // Add new prop for lesson completion
 }) => {
   const [hasNotifiedCompletion, setHasNotifiedCompletion] = useState(false);
   const [player, setPlayer] = useState(null);
@@ -38,7 +39,7 @@ const VideoProgressTracker = ({
     if (resetNotification) {
       setHasNotifiedCompletion(false);
     }
-  }, [resetNotification]); // Bỏ lessonId khỏi dependency array
+  }, [resetNotification]);
 
   const onReady = (event) => {
     setPlayer(event.target);
@@ -60,7 +61,10 @@ const VideoProgressTracker = ({
               watched: true,
               watchedDuration: currentTime,
             });
+
+            // Call both callbacks to update UI immediately
             onProgressUpdate(lessonId);
+            onLessonComplete(lessonId); // Notify parent component about completion
 
             if (typeof unlockNextLesson === "function") {
               unlockNextLesson(lessonId);
@@ -71,7 +75,13 @@ const VideoProgressTracker = ({
         }
       }
     },
-    [lessonId, onProgressUpdate, unlockNextLesson, hasNotifiedCompletion]
+    [
+      lessonId,
+      onProgressUpdate,
+      unlockNextLesson,
+      hasNotifiedCompletion,
+      onLessonComplete,
+    ]
   );
 
   const onStateChange = (event) => {
@@ -127,7 +137,7 @@ const VideoProgressTracker = ({
     };
 
     checkPreviousLessons();
-  }, [lessonId]); // Bỏ modules khỏi dependency array nếu nó không thay đổi
+  }, [lessonId]);
 
   return (
     <div className="video-container">
@@ -139,6 +149,7 @@ const VideoProgressTracker = ({
         className="video-player"
         containerClassName="video-player-container"
       />
+      <div className="completed-badge">Hoàn thành</div>
     </div>
   );
 };
@@ -155,6 +166,7 @@ VideoProgressTracker.propTypes = {
   onProgressUpdate: PropTypes.func.isRequired,
   unlockNextLesson: PropTypes.func,
   resetNotification: PropTypes.bool,
+  onLessonComplete: PropTypes.func.isRequired, // Add new prop type
 };
 
 export default VideoProgressTracker;

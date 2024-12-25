@@ -45,7 +45,7 @@ exports.initiatePayment = async (req, res) => {
         }
       }
     }
-
+    req.body.amount = finalAmount;
     // Create payment record
     const insertQuery = `
       INSERT INTO payments (
