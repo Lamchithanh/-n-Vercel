@@ -77,12 +77,17 @@ const Courses = () => {
           }
         }
 
-        // Loại bỏ dấu chấm trong giá trước khi gửi
-        const rawPrice = values.price.replace(/\./g, "");
+        let rawPrice = 0;
+        if (values.priceOption === "free") {
+          rawPrice = 0;
+        } else {
+          const priceString = String(values.price || "0");
+          rawPrice = parseInt(priceString.replace(/\./g, ""), 10) || 0;
+        }
 
         const courseData = {
           ...values,
-          price: values.priceOption === "free" ? "0" : rawPrice, // Giá không có dấu chấm
+          price: rawPrice.toString(),
           image: imageUrl || (editingCourse ? editingCourse.image : ""),
           intro_video_url: values.videoUrl,
         };
@@ -120,7 +125,7 @@ const Courses = () => {
         setIsUploading(false);
       }
     },
-    [fetchCourses, uploadMethod, uploadedFile, editingCourse, isUploading]
+    [fetchCourses, uploadMethod, uploadedFile, editingCourse, isUploading, form]
   );
 
   const confirmDelete = useCallback((courseId) => {
@@ -300,8 +305,14 @@ const Courses = () => {
   };
 
   const [price, setPrice] = useState("");
+
   const handlePriceChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
+    if (!value) {
+      setPrice("");
+      form.setFieldsValue({ price: "" });
+      return;
+    }
     const formattedValue = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     setPrice(formattedValue);
     form.setFieldsValue({ price: formattedValue });
@@ -310,19 +321,16 @@ const Courses = () => {
   const validatePrice = (_, value) => {
     const priceOption = form.getFieldValue("priceOption");
 
-    // Nếu đang trong chế độ miễn phí, không cần validate
     if (priceOption === "free") {
       return Promise.resolve();
     }
 
-    // Nếu đang chỉnh sửa khóa học và giá không thay đổi
     if (editingCourse && value === editingCourse.price) {
       return Promise.resolve();
     }
 
-    // Nếu là khóa học có phí và giá được thay đổi
     if (priceOption === "paid") {
-      const rawValue = value ? value.replace(/\./g, "") : "";
+      const rawValue = String(value || "").replace(/\./g, "");
       if (!rawValue || rawValue.length < 4) {
         return Promise.reject(new Error("Giá phải có ít nhất 4 chữ số!"));
       }

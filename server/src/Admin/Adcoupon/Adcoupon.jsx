@@ -30,11 +30,10 @@ const AdminAddCoupon = () => {
       setLoading(true);
       const response = await axios.get(`${API_URL}/coupons`);
 
-      // Ensure that response.data is an array
       if (Array.isArray(response.data)) {
         setCoupons(response.data);
       } else {
-        console.error("Unexpected response format:", response.data);
+        console.error("Sai định dạng:", response.data);
         setCoupons([]);
       }
     } catch (error) {
@@ -52,20 +51,16 @@ const AdminAddCoupon = () => {
     try {
       const submissionValues = { ...values };
 
-      // Đảm bảo chuyển đổi ngày một cách an toàn
       if (submissionValues.expiration_date) {
-        // Sử dụng format ISO hoặc định dạng phù hợp với backend
         submissionValues.expiration_date = moment(
           submissionValues.expiration_date
         ).format("YYYY-MM-DD HH:mm:ss");
       } else {
-        // Explicitly set to null if no date is selected
         submissionValues.expiration_date = null;
       }
 
-      // Handle default max_usage if not provided
       if (!submissionValues.max_usage) {
-        submissionValues.max_usage = 100; // Mặc định là 100 nếu không có giá trị nhập vào
+        submissionValues.max_usage = 100;
       }
 
       if (editingCoupon) {
@@ -79,12 +74,10 @@ const AdminAddCoupon = () => {
         message.success("Thêm mã giảm giá thành công");
       }
 
-      // Reset form and close modal
       setModalVisible(false);
       setEditingCoupon(null);
       form.resetFields();
 
-      // Refetch to ensure up-to-date data
       fetchCoupons();
     } catch (error) {
       message.error("Có lỗi xảy ra: " + error.message);
@@ -126,15 +119,10 @@ const AdminAddCoupon = () => {
     setModalVisible(true);
   };
 
-  // Handle adding new coupon
+  // HandleAdd
   const handleAddNew = () => {
-    // Reset form completely
     form.resetFields();
-
-    // Set editingCoupon to null
     setEditingCoupon(null);
-
-    // Open modal
     setModalVisible(true);
   };
 
@@ -147,7 +135,7 @@ const AdminAddCoupon = () => {
 
   const handleToggleStatus = async (coupon) => {
     try {
-      const updatedStatus = coupon.is_active === 1 ? 0 : 1; // Toggle status (1 => 0, 0 => 1)
+      const updatedStatus = coupon.is_active === 1 ? 0 : 1;
       const updatedCoupon = { ...coupon, is_active: updatedStatus };
 
       await axios.put(`${API_URL}/updatecoupons/${coupon.id}`, updatedCoupon);
@@ -186,9 +174,10 @@ const AdminAddCoupon = () => {
     },
     {
       title: "Trạng thái",
-      dataIndex: "is_active", // Dùng is_active thay vì status
+      dataIndex: "is_active",
       key: "is_active",
-      render: (is_active) => (is_active === 1 ? "Đang sử dụng" : "Vô hiệu hóa"),
+      render: (is_active) =>
+        is_active === 1 ? "Đang hoạt động" : "Đang bị khóa",
     },
     {
       title: "Thao tác",
@@ -330,7 +319,7 @@ const AdminAddCoupon = () => {
             initialValue={editingCoupon?.status || "active"}
           >
             <Select>
-              <Option value="active">Đang sử dụng</Option>
+              <Option value="active">Hoạt động</Option>
               <Option value="inactive">Vô hiệu hóa</Option>
             </Select>
           </Form.Item>

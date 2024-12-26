@@ -56,8 +56,8 @@ const Lessons = () => {
         setSelectedCourse(coursesData[0].id);
       }
     } catch (error) {
-      console.error("Error fetching courses:", error);
-      message.error("Unable to load courses. Please try again later.");
+      console.error("Lỗi lấy khoa học:", error);
+      message.error("Đã xảy ra lỗi vui lòng thử lại!");
       setCourses([]);
     } finally {
       setInitialLoading(false);
@@ -68,8 +68,6 @@ const Lessons = () => {
     const newLessons = Array.from(lessons);
     const [removed] = newLessons.splice(startIndex, 1);
     newLessons.splice(endIndex, 0, removed);
-
-    // Cập nhật lại order_index cho tất cả các bài học
     const updatedLessons = newLessons.map((lesson, index) => ({
       ...lesson,
       order_index: index,
@@ -77,6 +75,7 @@ const Lessons = () => {
 
     return updatedLessons;
   };
+
   const updateMultipleLessons = async (updatedLessons) => {
     const token = localStorage.getItem("token");
     const updatePromises = updatedLessons.map((lesson) =>
@@ -84,6 +83,7 @@ const Lessons = () => {
     );
     await Promise.all(updatePromises);
   };
+
   // Fetch lessons
   const fetchLessons = useCallback(async () => {
     if (!selectedCourse) {

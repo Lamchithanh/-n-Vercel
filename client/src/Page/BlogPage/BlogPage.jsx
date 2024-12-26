@@ -11,7 +11,6 @@ import {
   Button,
 } from "antd";
 import styled from "styled-components";
-// Import the CSS module here
 import styles from "./BlogPage.module.scss";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LeftOutlined } from "@ant-design/icons";
@@ -34,17 +33,17 @@ const StyledCard = styled(Card)`
     padding: 16px;
 
     @media (min-width: 768px) {
-      padding: 24px; // Tăng padding cho màn hình lớn
+      padding: 24px;
     }
   }
 `;
 
 const Container = styled.div`
-  max-width: 100%; // Để toàn bộ phần tử phù hợp với chiều rộng màn hình
+  max-width: 100%;
   padding: 16px;
 
   @media (min-width: 768px) {
-    max-width: 1200px; // Giới hạn chiều rộng tối đa cho màn hình lớn
+    max-width: 1200px;
     margin: 0 auto;
     padding: 24px;
   }
@@ -96,18 +95,17 @@ const BlogPage = () => {
   const pageSize = 4;
 
   useEffect(() => {
-    // Cuộn lên đầu trang mỗi khi URL thay đổi
     window.scrollTo(0, 0);
   }, [location]);
 
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:9000/api/posts");
+      const response = await fetch(" http://localhost:9000/api/posts");
       const data = await response.json();
       setPosts(data);
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error("Tải bài viết thất bại!:", error);
     } finally {
       setLoading(false);
     }
@@ -119,10 +117,10 @@ const BlogPage = () => {
       const response = await fetch(`http://localhost:9000/api/posts/${id}`);
       const data = await response.json();
       setSelectedPost(data);
-      setFullContent(data.content); // Assuming the API returns the full content
+      setFullContent(data.content);
       setModalVisible(true);
     } catch (error) {
-      console.error("Error fetching post detail:", error);
+      console.error("lỗi tài dữ liệu bài viết:", error);
     } finally {
       setLoading(false);
     }
@@ -178,13 +176,7 @@ const BlogPage = () => {
             <>
               <Row gutter={[24, 24]}>
                 {currentPosts.map((post, index) => (
-                  <Col
-                    xs={24} // Chiếm toàn bộ chiều rộng trên màn hình nhỏ
-                    sm={24} // Tương tự màn hình nhỏ
-                    md={12} // Chia làm 2 cột trên màn hình trung bình
-                    lg={12} // Tương tự màn hình lớn
-                    key={post.id}
-                  >
+                  <Col xs={24} sm={24} md={12} lg={12} key={post.id}>
                     <CardWrapper alignRight={index % 2 !== 0}>
                       <StyledCard
                         onClick={() => handleCardClick(post)}
